@@ -42,6 +42,7 @@ Choose from:
 - Map view
 - Authentication
 - AI assistant widget
+- Event calendar with category colour highlights
 
 ### Optional authentication upgrade
 If the team wants login support later, add authentication as an optional enhancement instead of part of the minimum build.
@@ -87,6 +88,32 @@ Why this is a good optional feature:
 Important note:
 - this feature should stay **optional**
 - build the core app first before adding the assistant widget
+
+### Optional event calendar enhancement
+If the team wants a stronger visual planning feature, add a calendar view for campus events.
+
+Suggested behaviour:
+- monthly calendar layout
+- event dates highlighted with different colours depending on category
+- clicking a date can show events scheduled for that day
+- helps students plan their week or month more easily
+
+Example category colours:
+- `Technology` → blue
+- `Careers` → green
+- `Sports` → orange
+- `Social` → pink
+- `Academic` → purple
+
+Why this is a good optional feature:
+- improves the events section visually
+- makes the app feel more useful for planning
+- gives the group a stronger demo feature for the presentation
+- can be built using the same fictional event data already used in the app
+
+Important note:
+- this feature should remain **optional**
+- only add it after the core event list and navigation are stable
 
 **Rule:** optional means optional. Do not let extras delay the main build.
 
