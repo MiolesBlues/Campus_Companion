@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "Welcome Week Tech Meetup",
+    "category": "Technology",
+    "date": "2026-05-02",
+    "time": "14:00",
+    "location": "Innovation Hub",
+    "description": "Meet other students interested in coding, startups, and new technology.",
+    "tags": ["tech", "networking", "students"]
+  },
+  {
+    "id": 2,
+    "title": "Careers CV Workshop",
+    "category": "Careers",
+    "date": "2026-05-03",
+    "time": "11:00",
+    "location": "Library Seminar Room",
+    "description": "Learn how to improve your CV and prepare for internship applications.",
+    "tags": ["careers", "cv", "skills"]
+  },
+  {
+    "id": 3,
+    "title": "Campus Football Social",
+    "category": "Sports",
+    "date": "2026-05-04",
+    "time": "16:30",
+    "location": "Sports Centre",
+    "description": "A casual football event for students looking to meet new people and stay active.",
+    "tags": ["sports", "social", "fitness"]
+  }
+]

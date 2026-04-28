@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Main Library",
+    "type": "Study Space",
+    "description": "Quiet study areas, group rooms, and access to academic resources.",
+    "opening_hours": "08:00 - 22:00",
+    "accessibility_notes": "Wheelchair accessible entrance and lift access available."
+  },
+  {
+    "id": 2,
+    "name": "Student Services Centre",
+    "type": "Support",
+    "description": "Help with registration, ID cards, student support, and general enquiries.",
+    "opening_hours": "09:00 - 17:00",
+    "accessibility_notes": "Step-free access and accessible service desk."
+  },
+  {
+    "id": 3,
+    "name": "Innovation Hub",
+    "type": "Event Space",
+    "description": "A flexible space used for workshops, talks, and society activities.",
+    "opening_hours": "10:00 - 18:00",
+    "accessibility_notes": "Accessible entrance and nearby accessible toilets."
+  }
+]
