@@ -265,6 +265,19 @@ Show:
 - opening hours
 - accessibility notes
 
+### Optional location page enhancements
+To make the locations page more useful and interactive, the team may also add:
+- a **search bar** for building names or services
+- a **filter by location type** such as study space, support, or event space
+- an **essential or popular locations** section near the top of the page
+- **quick info badges** such as wheelchair accessible, quiet study, or student support
+- **grouping by category** so locations feel more organised instead of being one long list
+
+Why these are good optional improvements:
+- they improve usability for first-year students
+- they make the page feel more interactive and less like a plain list
+- they are realistic to build without needing a complex backend
+
 ## Helpdesk page
 Show a form with:
 - issue category
