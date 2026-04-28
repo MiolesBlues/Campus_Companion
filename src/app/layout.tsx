@@ -33,13 +33,15 @@ export default function RootLayout({
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link
               href="/"
-              className="flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-slate-100"
+              className="flex items-center gap-3 rounded-2xl px-3 py-2 transition hover:bg-slate-100"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-lg font-bold text-white shadow-sm">
-                C
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-slate-900 shadow-sm">
+                <span className="text-sm font-semibold tracking-wide text-white">
+                  CC
+                </span>
               </div>
               <div className="leading-tight">
-                <p className="text-base font-semibold text-slate-900">
+                <p className="text-base font-semibold tracking-tight text-slate-900">
                   Campus Companion
                 </p>
                 <p className="text-xs text-slate-500">
