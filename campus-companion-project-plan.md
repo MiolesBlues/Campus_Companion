@@ -327,6 +327,14 @@ Start with the app.
 ### Best choice
 Add a small **event recommender** after the events page is working.
 
+### Recommended personalised version
+Let users have simple interests or preferences, then recommend events that match those interests.
+
+Example:
+- a user likes `sports`, `fitness`, and `social events`
+- the app should recommend sports-related events first
+- a user who prefers `tech` or `careers` should see those events ranked higher
+
 ### Simple version
 Use fictional user interests and event tags.
 Then recommend events based on matching categories or similarity scores.
@@ -336,8 +344,25 @@ Example:
 - event has matching tags
 - show those events first
 
-If you want a slightly better version:
-- use cosine similarity or k-nearest neighbours
+### Suggested inputs/features
+- user preferred categories
+- user interest tags
+- optional time preference
+- event category
+- event tags
+
+### Suggested logic
+- count matching tags/categories, or
+- use cosine similarity on simple feature vectors, or
+- use k-nearest neighbours if the team wants a slightly more ML-style approach
+
+### Suggested UI output
+Show recommendations in places like:
+- `Recommended for you` on the home page
+- `Suggested events based on your interests` on the events page
+
+Important note:
+- this is a strong option for the assignment because it is easy to explain, relevant to the app, and suitable for fictional data
 
 Keep it simple and explainable.
 
