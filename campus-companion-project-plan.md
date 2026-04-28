@@ -43,6 +43,7 @@ Choose from:
 - Authentication
 - AI assistant widget
 - Event calendar with category colour highlights
+- Student Q&A board
 
 ### Optional authentication upgrade
 If the team wants login support later, add authentication as an optional enhancement instead of part of the minimum build.
@@ -114,6 +115,30 @@ Why this is a good optional feature:
 Important note:
 - this feature should remain **optional**
 - only add it after the core event list and navigation are stable
+
+### Optional student Q&A board
+If the team wants a more social or community-focused feature, add a student Q&A board instead of a full live chat.
+
+Suggested behaviour:
+- students can post simple questions about campus life, events, or services
+- other students can reply with helpful answers
+- content can be shown as discussion cards or simple threaded posts
+- fictional example questions and answers can be used for the project dataset
+
+Why this is better than full live chat:
+- easier to build
+- easier to explain in the presentation
+- safer and more realistic for a student project
+- avoids the extra complexity of real-time messaging and moderation
+
+Why this is a good optional feature:
+- adds a community element to the app
+- helps first-year students get peer support
+- makes the app feel more interactive and student-focused
+
+Important note:
+- this feature should stay **optional**
+- build the core app first before adding a Q&A board
 
 **Rule:** optional means optional. Do not let extras delay the main build.
 
@@ -202,7 +227,7 @@ Deploy to Netlify before final polish.
 
 ## 5. Recommended Team Split
 
-## Person 1 — Setup + Repo + Deployment
+## Person 1 — Setup + Repo + Deployment - Vladyslav Vit
 Do:
 - create repo
 - create Next.js project
@@ -210,7 +235,7 @@ Do:
 - deploy to Netlify
 - keep README updated
 
-## Person 2 — Home + Layout + Styling - Vladyslav Vit
+## Person 2 — Home + Layout + Styling 
 Do:
 - homepage
 - navbar/layout
