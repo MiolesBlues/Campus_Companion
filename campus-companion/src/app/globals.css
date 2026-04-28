@@ -5,6 +5,10 @@
   --foreground: #0f172a;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -13,6 +17,15 @@ body {
 
 a {
   text-decoration: none;
+}
+
+.skip-link {
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  outline: 3px solid #bfdbfe;
+  outline-offset: 2px;
 }
 
 * {

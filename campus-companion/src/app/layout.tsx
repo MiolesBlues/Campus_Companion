@@ -15,6 +15,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <a
+          href="#main-content"
+          className="skip-link absolute left-4 top-4 -translate-y-20 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+
         <header className="border-b border-slate-200 bg-white shadow-sm">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-xl font-bold text-slate-900">
@@ -47,7 +54,10 @@ export default function RootLayout({
           </nav>
         </header>
 
-        <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
+        <main
+          id="main-content"
+          className="mx-auto min-h-screen max-w-6xl px-6 py-10"
+        >
           {children}
         </main>
       </body>
