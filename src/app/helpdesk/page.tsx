@@ -18,21 +18,21 @@ export default function HelpdeskPage() {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
         <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
           Support Desk
         </span>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Helpdesk Support</h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Submit a support request for common campus and student service
             issues.
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <label
@@ -105,7 +105,7 @@ export default function HelpdeskPage() {
 
           <button
             type="submit"
-            className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700"
+            className="w-full rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 sm:w-auto"
           >
             Submit request
           </button>
@@ -113,7 +113,7 @@ export default function HelpdeskPage() {
       </div>
 
       {submitted && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800 shadow-sm">
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-sm sm:text-base">
           Your helpdesk request has been submitted successfully.
         </div>
       )}

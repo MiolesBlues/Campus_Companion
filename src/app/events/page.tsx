@@ -17,20 +17,20 @@ export default function EventsPage() {
   }, [selectedCategory]);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
         <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
           What&apos;s Happening
         </span>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Campus Events</h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Discover upcoming events, workshops, and activities around campus.
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <label
           htmlFor="event-category"
           className="mb-2 block text-sm font-medium text-slate-700"
@@ -41,7 +41,7 @@ export default function EventsPage() {
           id="event-category"
           value={selectedCategory}
           onChange={(event) => setSelectedCategory(event.target.value)}
-          className="w-full max-w-sm rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
         >
           {categories.map((category) => (
             <option key={category} value={category}>
@@ -55,7 +55,7 @@ export default function EventsPage() {
         {filteredEvents.map((event) => (
           <article
             key={event.id}
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
           >
             <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
               {event.category}
@@ -71,7 +71,9 @@ export default function EventsPage() {
 
             <p className="mt-1 text-sm text-slate-500">{event.location}</p>
 
-            <p className="mt-4 text-slate-600">{event.description}</p>
+            <p className="mt-4 text-sm text-slate-600 sm:text-base">
+              {event.description}
+            </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {event.tags.map((tag) => (
@@ -88,7 +90,7 @@ export default function EventsPage() {
       </div>
 
       {filteredEvents.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600 shadow-sm">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">
           No events found for this category.
         </div>
       )}
