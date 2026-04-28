@@ -1,5 +1,4 @@
 [build]
-  base = "campus-companion"
   command = "npm run build"
 
 [[plugins]]
