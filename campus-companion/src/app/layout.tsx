@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <header className="border-b bg-white">
+        <header className="border-b border-slate-200 bg-white shadow-sm">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-xl font-bold text-slate-900">
               Campus Companion
@@ -47,7 +47,9 @@ export default function RootLayout({
           </nav>
         </header>
 
-        <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        <main className="mx-auto min-h-screen max-w-6xl px-6 py-10">
+          {children}
+        </main>
       </body>
     </html>
   );

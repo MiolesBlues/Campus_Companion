@@ -1,3 +1,3 @@
-export default function EventsPage() {
-  return <main><h1>Events</h1></main>;
+export default function LocationsPage() {
+  return <main><h1>Locations</h1></main>;
 }
