@@ -42,6 +42,28 @@ Choose from:
 - Map view
 - Authentication
 
+### Optional authentication upgrade
+If the team wants login support later, add authentication as an optional enhancement instead of part of the minimum build.
+
+Recommended approach:
+- use **Supabase Auth** for email/password login
+- keep users signed in with Supabase session persistence so they do not need to log in every visit
+- store user roles in a separate `profiles` table
+- use roles such as:
+  - `student`
+  - `teacher`
+  - `admin`
+
+Why this approach is better:
+- safer than building your own password system
+- easier to manage sessions
+- supports role-based access if needed later
+- fits the assignment better than manually storing passwords
+
+Important note:
+- authentication is **optional**
+- do not let login/auth delay the core app unless the rest of the base features are already stable
+
 **Rule:** optional means optional. Do not let extras delay the main build.
 
 ---
