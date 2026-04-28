@@ -41,6 +41,7 @@ Choose from:
 - Reminders / notifications
 - Map view
 - Authentication
+- AI assistant widget
 
 ### Optional authentication upgrade
 If the team wants login support later, add authentication as an optional enhancement instead of part of the minimum build.
@@ -63,6 +64,29 @@ Why this approach is better:
 Important note:
 - authentication is **optional**
 - do not let login/auth delay the core app unless the rest of the base features are already stable
+
+### Optional AI assistant widget
+If the team wants a more interactive feature, add a small AI-style assistant widget in the bottom-right corner of the screen.
+
+Suggested behaviour:
+- floating chat button fixed in the corner of the page
+- opens a small tray or chat panel
+- answers simple questions about events, locations, helpdesk, and app navigation
+- helps first-year students find information quickly
+
+Implementation options:
+- **simple version:** predefined FAQ responses for common questions
+- **advanced version:** lightweight AI integration for natural-language replies
+
+Why this is a good optional feature:
+- makes the app feel more modern and interactive
+- improves usability for new students
+- gives the team an extra demo feature for the presentation
+- can be kept small enough not to distract from the main assignment requirements
+
+Important note:
+- this feature should stay **optional**
+- build the core app first before adding the assistant widget
 
 **Rule:** optional means optional. Do not let extras delay the main build.
 
