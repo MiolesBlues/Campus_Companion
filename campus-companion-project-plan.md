@@ -137,7 +137,7 @@ Do:
 - deploy to Netlify
 - keep README updated
 
-## Person 2 — Home + Layout + Styling
+## Person 2 — Home + Layout + Styling - Vladyslav Vit
 Do:
 - homepage
 - navbar/layout
