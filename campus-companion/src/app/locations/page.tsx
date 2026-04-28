@@ -2,14 +2,19 @@ import locations from "@/data/locations.json";
 
 export default function LocationsPage() {
   return (
-    <section className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">
-          Campus Locations
-        </h1>
-        <p className="mt-2 text-slate-600">
-          Find important campus spaces, support centres, and study areas.
-        </p>
+    <section className="space-y-8">
+      <div className="space-y-3">
+        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+          Find Your Way
+        </span>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Campus Locations
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Find important campus spaces, support centres, and study areas.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
