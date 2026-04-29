@@ -7,15 +7,27 @@ const categories = ["All", ...new Set(events.map((event) => event.category))];
 
 export default function EventsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState("asc");  // sorting by date
 
-  const filteredEvents = useMemo(() => {
-    if (selectedCategory === "All") {
-      return events;
+const filteredEvents = useMemo(() => {
+  // categorical filter
+  let result = selectedCategory === "All"
+    ? events
+    : events.filter((event) => event.category === selectedCategory);
+
+  // date sorting
+  result = [...result].sort((a, b) => {
+    if (sortOrder === "asc") {
+      return a.date < b.date ? -1 : 1;
+    } else {
+      return a.date > b.date ? -1 : 1;
     }
+  });
 
-    return events.filter((event) => event.category === selectedCategory);
-  }, [selectedCategory]);
+  return result;
 
+}, [selectedCategory, sortOrder]);
+    
   return (
     <section className="space-y-8">
       <div className="space-y-3">
@@ -30,26 +42,52 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <label
-          htmlFor="event-category"
-          className="mb-2 block text-sm font-medium text-slate-700"
-        >
-          Filter by category
-        </label>
-        <select
-          id="event-category"
-          value={selectedCategory}
-          onChange={(event) => setSelectedCategory(event.target.value)}
-          className="w-full max-w-sm rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-        >
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
+{/* Filter + Sort controls — CHANGED: added flex gap-6 to the wrapper div */}
+<div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex gap-6">
+
+  {/* Sort by Category*/}
+  <div>
+    <label
+      htmlFor="event-category"
+      className="mb-2 block text-sm font-medium text-slate-700"
+    >
+      Filter by category
+    </label>
+    <select
+      id="event-category"
+      value={selectedCategory}
+      onChange={(e) => setSelectedCategory(e.target.value)}
+      className="w-full max-w-sm rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+    >
+      {categories.map((category) => (
+        <option key={category} value={category}>
+          {category}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Sort by date */}
+  <div>
+    <label
+      htmlFor="sort-order"
+      className="mb-2 block text-sm font-medium text-slate-700"
+    >
+      Sort by date
+    </label>
+    <select
+      id="sort-order"
+      value={sortOrder}
+      onChange={(e) => setSortOrder(e.target.value)}
+      className="w-full max-w-sm rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+    >
+      <option value="asc">Soonest first</option>
+      <option value="desc">Latest first</option>
+    </select>
+  </div>
+
+</div>
+       
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredEvents.map((event) => (
