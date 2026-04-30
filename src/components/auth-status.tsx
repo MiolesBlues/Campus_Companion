@@ -23,7 +23,11 @@ export function AuthStatus() {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+        Guest
+      </div>
+    );
   }
 
   return (
