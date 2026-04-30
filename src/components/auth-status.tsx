@@ -23,22 +23,7 @@ export function AuthStatus() {
   }
 
   if (!user) {
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href="/login"
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
-        >
-          Log in
-        </Link>
-        <Link
-          href="/signup"
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-        >
-          Sign up
-        </Link>
-      </div>
-    );
+    return null;
   }
 
   return (
