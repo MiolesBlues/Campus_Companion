@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getHelpdeskTickets } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -9,6 +9,7 @@ import type { HelpdeskTicketRecord } from "@/types/database";
 export default function AdminHelpdeskPage() {
   const { profile } = useAuth();
   const [tickets, setTickets] = useState<HelpdeskTicketRecord[]>([]);
+  const [search, setSearch] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const loadTickets = async () => {
@@ -19,6 +20,12 @@ export default function AdminHelpdeskPage() {
   useEffect(() => {
     void loadTickets();
   }, []);
+
+  const filteredTickets = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return tickets;
+    return tickets.filter((ticket) => [ticket.subject, ticket.category, ticket.urgency, ticket.status, ticket.description].join(" ").toLowerCase().includes(query));
+  }, [search, tickets]);
 
   if (!profile || profile.role !== "admin") {
     return <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm">Admin access only.</section>;
@@ -38,13 +45,17 @@ export default function AdminHelpdeskPage() {
     <section className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Helpdesk Requests</h1>
-        <p className="mt-2 text-slate-600">Review and delete support requests.</p>
+        <p className="mt-2 text-slate-600">Review, search, and delete support requests.</p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search requests by subject, category, urgency, status, or description" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900" />
       </div>
 
       {message && <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">{message}</div>}
 
       <div className="grid gap-4">
-        {tickets.map((ticket) => (
+        {filteredTickets.map((ticket) => (
           <article key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">

@@ -13,9 +13,7 @@ create table if not exists public.profiles (
   student_id text unique,
   course text,
   year_of_study integer check (year_of_study between 1 and 6),
-  start_year integer check (start_year between 2010 and 2100),
-  avatar_url text,
-  societies jsonb not null default '[]'::jsonb,
+  start_year integer check (start_year between 2010 and 2100),`r`n  avatar_url text,`r`n  banned boolean not null default false,`r`n  societies jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -177,7 +175,7 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name, role, course, year_of_study, start_year, avatar_url, societies)
+  insert into public.profiles (id, email, full_name, role, course, year_of_study, start_year, avatar_url, banned, societies)
   values (
     new.id,
     new.email,
@@ -185,9 +183,7 @@ begin
     coalesce(new.raw_user_meta_data ->> 'role', 'student'),
     new.raw_user_meta_data ->> 'course',
     coalesce((new.raw_user_meta_data ->> 'year_of_study')::integer, 1),
-    coalesce((new.raw_user_meta_data ->> 'start_year')::integer, extract(year from now())::integer),
-    new.raw_user_meta_data ->> 'avatar_url',
-    coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb)
+    coalesce((new.raw_user_meta_data ->> 'start_year')::integer, extract(year from now())::integer),`r`n    new.raw_user_meta_data ->> 'avatar_url',`r`n    false,`r`n    coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb)
   )
   on conflict (id) do nothing;
 
@@ -488,3 +484,4 @@ insert into public.helpdesk_tickets (user_id, category, urgency, subject, descri
 select id, 'IT Support', 'medium', 'Sample Laptop Wi-Fi Issue', 'Unable to connect to secure campus Wi-Fi after password reset.', 'open'
 from public.profiles
 limit 0;
+

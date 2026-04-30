@@ -25,6 +25,7 @@ export type Profile = {
   year_of_study: number | null;
   start_year: number | null;
   avatar_url?: string | null;
+  banned?: boolean;
   societies: SocietyMembership[] | null;
   created_at: string;
   updated_at: string;
