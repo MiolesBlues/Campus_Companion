@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getLocations } from "@/lib/data";
 
 type LocationRecord = {
@@ -14,6 +14,7 @@ type LocationRecord = {
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<LocationRecord[]>([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const loadLocations = async () => {
@@ -23,6 +24,18 @@ export default function LocationsPage() {
 
     void loadLocations();
   }, []);
+
+  const filteredLocations = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return locations;
+
+    return locations.filter((location) =>
+      [location.name, location.type, location.description, location.opening_hours ?? "", location.accessibility_notes ?? ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [locations, search]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -38,8 +51,21 @@ export default function LocationsPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <label htmlFor="location-search" className="mb-2 block text-sm font-medium text-slate-700">
+          Search locations
+        </label>
+        <input
+          id="location-search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by name, type, description, hours, or accessibility"
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+        />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {locations.map((location) => (
+        {filteredLocations.map((location) => (
           <article key={location.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
               {location.type}
@@ -62,6 +88,12 @@ export default function LocationsPage() {
           </article>
         ))}
       </div>
+
+      {filteredLocations.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">
+          No locations found for your current search.
+        </div>
+      )}
     </section>
   );
 }

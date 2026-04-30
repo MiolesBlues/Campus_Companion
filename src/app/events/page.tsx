@@ -6,6 +6,7 @@ import type { EventWithTags } from "@/types/database";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<EventWithTags[]>([]);
+  const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
 
@@ -24,10 +25,21 @@ export default function EventsPage() {
   );
 
   const filteredEvents = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     let result =
       selectedCategory === "All"
         ? events
         : events.filter((event) => event.category === selectedCategory);
+
+    if (query) {
+      result = result.filter((event) =>
+        [event.title, event.category, event.location, event.description, event.tags.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+      );
+    }
 
     result = [...result].sort((a, b) => {
       const aValue = `${a.event_date} ${a.start_time}`;
@@ -41,7 +53,7 @@ export default function EventsPage() {
     });
 
     return result;
-  }, [events, selectedCategory, sortOrder]);
+  }, [events, search, selectedCategory, sortOrder]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -57,7 +69,20 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 sm:p-6">
+      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-6">
+        <div>
+          <label htmlFor="event-search" className="mb-2 block text-sm font-medium text-slate-700">
+            Search events
+          </label>
+          <input
+            id="event-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title, location, description, or tag"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+          />
+        </div>
+
         <div>
           <label htmlFor="event-category" className="mb-2 block text-sm font-medium text-slate-700">
             Filter by category
@@ -66,7 +91,7 @@ export default function EventsPage() {
             id="event-category"
             value={selectedCategory}
             onChange={(event) => setSelectedCategory(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
           >
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -84,7 +109,7 @@ export default function EventsPage() {
             id="sort-order"
             value={sortOrder}
             onChange={(event) => setSortOrder(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
           >
             <option value="asc">Soonest first</option>
             <option value="desc">Latest first</option>
@@ -122,7 +147,7 @@ export default function EventsPage() {
 
       {filteredEvents.length === 0 && (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">
-          No events found for this category.
+          No events found for your current search or category.
         </div>
       )}
     </section>
