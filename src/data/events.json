@@ -28,5 +28,186 @@
     "location": "Sports Centre",
     "description": "A casual football event for students looking to meet new people and stay active.",
     "tags": ["sports", "social", "fitness"]
+  },
+  {
+    "id": 4,
+    "title": "Exam Wellbeing Session",
+    "category": "Mental Health & Wellness",
+    "date": "2026-05-07",
+    "time": "13:00",
+    "location": "Wellness Centre",
+    "description": "A guided session covering breathing techniques and mindfulness for exam stress.",
+    "tags": ["wellness", "mental-health", "Relax"]
+  },
+  {
+    "id": 5,
+    "title": "Cultural Food Festival",
+    "category": "Cultural",
+    "date": "2026-05-08",
+    "time": "12:00",
+    "location": "PE Hall",
+    "description": "Students from different countries share traditional food, music, and stories.",
+    "tags": ["cultural", "food", "diversity"]
+  },
+  {
+    "id": 6,
+    "title": "Board Games Night",
+    "category": "Social",
+    "date": "2026-05-11",
+    "time": "19:00",
+    "location": "T-Main-202",
+    "description": "A fun evening of board games, snacks, and good company.",
+    "tags": ["social", "fun", "games"]
+  },
+  {
+    "id": 7,
+    "title": "Academic Writing Workshop",
+    "category": "Academic",
+    "date": "2026-05-09",
+    "time": "15:00",
+    "location": "T-main-001",
+    "description": "Improve your essay and report writing with guidance from the academic skills team.",
+    "tags": ["academic", "writing", "skills"]
+  },
+  {
+    "id": 8,
+    "title": "Study Skills for Exams",
+    "category": "Academic",
+    "date": "2026-05-06",
+    "time": "12:00",
+    "location": "T-main-005",
+    "description": "Tips and techniques for exam preparation.",
+    "tags": ["academic", "study", "exams"]
+  },
+  {
+    "id": 9,
+    "title": "Running Club-Beginners",
+    "category": "Sports",
+    "date": "2026-05-07",
+    "time": "08:00",
+    "location": "Campus Track",
+    "description": "A friendly morning run open to all fitness levels. No experience needed.",
+    "tags": ["sports", "fitness", "outdoors"]
+  },
+  {
+    "id": 10,
+    "title": "Graduate Recruitment Fair",
+    "category": "Careers",
+    "date": "2026-05-10",
+    "time": "10:00",
+    "location": "Main Hall",
+    "description": "Meet recruiters from over 20 companies hiring interns and graduates.",
+    "tags": ["careers", "recruitment", "networking"]
+  },
+  {
+    "id": 11,
+    "title": "AI & Machine Learning Talk",
+    "category": "Technology",
+    "date": "2026-05-08",
+    "time": "13:00",
+    "location": "T-north-204",
+    "description": "A guest speaker from industry discusses real-world applications of AI and ML.",
+    "tags": ["tech", "ai", "ml"]
+  },
+  {
+    "id": 12,
+    "title": "Careers CV Workshop",
+    "category": "Careers",
+    "date": "2026-05-03",
+    "time": "11:00",
+    "location": "Main Hall",
+    "description": "Learn how to improve your CV and prepare for internship applications.",
+    "tags": ["careers", "cv", "skills"]
+  },
+  {
+    "id": 13,
+    "title": "Basketball-Beginners",
+    "category": "Sports",
+    "date": "2026-05-14",
+    "time": "17:00",
+    "location": "Sports Hall",
+    "description": "Casual basketball session open to all students, beginners welcome.",
+    "tags": ["sports", "basketball", "fitness"]
+  },
+  {
+    "id": 14,
+    "title": "International Music Night",
+    "category": "Cultural",
+    "date": "2026-05-16",
+    "time": "19:00",
+    "location": "Student Union Hall",
+    "description": "Live music performances representing cultures from around the world.",
+    "tags": ["cultural", "music", "diversity"]
+  },
+ {
+    "id": 15,
+    "title": "LinkedIn Profile Workshop",
+    "category": "Careers",
+    "date": "2026-05-13",
+    "time": "14:00",
+    "location": "Main Hall",
+    "description": "Learn how to build a strong LinkedIn profile for internships and graduate roles.",
+    "tags": ["careers", "linkedin", "networking"]
+  },
+  {
+    "id": 16,
+    "title": "Quiz Night Challenge",
+    "category": "Social",
+    "date": "2026-05-25",
+    "time": "19:30",
+    "location": "Student Union Hall",
+    "description": "Team-based trivia night with prizes and lots of fun.",
+    "tags": ["social", "quiz", "games"]
+  },
+  {
+    "id": 17,
+    "title": "Robotics Demo Day",
+    "category": "Technology",
+    "date": "2026-05-29",
+    "time": "13:00",
+    "location": "Engineering Lab-003",
+    "description": "Student teams showcase robotics projects and automation demos.",
+    "tags": ["tech", "robotics", "engineering"]
+  },
+  {
+    "id": 18,
+    "title": "Time Management Workshop",
+    "category": "Academic",
+    "date": "2026-05-26",
+    "time": "12:00",
+    "location": "T-main-201",
+    "description": "Learn practical ways to manage assignments and deadlines.",
+    "tags": ["academic", "productivity", "study"]
+  },
+  {
+    "id": 19,
+    "title": "Cybersecurity Awareness Talk",
+    "category": "Technology",
+    "date": "2026-05-22",
+    "time": "13:00",
+    "location": "T-north-102",
+    "description": "Learn practical cybersecurity tips for students and future professionals.",
+    "tags": ["tech", "cybersecurity", "security"]
+  }, 
+  {
+    "id": 20,
+    "title": "Healthy Eating",
+    "category": "Mental Health & Wellness",
+    "date": "2026-05-30",
+    "time": "11:30",
+    "location": "Health Centre",
+    "description": "Nutrition advice for busy students balancing study and wellbeing.",
+    "tags": ["wellness", "health", "nutrition"]
+  },
+  {
+    "id": 21,
+    "title": "Mock Interview Practice",
+    "category": "Careers",
+    "date": "2026-05-28",
+    "time": "15:00",
+    "location": "Careers Office",
+    "description": "Practice interview questions and get feedback from career advisors.",
+    "tags": ["careers", "interview", "skills"]
   }
+
 ]

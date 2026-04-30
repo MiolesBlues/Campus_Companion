@@ -7,14 +7,24 @@ const categories = ["All", ...new Set(events.map((event) => event.category))];
 
 export default function EventsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const filteredEvents = useMemo(() => {
-    if (selectedCategory === "All") {
-      return events;
-    }
+    let result =
+      selectedCategory === "All"
+        ? events
+        : events.filter((event) => event.category === selectedCategory);
 
-    return events.filter((event) => event.category === selectedCategory);
-  }, [selectedCategory]);
+    result = [...result].sort((a, b) => {
+      if (sortOrder === "asc") {
+        return a.date < b.date ? -1 : 1;
+      }
+
+      return a.date > b.date ? -1 : 1;
+    });
+
+    return result;
+  }, [selectedCategory, sortOrder]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -30,25 +40,45 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <label
-          htmlFor="event-category"
-          className="mb-2 block text-sm font-medium text-slate-700"
-        >
-          Filter by category
-        </label>
-        <select
-          id="event-category"
-          value={selectedCategory}
-          onChange={(event) => setSelectedCategory(event.target.value)}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
-        >
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 sm:p-6">
+        <div>
+          <label
+            htmlFor="event-category"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+            Filter by category
+          </label>
+          <select
+            id="event-category"
+            value={selectedCategory}
+            onChange={(event) => setSelectedCategory(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="sort-order"
+            className="mb-2 block text-sm font-medium text-slate-700"
+          >
+            Sort by date
+          </label>
+          <select
+            id="sort-order"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none sm:max-w-sm"
+          >
+            <option value="asc">Soonest first</option>
+            <option value="desc">Latest first</option>
+          </select>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

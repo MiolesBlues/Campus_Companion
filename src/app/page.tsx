@@ -14,8 +14,8 @@ export default function Home() {
           Campus Companion
         </h1>
         <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">
-          A student helper app for finding events, locating campus services,
-          and getting support quickly.
+          A student helper app for finding events, checking timetables,
+          locating campus services, and getting support quickly.
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -24,6 +24,12 @@ export default function Home() {
             className="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-slate-700"
           >
             Go to Events
+          </Link>
+          <Link
+            href="/timetables"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+          >
+            Go to Timetables
           </Link>
           <Link
             href="/locations"
@@ -40,7 +46,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href="/events"
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"
@@ -50,6 +56,17 @@ export default function Home() {
             Browse upcoming campus activities and workshops.
           </p>
           <p className="mt-4 text-sm font-medium text-blue-700">Open events →</p>
+        </Link>
+
+        <Link
+          href="/timetables"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"
+        >
+          <h2 className="text-xl font-semibold text-slate-900">Timetables</h2>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            Check student schedules with filters for courses and year groups.
+          </p>
+          <p className="mt-4 text-sm font-medium text-blue-700">Open timetables →</p>
         </Link>
 
         <Link
