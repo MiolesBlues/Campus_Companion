@@ -31,12 +31,12 @@ export function MainNav() {
   }
 
   return (
-    <div className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm sm:grid-cols-4 xl:grid-cols-8">
+    <div className="flex w-full flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
       {navLinks.map((link) => (
         <Link
           key={link.href}
           href={link.href}
-          className="rounded-xl px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:bg-white hover:text-slate-900 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300 sm:px-4"
+          className="min-w-[140px] flex-1 rounded-xl px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:bg-white hover:text-slate-900 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300 sm:px-4"
         >
           {link.label}
         </Link>
