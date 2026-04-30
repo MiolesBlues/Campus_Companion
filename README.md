@@ -1,6 +1,6 @@
 # Campus Companion
 
-Campus Companion is a Next.js web app designed to help students and teachers navigate campus life with quick access to events, timetables, locations, support services, and account-based features.
+Campus Companion is a Next.js web app designed to help students and teachers navigate campus life with quick access to events, timetables, locations, societies, support services, and account-based features.
 
 ## Stack
 - Next.js (App Router)
@@ -15,6 +15,7 @@ Campus Companion is a Next.js web app designed to help students and teachers nav
 - Automatic student timetable selection based on account profile
 - Teacher timetable support
 - Campus locations directory
+- Database-backed societies list for signup and account editing
 - Helpdesk form with client-side submission feedback
 - Login / signup pages prepared for Supabase Auth
 - Account page with role visibility and editable student profile fields
@@ -45,6 +46,7 @@ A starter example is provided in `.env.example`.
 
 ### What the SQL setup includes
 - `profiles` table linked to `auth.users`
+- `societies`
 - `events`
 - `event_tags`
 - `locations`
@@ -55,8 +57,8 @@ A starter example is provided in `.env.example`.
 - three roles: `student`, `teacher`, and `admin`
 - trigger to create a profile automatically when a user signs up
 - automatic student year-of-study sync based on academic start year
-- editable societies stored as JSON
-- large starter seed dataset for events, locations, student timetables, teacher timetables, and announcements
+- profile societies stored as selected society IDs + names
+- large starter seed dataset for societies, events, locations, student timetables, teacher timetables, and announcements
 
 ### Roles and access
 - New signups default to `student`

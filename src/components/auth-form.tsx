@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { courseOptions, yearOptions } from "@/lib/constants";
+import { getSocieties } from "@/lib/societies";
+import type { Society } from "@/types/database";
 
 function currentAcademicStartYear(now = new Date()) {
   const month = now.getMonth();
@@ -19,23 +21,37 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [course, setCourse] = useState(courseOptions[0]);
   const [yearOfStudy, setYearOfStudy] = useState("1");
   const [startYear, setStartYear] = useState(String(currentAcademicStartYear()));
-  const [societies, setSocieties] = useState([""]);
+  const [societyOptions, setSocietyOptions] = useState<Society[]>([]);
+  const [selectedSocietyIds, setSelectedSocietyIds] = useState<string[]>([""]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isSignup = mode === "signup";
 
+  useEffect(() => {
+    if (!isSignup) {
+      return;
+    }
+
+    const loadSocieties = async () => {
+      const societies = await getSocieties();
+      setSocietyOptions(societies);
+    };
+
+    void loadSocieties();
+  }, [isSignup]);
+
   const updateSociety = (index: number, value: string) => {
-    setSocieties((current) => current.map((item, i) => (i === index ? value : item)));
+    setSelectedSocietyIds((current) => current.map((item, i) => (i === index ? value : item)));
   };
 
   const addSocietyField = () => {
-    setSocieties((current) => [...current, ""]);
+    setSelectedSocietyIds((current) => [...current, ""]);
   };
 
   const removeSocietyField = (index: number) => {
-    setSocieties((current) => current.filter((_, i) => i !== index));
+    setSelectedSocietyIds((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -59,10 +75,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
 
     if (isSignup) {
-      const cleanSocieties = societies
-        .map((name) => name.trim())
+      const cleanSocieties = selectedSocietyIds
         .filter(Boolean)
-        .map((name) => ({ name }));
+        .map((id) => societyOptions.find((society) => society.id === Number(id)))
+        .filter((society): society is Society => Boolean(society))
+        .map((society) => ({ society_id: society.id, name: society.name }));
 
       const { error: signUpError } = await supabase.auth.signUp({
         email,
@@ -196,16 +213,21 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
                 </button>
               </div>
 
-              {societies.map((society, index) => (
-                <div key={`${index}-${society}`} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={society}
+              {selectedSocietyIds.map((societyId, index) => (
+                <div key={`${index}-${societyId}`} className="flex gap-2">
+                  <select
+                    value={societyId}
                     onChange={(event) => updateSociety(index, event.target.value)}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-                    placeholder="e.g. Computer Society"
-                  />
-                  {societies.length > 1 && (
+                  >
+                    <option value="">Select a society</option>
+                    {societyOptions.map((society) => (
+                      <option key={society.id} value={String(society.id)}>
+                        {society.name}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedSocietyIds.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeSocietyField(index)}

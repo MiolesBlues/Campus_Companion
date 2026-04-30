@@ -5,17 +5,29 @@ import { useAuth } from "@/components/auth-provider";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { courseOptions } from "@/lib/constants";
 import { calculateAcademicYear, getEffectiveYearOfStudy } from "@/lib/profile";
+import { getSocieties } from "@/lib/societies";
+import type { Society } from "@/types/database";
 
 export default function AccountPage() {
   const { loading, user, profile, isConfigured, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [societyOptions, setSocietyOptions] = useState<Society[]>([]);
 
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
   const [course, setCourse] = useState(courseOptions[0]);
   const [startYear, setStartYear] = useState(String(new Date().getFullYear()));
-  const [societies, setSocieties] = useState<string[]>([""]);
+  const [selectedSocietyIds, setSelectedSocietyIds] = useState<string[]>([""]);
+
+  useEffect(() => {
+    const loadSocieties = async () => {
+      const societies = await getSocieties();
+      setSocietyOptions(societies);
+    };
+
+    void loadSocieties();
+  }, []);
 
   useEffect(() => {
     if (!profile) {
@@ -24,19 +36,23 @@ export default function AccountPage() {
 
     setCourse(profile.course ?? courseOptions[0]);
     setStartYear(String(profile.start_year ?? new Date().getFullYear()));
-    setSocieties(profile.societies?.length ? profile.societies.map((item) => item.name) : [""]);
+    setSelectedSocietyIds(
+      profile.societies?.length
+        ? profile.societies.map((item) => String(item.society_id))
+        : [""]
+    );
   }, [profile]);
 
   const updateSociety = (index: number, value: string) => {
-    setSocieties((current) => current.map((item, i) => (i === index ? value : item)));
+    setSelectedSocietyIds((current) => current.map((item, i) => (i === index ? value : item)));
   };
 
   const addSocietyField = () => {
-    setSocieties((current) => [...current, ""]);
+    setSelectedSocietyIds((current) => [...current, ""]);
   };
 
   const removeSocietyField = (index: number) => {
-    setSocieties((current) => current.filter((_, i) => i !== index));
+    setSelectedSocietyIds((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
@@ -53,10 +69,11 @@ export default function AccountPage() {
     }
 
     const parsedStartYear = Number(startYear);
-    const cleanSocieties = societies
-      .map((name) => name.trim())
+    const cleanSocieties = selectedSocietyIds
       .filter(Boolean)
-      .map((name) => ({ name }));
+      .map((id) => societyOptions.find((society) => society.id === Number(id)))
+      .filter((society): society is Society => Boolean(society))
+      .map((society) => ({ society_id: society.id, name: society.name }));
 
     const nextYear = profile?.role === "student" ? calculateAcademicYear(parsedStartYear) : null;
 
@@ -174,16 +191,21 @@ export default function AccountPage() {
                     </button>
                   </div>
 
-                  {societies.map((society, index) => (
-                    <div key={`${index}-${society}`} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={society}
+                  {selectedSocietyIds.map((societyId, index) => (
+                    <div key={`${index}-${societyId}`} className="flex gap-2">
+                      <select
+                        value={societyId}
                         onChange={(event) => updateSociety(index, event.target.value)}
                         className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-                        placeholder="e.g. Drama Society"
-                      />
-                      {societies.length > 1 && (
+                      >
+                        <option value="">Select a society</option>
+                        {societyOptions.map((society) => (
+                          <option key={society.id} value={String(society.id)}>
+                            {society.name}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedSocietyIds.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeSocietyField(index)}

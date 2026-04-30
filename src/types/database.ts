@@ -1,7 +1,18 @@
 export type UserRole = "student" | "teacher" | "admin";
 
-export type Society = {
+export type SocietyMembership = {
+  society_id: number;
   name: string;
+};
+
+export type Society = {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  contact_email: string | null;
+  meeting_day: string | null;
+  published: boolean;
 };
 
 export type Profile = {
@@ -13,7 +24,7 @@ export type Profile = {
   course: string | null;
   year_of_study: number | null;
   start_year: number | null;
-  societies: Society[] | null;
+  societies: SocietyMembership[] | null;
   created_at: string;
   updated_at: string;
 };

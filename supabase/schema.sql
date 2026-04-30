@@ -17,6 +17,18 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.societies (
+  id bigserial primary key,
+  name text not null unique,
+  category text not null,
+  description text not null,
+  contact_email text,
+  meeting_day text,
+  published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.events (
   id bigserial primary key,
   title text not null,
@@ -186,6 +198,10 @@ drop trigger if exists profiles_sync_year on public.profiles;
 create trigger profiles_sync_year before insert or update on public.profiles
 for each row execute procedure public.sync_profile_year_of_study();
 
+drop trigger if exists societies_set_updated_at on public.societies;
+create trigger societies_set_updated_at before update on public.societies
+for each row execute procedure public.set_updated_at();
+
 drop trigger if exists events_set_updated_at on public.events;
 create trigger events_set_updated_at before update on public.events
 for each row execute procedure public.set_updated_at();
@@ -219,6 +235,7 @@ as $$
 $$;
 
 alter table public.profiles enable row level security;
+alter table public.societies enable row level security;
 alter table public.events enable row level security;
 alter table public.event_tags enable row level security;
 alter table public.locations enable row level security;
@@ -244,6 +261,17 @@ create policy "profiles_insert_own"
 on public.profiles
 for insert
 with check (auth.uid() = id or public.is_admin());
+
+create policy "societies_read_published"
+on public.societies
+for select
+using (published = true or public.is_admin());
+
+create policy "societies_admin_all"
+on public.societies
+for all
+using (public.is_admin())
+with check (public.is_admin());
 
 create policy "events_read_published"
 on public.events
@@ -326,6 +354,22 @@ on public.announcements
 for all
 using (public.is_admin())
 with check (public.is_admin());
+
+insert into public.societies (name, category, description, contact_email, meeting_day, published)
+values
+('Computer Society', 'Technology', 'Coding nights, hackathons, and software project collaboration.', 'computing@campuscompanion.edu', 'Wednesday', true),
+('Drama Society', 'Arts', 'Theatre workshops, auditions, and live productions.', 'drama@campuscompanion.edu', 'Thursday', true),
+('Basketball Club', 'Sports', 'Training sessions, intervarsity prep, and casual games.', 'basketball@campuscompanion.edu', 'Tuesday', true),
+('Debate Society', 'Academic', 'Debates, public speaking events, and competitions.', 'debate@campuscompanion.edu', 'Monday', true),
+('Music Society', 'Arts', 'Band practice, open mic nights, and live performances.', 'music@campuscompanion.edu', 'Friday', true),
+('Entrepreneurship Society', 'Business', 'Startup meetups, founder talks, and pitch practice.', 'startup@campuscompanion.edu', 'Wednesday', true),
+('Gaming Society', 'Social', 'Esports, board game nights, and casual tournaments.', 'gaming@campuscompanion.edu', 'Saturday', true),
+('International Students Society', 'Community', 'Meetups, support, and cross-cultural events.', 'international@campuscompanion.edu', 'Thursday', true),
+('Photography Club', 'Creative', 'Campus photo walks, editing sessions, and exhibitions.', 'photo@campuscompanion.edu', 'Monday', true),
+('Volunteering Society', 'Community', 'Charity work, local outreach, and service projects.', 'volunteer@campuscompanion.edu', 'Tuesday', true),
+('Cybersecurity Society', 'Technology', 'CTF practice, security talks, and lab sessions.', 'cyber@campuscompanion.edu', 'Friday', true),
+('Dance Society', 'Arts', 'Group rehearsals, showcases, and beginner-friendly classes.', 'dance@campuscompanion.edu', 'Wednesday', true)
+on conflict (name) do nothing;
 
 insert into public.events (title, category, description, location, event_date, start_time, end_time, audience, capacity, published)
 values
