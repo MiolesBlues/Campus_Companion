@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthProvider } from "@/components/auth-provider";
+import { AccessibilityProvider } from "@/components/AccessibilityProvider";
 import { AuthStatus } from "@/components/auth-status";
 import "./globals.css";
 
@@ -16,6 +17,7 @@ const navLinks = [
   { href: "/locations", label: "Locations" },
   { href: "/helpdesk", label: "Helpdesk" },
   { href: "/account", label: "Account" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export default function RootLayout({
@@ -27,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
+          <AccessibilityProvider>
           <a
             href="#main-content"
             className="skip-link absolute left-4 top-4 -translate-y-20 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white focus:translate-y-0"
@@ -79,6 +82,7 @@ export default function RootLayout({
           >
             {children}
           </main>
+          </AccessibilityProvider>
         </AuthProvider>
       </body>
     </html>
