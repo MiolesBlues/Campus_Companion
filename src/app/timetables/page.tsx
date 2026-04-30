@@ -77,9 +77,12 @@ export default function TimetablesPage() {
   }, [filteredEntries]);
 
   const cellMap = useMemo(() => {
-    const map = new Map<string, TimetableRecord>();
+    const map = new Map<string, TimetableRecord[]>();
     filteredEntries.forEach((entry) => {
-      map.set(`${entry.day_of_week}-${entry.start_time}`, entry);
+      const key = `${entry.day_of_week}-${entry.start_time}`;
+      const current = map.get(key) ?? [];
+      current.push(entry);
+      map.set(key, current);
     });
     return map;
   }, [filteredEntries]);
@@ -129,17 +132,22 @@ export default function TimetablesPage() {
                 <tr key={time}>
                   <td className="border border-slate-300 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700">{time}</td>
                   {daysOrder.map((day) => {
-                    const entry = cellMap.get(`${day}-${time}`);
+                    const cellEntries = cellMap.get(`${day}-${time}`) ?? [];
                     return (
-                      <td key={`${day}-${time}`} className="h-28 min-w-[180px] border border-slate-300 px-2 py-2 align-top">
-                        {entry ? (
-                          <div className={`h-full rounded-xl border p-3 text-sm shadow-sm ${subjectColor(entry.module_code)}`}>
-                            <p className="font-semibold text-slate-900">{entry.module_name}</p>
-                            <p className="mt-1 text-slate-700">{entry.start_time} - {entry.end_time}</p>
-                            <p className="mt-1 text-slate-700">{entry.building}, {entry.room}</p>
-                            <p className="mt-1 text-slate-700">{entry.lecturer_name}</p>
-                          </div>
-                        ) : null}
+                      <td key={`${day}-${time}`} className="min-w-[220px] border border-slate-300 px-2 py-2 align-top">
+                        <div className="flex min-h-28 flex-col gap-2">
+                          {cellEntries.map((entry) => (
+                            <div key={entry.id} className={`rounded-xl border p-3 text-sm shadow-sm ${subjectColor(entry.module_code)}`}>
+                              <div className="flex items-start justify-between gap-3">
+                                <p className="font-semibold text-slate-900">{entry.module_name}</p>
+                                <span className="rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-slate-700">{entry.course_name}{entry.year_of_study ? ` · Y${entry.year_of_study}` : ""}</span>
+                              </div>
+                              <p className="mt-1 text-slate-700">{entry.start_time} - {entry.end_time}</p>
+                              <p className="mt-1 text-slate-700">{entry.building}, {entry.room}</p>
+                              <p className="mt-1 text-slate-700">{entry.lecturer_name}</p>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     );
                   })}
