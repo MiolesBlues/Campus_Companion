@@ -1,6 +1,18 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import locations from "@/data/locations.json";
 
+const types = ["All", ...new Set(locations.map((location) => location.type))];
+
 export default function LocationsPage() {
+  const [selectedType, setSelectedType] = useState("All");
+
+  const filteredLocations = useMemo(() => {
+    if (selectedType === "All") return locations;
+    return locations.filter((location) => location.type === selectedType);
+  }, [selectedType]);
+
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
@@ -17,8 +29,29 @@ export default function LocationsPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <label
+          htmlFor="location-type"
+          className="mb-2 block text-sm font-medium text-slate-700"
+        >
+          Filter by type
+        </label>
+        <select
+          id="location-type"
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="w-full max-w-sm rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+        >
+          {types.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {locations.map((location) => (
+        {filteredLocations.map((location) => (
           <article
             key={location.id}
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
@@ -50,6 +83,12 @@ export default function LocationsPage() {
           </article>
         ))}
       </div>
+
+      {filteredLocations.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600 shadow-sm">
+          No locations found for this type.
+        </div>
+      )}
     </section>
   );
 }
