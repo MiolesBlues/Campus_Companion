@@ -149,13 +149,20 @@ export function AuthForm({ mode }: AuthFormProps) {
       </form>
 
       {message && (
-        <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+        >
           {message}
         </div>
       )}
 
       {error && (
-        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div
+          role="alert"
+          className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        >
           {error}
         </div>
       )}
