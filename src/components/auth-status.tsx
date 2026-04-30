@@ -33,15 +33,23 @@ export function AuthStatus() {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {profile?.role === "admin" && (
+        <Link
+          href="/admin"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-lg text-slate-900 transition hover:bg-slate-50"
+          title="Settings"
+          aria-label="Settings"
+        >
+          ⚙️
+        </Link>
+      )}
+
       <Link
         href="/account"
         className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
       >
         <Avatar src={profile?.avatar_url ?? null} alt={profile?.full_name ?? user.email ?? "User avatar"} size="sm" />
-        <span>
-          {profile?.full_name ?? user.email}
-          {profile?.role === "admin" ? " (Admin)" : ""}
-        </span>
+        <span>{profile?.full_name ?? user.email}</span>
       </Link>
     </div>
   );
