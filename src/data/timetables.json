@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "course": "Computer Science",
+    "year": "Year 1",
+    "day": "Monday",
+    "module": "Introduction to Programming",
+    "time": "09:00 - 10:30",
+    "location": "Engineering Block, Room E201",
+    "lecturer": "Dr. Ryan"
+  },
+  {
+    "id": 2,
+    "course": "Computer Science",
+    "year": "Year 1",
+    "day": "Monday",
+    "module": "Discrete Mathematics",
+    "time": "11:00 - 12:30",
+    "location": "Science Centre, Room S104",
+    "lecturer": "Prof. Walsh"
+  },
+  {
+    "id": 3,
+    "course": "Computer Science",
+    "year": "Year 1",
+    "day": "Wednesday",
+    "module": "Web Development Lab",
+    "time": "14:00 - 16:00",
+    "location": "Tech Lab 2",
+    "lecturer": "Ms. Keane"
+  },
+  {
+    "id": 4,
+    "course": "Computer Science",
+    "year": "Year 2",
+    "day": "Tuesday",
+    "module": "Data Structures",
+    "time": "10:00 - 11:30",
+    "location": "Engineering Block, Room E305",
+    "lecturer": "Dr. Byrne"
+  },
+  {
+    "id": 5,
+    "course": "Computer Science",
+    "year": "Year 2",
+    "day": "Thursday",
+    "module": "Database Systems",
+    "time": "13:00 - 14:30",
+    "location": "ICT Building, Room I110",
+    "lecturer": "Mr. Ahmed"
+  },
+  {
+    "id": 6,
+    "course": "Business",
+    "year": "Year 1",
+    "day": "Monday",
+    "module": "Principles of Marketing",
+    "time": "10:00 - 11:30",
+    "location": "Business School, Room B101",
+    "lecturer": "Dr. Murphy"
+  },
+  {
+    "id": 7,
+    "course": "Business",
+    "year": "Year 1",
+    "day": "Friday",
+    "module": "Business Communication",
+    "time": "09:00 - 10:30",
+    "location": "Business School, Room B203",
+    "lecturer": "Ms. Nolan"
+  },
+  {
+    "id": 8,
+    "course": "Business",
+    "year": "Year 2",
+    "day": "Tuesday",
+    "module": "Financial Accounting",
+    "time": "12:00 - 13:30",
+    "location": "Business School, Room B115",
+    "lecturer": "Mr. O'Connell"
+  },
+  {
+    "id": 9,
+    "course": "Business",
+    "year": "Year 2",
+    "day": "Thursday",
+    "module": "Project Management",
+    "time": "15:00 - 16:30",
+    "location": "Innovation Hub, Room H12",
+    "lecturer": "Dr. Smith"
+  }
+]
