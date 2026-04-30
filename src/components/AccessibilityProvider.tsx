@@ -58,6 +58,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     html.dataset.reducedMotion = reducedMotion;
     // Body font-size scales elements that inherit from body; rem values scale
     // via CSS rules targeting [data-text-size] on <html>.
+    document.documentElement.style.fontSize = textSize === "1" ? "" : `${parseFloat(textSize) * 100}%`;
     document.body.style.fontSize = textSize === "1" ? "" : `${textSize}rem`;
   }, [textSize, contrast, reducedMotion]);
 

@@ -100,7 +100,31 @@ The same pattern was applied to `src/app/helpdesk/page.tsx` (success uses `role=
 
 ---
 
-### Fix 2 — Focus indicator was low-contrast and inconsistent (WCAG 2.4.7)
+### Fix 2 — High contrast mode: black/white palette (WCAG 1.4.3)
+
+**Before** — normal mode: body text using `text-slate-500` (#64748b on white) gives ≈ 4.0 : 1, below the 4.5 : 1 AA threshold. No high-contrast option existed.
+
+![Before: normal colour mode on Campus Locations page](wcag-screenshots/contrast-before.png)
+
+**After** — high contrast enabled via `/settings`: true black background, white text, yellow links, white borders. All text now exceeds 21 : 1.
+
+![After: high contrast mode — black background, white text, yellow nav links](wcag-screenshots/contrast-after.png)
+
+---
+
+### Fix 3 — Text size scaling (WCAG 1.4.4)
+
+**Before** — no text scaling option. Font size fixed at browser default (16 px). Users who needed larger text had to rely on browser zoom only.
+
+![Before: settings page with Normal (16 px) text size selected](wcag-screenshots/text-size-before.png)
+
+**After** — Extra Large selected: `font-size` set to 130% on `<html>`, scaling all rem-based Tailwind utilities. Heading, body, and label text all increase proportionally.
+
+![After: settings page with Extra Large text size — visibly larger text throughout](wcag-screenshots/text-size-after.png)
+
+---
+
+### Fix 4 — Focus indicator was low-contrast and inconsistent (WCAG 2.4.7)
 
 **Before** (`src/app/globals.css` and `src/app/layout.tsx`):
 ```css
