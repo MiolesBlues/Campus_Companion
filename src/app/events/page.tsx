@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getEvents } from "@/lib/data";
-import type { EventRecord } from "@/types/database";
+import type { EventWithTags } from "@/types/database";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [events, setEvents] = useState<EventWithTags[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
 
@@ -108,6 +108,14 @@ export default function EventsPage() {
             <p className="mt-1 text-sm text-slate-500">{event.location}</p>
 
             <p className="mt-4 text-sm text-slate-600 sm:text-base">{event.description}</p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {event.tags.map((tag) => (
+                <span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </article>
         ))}
       </div>

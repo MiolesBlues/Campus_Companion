@@ -13,9 +13,11 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
   { href: "/timetables", label: "Timetables" },
+  { href: "/societies", label: "Societies" },
   { href: "/locations", label: "Locations" },
   { href: "/helpdesk", label: "Helpdesk" },
   { href: "/account", label: "Account" },
+  { href: "/admin", label: "Admin" },
 ];
 
 export default function RootLayout({
@@ -42,24 +44,18 @@ export default function RootLayout({
                   className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 transition hover:bg-slate-100 lg:w-auto"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-slate-900 shadow-sm sm:h-11 sm:w-11">
-                    <span className="text-sm font-semibold tracking-wide text-white">
-                      CC
-                    </span>
+                    <span className="text-sm font-semibold tracking-wide text-white">CC</span>
                   </div>
                   <div className="min-w-0 leading-tight">
-                    <p className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
-                      Campus Companion
-                    </p>
-                    <p className="text-[11px] text-slate-500 sm:text-xs">
-                      Student life made simpler
-                    </p>
+                    <p className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base">Campus Companion</p>
+                    <p className="text-[11px] text-slate-500 sm:text-xs">Student life made simpler</p>
                   </div>
                 </Link>
 
                 <AuthStatus />
               </div>
 
-              <div className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm sm:grid-cols-3 lg:flex lg:items-center lg:gap-2 lg:p-1">
+              <div className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm sm:grid-cols-4 xl:flex xl:items-center xl:gap-2 xl:p-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
@@ -73,10 +69,7 @@ export default function RootLayout({
             </nav>
           </header>
 
-          <main
-            id="main-content"
-            className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10"
-          >
+          <main id="main-content" className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
             {children}
           </main>
         </AuthProvider>

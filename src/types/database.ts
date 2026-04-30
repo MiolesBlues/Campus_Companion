@@ -29,6 +29,12 @@ export type Profile = {
   updated_at: string;
 };
 
+export type EventTagRecord = {
+  id: number;
+  event_id: number;
+  tag: string;
+};
+
 export type EventRecord = {
   id: number;
   title: string;
@@ -41,6 +47,11 @@ export type EventRecord = {
   audience: string;
   capacity: number | null;
   published: boolean;
+  created_by?: string | null;
+};
+
+export type EventWithTags = EventRecord & {
+  tags: string[];
 };
 
 export type TimetableRecord = {

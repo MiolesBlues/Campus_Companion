@@ -1,8 +1,9 @@
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { fallbackSocieties } from "@/lib/societies";
 import fallbackEvents from "@/data/events.json";
 import fallbackLocations from "@/data/locations.json";
 import fallbackTimetables from "@/data/timetables.json";
-import type { EventRecord, TimetableRecord } from "@/types/database";
+import type { EventRecord, EventTagRecord, EventWithTags, Society, TimetableRecord } from "@/types/database";
 
 type LocationRecord = {
   id: number;
@@ -50,50 +51,56 @@ const eventFallback = fallbackEvents as FallbackEvent[];
 const locationFallback = fallbackLocations as FallbackLocation[];
 const timetableFallback = fallbackTimetables as FallbackTimetable[];
 
+function mapFallbackEvents(): EventWithTags[] {
+  return eventFallback.map((event) => ({
+    id: event.id,
+    title: event.title,
+    category: event.category,
+    description: event.description,
+    location: event.location,
+    event_date: event.date,
+    start_time: event.time,
+    end_time: event.time,
+    audience: "all",
+    capacity: null,
+    published: true,
+    tags: event.tags,
+  }));
+}
+
 export async function getEvents() {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    return eventFallback.map((event) => ({
-      id: event.id,
-      title: event.title,
-      category: event.category,
-      description: event.description,
-      location: event.location,
-      event_date: event.date,
-      start_time: event.time,
-      end_time: event.time,
-      audience: "all",
-      capacity: null,
-      published: true,
-    })) as EventRecord[];
+    return mapFallbackEvents();
   }
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("published", true)
-    .order("event_date", { ascending: true })
-    .order("start_time", { ascending: true });
+  const [{ data: events, error: eventsError }, { data: tags, error: tagsError }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("*")
+      .eq("published", true)
+      .order("event_date", { ascending: true })
+      .order("start_time", { ascending: true }),
+    supabase.from("event_tags").select("*")
+  ]);
 
-  if (error || !data) {
-    console.error("Failed to load events", error);
-    return eventFallback.map((event) => ({
-      id: event.id,
-      title: event.title,
-      category: event.category,
-      description: event.description,
-      location: event.location,
-      event_date: event.date,
-      start_time: event.time,
-      end_time: event.time,
-      audience: "all",
-      capacity: null,
-      published: true,
-    })) as EventRecord[];
+  if (eventsError || !events || tagsError || !tags) {
+    console.error("Failed to load events or tags", { eventsError, tagsError });
+    return mapFallbackEvents();
   }
 
-  return data as EventRecord[];
+  const tagsByEvent = new Map<number, string[]>();
+  (tags as EventTagRecord[]).forEach((tag) => {
+    const current = tagsByEvent.get(tag.event_id) ?? [];
+    current.push(tag.tag);
+    tagsByEvent.set(tag.event_id, current);
+  });
+
+  return (events as EventRecord[]).map((event) => ({
+    ...event,
+    tags: tagsByEvent.get(event.id) ?? [],
+  }));
 }
 
 export async function getLocations() {
@@ -173,4 +180,42 @@ export async function getTimetables() {
   }
 
   return data as TimetableRecord[];
+}
+
+export async function getSocietiesList() {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return fallbackSocieties;
+  }
+
+  const { data, error } = await supabase
+    .from("societies")
+    .select("*")
+    .eq("published", true)
+    .order("name", { ascending: true });
+
+  if (error || !data) {
+    console.error("Failed to load societies list", error);
+    return fallbackSocieties;
+  }
+
+  return data as Society[];
+}
+
+export async function getProfilesList() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, role, course, year_of_study, start_year, societies, created_at, updated_at, student_id")
+    .order("full_name", { ascending: true });
+
+  if (error || !data) {
+    console.error("Failed to load profiles list", error);
+    return [];
+  }
+
+  return data;
 }
