@@ -3,16 +3,7 @@ import { fallbackSocieties } from "@/lib/societies";
 import fallbackEvents from "@/data/events.json";
 import fallbackLocations from "@/data/locations.json";
 import fallbackTimetables from "@/data/timetables.json";
-import type { EventRecord, EventTagRecord, EventWithTags, Society, TimetableRecord } from "@/types/database";
-
-type LocationRecord = {
-  id: number;
-  name: string;
-  type: string;
-  description: string;
-  opening_hours: string | null;
-  accessibility_notes: string | null;
-};
+import type { EventRecord, EventTagRecord, EventWithTags, HelpdeskTicketRecord, LocationRecord, Society, TimetableRecord } from "@/types/database";
 
 type FallbackEvent = {
   id: number;
@@ -76,12 +67,7 @@ export async function getEvents() {
   }
 
   const [{ data: events, error: eventsError }, { data: tags, error: tagsError }] = await Promise.all([
-    supabase
-      .from("events")
-      .select("*")
-      .eq("published", true)
-      .order("event_date", { ascending: true })
-      .order("start_time", { ascending: true }),
+    supabase.from("events").select("*").eq("published", true).order("event_date", { ascending: true }).order("start_time", { ascending: true }),
     supabase.from("event_tags").select("*")
   ]);
 
@@ -97,10 +83,7 @@ export async function getEvents() {
     tagsByEvent.set(tag.event_id, current);
   });
 
-  return (events as EventRecord[]).map((event) => ({
-    ...event,
-    tags: tagsByEvent.get(event.id) ?? [],
-  }));
+  return (events as EventRecord[]).map((event) => ({ ...event, tags: tagsByEvent.get(event.id) ?? [] }));
 }
 
 export async function getLocations() {
@@ -112,7 +95,7 @@ export async function getLocations() {
 
   const { data, error } = await supabase
     .from("locations")
-    .select("id, name, type, description, opening_hours, accessibility_notes")
+    .select("id, name, type, description, opening_hours, accessibility_notes, contact_email, contact_phone, published")
     .eq("published", true)
     .order("name", { ascending: true });
 
@@ -149,12 +132,7 @@ export async function getTimetables() {
     })) as TimetableRecord[];
   }
 
-  const { data, error } = await supabase
-    .from("timetables")
-    .select("*")
-    .eq("published", true)
-    .order("day_of_week", { ascending: true })
-    .order("start_time", { ascending: true });
+  const { data, error } = await supabase.from("timetables").select("*").eq("published", true).order("day_of_week", { ascending: true }).order("start_time", { ascending: true });
 
   if (error || !data) {
     console.error("Failed to load timetables", error);
@@ -189,11 +167,7 @@ export async function getSocietiesList() {
     return fallbackSocieties;
   }
 
-  const { data, error } = await supabase
-    .from("societies")
-    .select("*")
-    .eq("published", true)
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.from("societies").select("*").eq("published", true).order("name", { ascending: true });
 
   if (error || !data) {
     console.error("Failed to load societies list", error);
@@ -209,7 +183,7 @@ export async function getProfilesList() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, course, year_of_study, start_year, societies, created_at, updated_at, student_id")
+    .select("id, email, full_name, role, course, year_of_study, start_year, avatar_url, societies, created_at, updated_at, student_id")
     .order("full_name", { ascending: true });
 
   if (error || !data) {
@@ -218,4 +192,21 @@ export async function getProfilesList() {
   }
 
   return data;
+}
+
+export async function getHelpdeskTickets() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("helpdesk_tickets")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("Failed to load helpdesk tickets", error);
+    return [];
+  }
+
+  return data as HelpdeskTicketRecord[];
 }

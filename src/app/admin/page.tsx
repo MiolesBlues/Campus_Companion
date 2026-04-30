@@ -25,7 +25,7 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Manage platform content, user roles, events, and timetables.
+            Manage platform content, user roles, events, timetables, societies, locations, and support requests.
           </p>
         </div>
       </div>
@@ -42,6 +42,18 @@ export default function AdminDashboardPage() {
         <Link href="/admin/users" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
           <h2 className="text-xl font-semibold text-slate-900">Manage Users</h2>
           <p className="mt-2 text-slate-600">Review profiles and assign student, teacher, or admin roles.</p>
+        </Link>
+        <Link href="/admin/societies" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+          <h2 className="text-xl font-semibold text-slate-900">Manage Societies</h2>
+          <p className="mt-2 text-slate-600">Create, edit, and delete societies.</p>
+        </Link>
+        <Link href="/admin/locations" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+          <h2 className="text-xl font-semibold text-slate-900">Manage Locations</h2>
+          <p className="mt-2 text-slate-600">Create, edit, and delete campus locations.</p>
+        </Link>
+        <Link href="/admin/helpdesk" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+          <h2 className="text-xl font-semibold text-slate-900">Helpdesk Requests</h2>
+          <p className="mt-2 text-slate-600">Read and delete support requests.</p>
         </Link>
       </div>
     </section>

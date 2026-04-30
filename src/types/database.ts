@@ -24,6 +24,7 @@ export type Profile = {
   course: string | null;
   year_of_study: number | null;
   start_year: number | null;
+  avatar_url?: string | null;
   societies: SocietyMembership[] | null;
   created_at: string;
   updated_at: string;
@@ -54,6 +55,18 @@ export type EventWithTags = EventRecord & {
   tags: string[];
 };
 
+export type LocationRecord = {
+  id: number;
+  name: string;
+  type: string;
+  description: string;
+  opening_hours: string | null;
+  accessibility_notes: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  published?: boolean;
+};
+
 export type TimetableRecord = {
   id: number;
   course_code: string;
@@ -72,4 +85,18 @@ export type TimetableRecord = {
   delivery_mode: string;
   owner_role: "student" | "teacher";
   published: boolean;
+};
+
+export type HelpdeskTicketRecord = {
+  id: number;
+  user_id: string;
+  category: string;
+  urgency: "low" | "medium" | "high";
+  subject: string;
+  description: string;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  assigned_to: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
 };

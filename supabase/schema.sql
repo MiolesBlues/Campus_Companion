@@ -14,6 +14,7 @@ create table if not exists public.profiles (
   course text,
   year_of_study integer check (year_of_study between 1 and 6),
   start_year integer check (start_year between 2010 and 2100),
+  avatar_url text,
   societies jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -118,12 +119,17 @@ create table if not exists public.announcements (
 );
 
 grant select, insert, update on public.profiles to authenticated;
-grant select on public.societies to anon, authenticated;
-grant select on public.events to anon, authenticated;
-grant select on public.event_tags to anon, authenticated;
-grant select on public.locations to anon, authenticated;
-grant select on public.timetables to anon, authenticated;
-grant select, insert, update on public.helpdesk_tickets to authenticated;
+grant select, insert, update, delete on public.societies to authenticated;
+grant select, insert, update, delete on public.events to authenticated;
+grant select, insert, update, delete on public.event_tags to authenticated;
+grant select, insert, update, delete on public.locations to authenticated;
+grant select, insert, update, delete on public.timetables to authenticated;
+grant select, insert, update, delete on public.helpdesk_tickets to authenticated;
+grant select on public.societies to anon;
+grant select on public.events to anon;
+grant select on public.event_tags to anon;
+grant select on public.locations to anon;
+grant select on public.timetables to anon;
 grant select on public.announcements to anon, authenticated;
 
 grant usage, select on all sequences in schema public to anon, authenticated;
@@ -171,7 +177,7 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name, role, course, year_of_study, start_year, societies)
+  insert into public.profiles (id, email, full_name, role, course, year_of_study, start_year, avatar_url, societies)
   values (
     new.id,
     new.email,
@@ -180,6 +186,7 @@ begin
     new.raw_user_meta_data ->> 'course',
     coalesce((new.raw_user_meta_data ->> 'year_of_study')::integer, 1),
     coalesce((new.raw_user_meta_data ->> 'start_year')::integer, extract(year from now())::integer),
+    new.raw_user_meta_data ->> 'avatar_url',
     coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb)
   )
   on conflict (id) do nothing;
@@ -356,6 +363,11 @@ on public.helpdesk_tickets
 for update
 using (auth.uid() = user_id or public.is_admin())
 with check (auth.uid() = user_id or public.is_admin());
+
+create policy "tickets_admin_delete"
+on public.helpdesk_tickets
+for delete
+using (public.is_admin());
 
 create policy "announcements_read_published"
 on public.announcements

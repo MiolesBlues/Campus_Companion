@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
+import { Avatar } from "@/components/avatar";
 
 export function AuthStatus() {
   const { loading, user, profile, signOut, isConfigured } = useAuth();
@@ -34,10 +35,13 @@ export function AuthStatus() {
     <div className="flex flex-wrap items-center gap-2">
       <Link
         href="/account"
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+        className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
       >
-        {profile?.full_name ?? user.email}
-        {profile?.role === "admin" ? " (Admin)" : ""}
+        <Avatar src={profile?.avatar_url ?? null} alt={profile?.full_name ?? user.email ?? "User avatar"} size="sm" />
+        <span>
+          {profile?.full_name ?? user.email}
+          {profile?.role === "admin" ? " (Admin)" : ""}
+        </span>
       </Link>
       <button
         type="button"

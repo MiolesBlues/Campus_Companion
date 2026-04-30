@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEvents } from "@/lib/data";
-import type { EventRecord } from "@/types/database";
+import type { EventWithTags } from "@/types/database";
 
 export default function Home() {
-  const [upcomingEvents, setUpcomingEvents] = useState<EventRecord[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventWithTags[]>([]);
 
   useEffect(() => {
     const loadEvents = async () => {
       const events = await getEvents();
-      setUpcomingEvents(events.slice(0, 2));
+      setUpcomingEvents(events.slice(0, 4));
     };
 
     void loadEvents();
@@ -29,18 +29,10 @@ export default function Home() {
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Link href="/events" className="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-slate-700">
-            Go to Events
-          </Link>
-          <Link href="/timetables" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">
-            Go to Timetables
-          </Link>
-          <Link href="/locations" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">
-            Go to Locations
-          </Link>
-          <Link href="/helpdesk" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">
-            Go to Helpdesk
-          </Link>
+          <Link href="/events" className="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-slate-700">Go to Events</Link>
+          <Link href="/timetables" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">Go to Timetables</Link>
+          <Link href="/locations" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">Go to Locations</Link>
+          <Link href="/helpdesk" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:border-slate-400 hover:bg-slate-50">Go to Helpdesk</Link>
         </div>
       </div>
 
@@ -73,17 +65,13 @@ export default function Home() {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Upcoming Events</h2>
-          <Link href="/events" className="text-sm font-medium text-blue-700 hover:text-blue-900">
-            View all
-          </Link>
+          <Link href="/events" className="text-sm font-medium text-blue-700 hover:text-blue-900">View all</Link>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {upcomingEvents.map((event) => (
             <article key={event.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <p className="text-sm font-medium text-slate-500">
-                {event.event_date} • {event.start_time}
-              </p>
+              <p className="text-sm font-medium text-slate-500">{event.event_date} • {event.start_time}</p>
               <h3 className="mt-2 text-lg font-semibold text-slate-900">{event.title}</h3>
               <p className="mt-1 text-sm text-slate-600">{event.location}</p>
               <p className="mt-3 text-sm text-slate-600 sm:text-base">{event.description}</p>
