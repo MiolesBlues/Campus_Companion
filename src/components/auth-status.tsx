@@ -9,7 +9,7 @@ export function AuthStatus() {
 
   if (!isConfigured) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 shadow-sm">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-800 shadow-sm">
         Supabase auth not configured yet
       </div>
     );
@@ -17,7 +17,7 @@ export function AuthStatus() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-500 shadow-sm">
         Checking account...
       </div>
     );
@@ -25,7 +25,7 @@ export function AuthStatus() {
 
   if (!user) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm">
         Guest
       </div>
     );
@@ -36,7 +36,7 @@ export function AuthStatus() {
       {profile?.role === "admin" && (
         <Link
           href="/admin"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-lg text-slate-900 transition hover:bg-slate-50"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-base text-slate-900 transition hover:bg-slate-50"
           title="Settings"
           aria-label="Settings"
         >
@@ -46,7 +46,7 @@ export function AuthStatus() {
 
       <Link
         href="/account"
-        className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+        className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
       >
         <Avatar src={profile?.avatar_url ?? null} alt={profile?.full_name ?? user.email ?? "User avatar"} size="sm" />
         <span>{profile?.full_name ?? user.email}</span>
