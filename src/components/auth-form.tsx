@@ -78,10 +78,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       const cleanSocieties = selectedSocietyIds
         .filter(Boolean)
         .map((id) => societyOptions.find((society) => society.id === Number(id)))
-        .filter((society): society is Society => Boolean(society))
-        .map((society) => ({ society_id: society.id, name: society.name }));
+        .filter((society): society is Society => Boolean(society));
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -91,7 +90,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             course,
             year_of_study: Number(yearOfStudy),
             start_year: Number(startYear),
-            societies: cleanSocieties,
+            societies: cleanSocieties.map((society) => ({ society_id: society.id, name: society.name })),
           },
         },
       });
@@ -100,6 +99,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         setError(signUpError.message);
         setLoading(false);
         return;
+      }
+
+      const newUserId = data.user?.id;
+      if (newUserId && cleanSocieties.length > 0) {
+        await supabase.from("society_memberships").insert(
+          cleanSocieties.map((society) => ({ user_id: newUserId, society_id: society.id }))
+        );
       }
 
       setMessage("Account created. Check your email to confirm your account.");

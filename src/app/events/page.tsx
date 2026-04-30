@@ -6,11 +6,43 @@ import { getEvents, getUserEventRegistrations } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
 
+function formatIcsDate(date: string, time: string) {
+  const safeTime = time.slice(0, 5);
+  return `${date.replaceAll("-", "") }T${safeTime.replace(":", "")}00`;
+}
+
+function downloadEventIcs(event: EventWithTags) {
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Campus Companion//EN",
+    "BEGIN:VEVENT",
+    `UID:event-${event.id}@campuscompanion`,
+    `DTSTAMP:${formatIcsDate(event.event_date, event.start_time)}`,
+    `DTSTART:${formatIcsDate(event.event_date, event.start_time)}`,
+    `DTEND:${formatIcsDate(event.event_date, event.end_time)}`,
+    `SUMMARY:${event.title}`,
+    `DESCRIPTION:${event.description.replaceAll("\n", " ")}`,
+    `LOCATION:${event.location}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
 export default function EventsPage() {
   const { user } = useAuth();
   const [events, setEvents] = useState<EventWithTags[]>([]);
   const [registrations, setRegistrations] = useState<number[]>([]);
-  const [showCalendar, setShowCalendar] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -63,13 +95,6 @@ export default function EventsPage() {
     return result;
   }, [events, search, selectedCategory, sortOrder]);
 
-  const groupedByDate = useMemo(() => {
-    return filteredEvents.reduce<Record<string, EventWithTags[]>>((acc, event) => {
-      acc[event.event_date] = [...(acc[event.event_date] ?? []), event];
-      return acc;
-    }, {});
-  }, [filteredEvents]);
-
   const toggleRegister = async (eventItem: EventWithTags) => {
     if (!user) {
       setMessage("Please log in to register for events.");
@@ -104,7 +129,7 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-4 sm:p-6">
+      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-6">
         <div>
           <label htmlFor="event-search" className="mb-2 block text-sm font-medium text-slate-700">Search events</label>
           <input id="event-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by title, location, description, or tag" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
@@ -122,9 +147,6 @@ export default function EventsPage() {
             <option value="desc">Latest first</option>
           </select>
         </div>
-        <div className="flex items-end">
-          <button type="button" onClick={() => setShowCalendar(true)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">Calendar</button>
-        </div>
       </div>
 
       {message && <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">{message}</div>}
@@ -136,13 +158,16 @@ export default function EventsPage() {
             <article key={event.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{event.category}</span>
               <h2 className="mt-4 text-xl font-semibold text-slate-900">{event.title}</h2>
-              <p className="mt-2 text-sm text-slate-500">{event.event_date} • {event.start_time}</p>
+              <p className="mt-2 text-sm text-slate-500">{event.event_date} • {event.start_time} - {event.end_time}</p>
               <p className="mt-1 text-sm text-slate-500">{event.location}</p>
               <p className="mt-4 text-sm text-slate-600 sm:text-base">{event.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">{event.tags.map((tag) => (<span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">#{tag}</span>))}</div>
-              <div className="mt-5">
+              <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" onClick={() => void toggleRegister(event)} className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${isRegistered ? "bg-slate-600" : "bg-slate-900"}`}>
                   {isRegistered ? "Registered" : "Register"}
+                </button>
+                <button type="button" onClick={() => downloadEventIcs(event)} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
+                  Download ICS
                 </button>
               </div>
             </article>
@@ -151,35 +176,6 @@ export default function EventsPage() {
       </div>
 
       {filteredEvents.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">No events found for your current search or category.</div>}
-
-      {showCalendar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">Event Calendar</h2>
-                <p className="mt-1 text-sm text-slate-600">Upcoming events grouped by date.</p>
-              </div>
-              <button type="button" onClick={() => setShowCalendar(false)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">Close</button>
-            </div>
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-              {Object.entries(groupedByDate).map(([date, items]) => (
-                <div key={date} className="rounded-2xl border border-slate-200 p-4">
-                  <h3 className="text-lg font-semibold text-slate-900">{date}</h3>
-                  <div className="mt-3 space-y-3">
-                    {items.map((event) => (
-                      <div key={event.id} className="rounded-xl bg-slate-50 p-3">
-                        <p className="font-medium text-slate-900">{event.title}</p>
-                        <p className="text-sm text-slate-600">{event.start_time} • {event.location}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

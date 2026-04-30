@@ -11,6 +11,8 @@ export default function SocietiesPage() {
   const [societies, setSocieties] = useState<Society[]>([]);
   const [memberships, setMemberships] = useState<number[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedDay, setSelectedDay] = useState("All");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,17 +37,22 @@ export default function SocietiesPage() {
     void loadMemberships();
   }, [user]);
 
+  const categories = useMemo(() => ["All", ...new Set(societies.map((society) => society.category))], [societies]);
+  const meetingDays = useMemo(() => ["All", ...new Set(societies.map((society) => society.meeting_day).filter(Boolean) as string[])], [societies]);
+
   const filteredSocieties = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return societies;
 
-    return societies.filter((society) =>
-      [society.name, society.category, society.description, society.contact_email ?? "", society.meeting_day ?? ""]
+    return societies.filter((society) => {
+      const matchesSearch = !query || [society.name, society.category, society.description, society.contact_email ?? "", society.meeting_day ?? ""]
         .join(" ")
         .toLowerCase()
-        .includes(query)
-    );
-  }, [search, societies]);
+        .includes(query);
+      const matchesCategory = selectedCategory === "All" || society.category === selectedCategory;
+      const matchesDay = selectedDay === "All" || society.meeting_day === selectedDay;
+      return matchesSearch && matchesCategory && matchesDay;
+    });
+  }, [search, selectedCategory, selectedDay, societies]);
 
   const toggleJoin = async (society: Society) => {
     if (!user || !profile) {
@@ -88,9 +95,23 @@ export default function SocietiesPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <label htmlFor="society-search" className="mb-2 block text-sm font-medium text-slate-700">Search societies</label>
-        <input id="society-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name, category, description, contact, or meeting day" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
+      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-6">
+        <div>
+          <label htmlFor="society-search" className="mb-2 block text-sm font-medium text-slate-700">Search societies</label>
+          <input id="society-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name, category, description, contact, or meeting day" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
+        </div>
+        <div>
+          <label htmlFor="society-category" className="mb-2 block text-sm font-medium text-slate-700">Category</label>
+          <select id="society-category" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+            {categories.map((category) => (<option key={category} value={category}>{category}</option>))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="society-day" className="mb-2 block text-sm font-medium text-slate-700">Meeting day</label>
+          <select id="society-day" value={selectedDay} onChange={(event) => setSelectedDay(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+            {meetingDays.map((day) => (<option key={day} value={day}>{day}</option>))}
+          </select>
+        </div>
       </div>
 
       {message && <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">{message}</div>}
@@ -123,7 +144,7 @@ export default function SocietiesPage() {
 
       {filteredSocieties.length === 0 && (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">
-          No societies found for your current search.
+          No societies found for your current filters.
         </div>
       )}
     </section>
