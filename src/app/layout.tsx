@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
+  { href: "/timetables", label: "Timetables" },
   { href: "/locations", label: "Locations" },
   { href: "/helpdesk", label: "Helpdesk" },
 ];
@@ -50,7 +51,7 @@ export default function RootLayout({
               </div>
             </Link>
 
-            <div className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm sm:grid-cols-4 lg:w-auto lg:flex lg:items-center lg:gap-2 lg:p-1">
+            <div className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm sm:grid-cols-5 lg:w-auto lg:flex lg:items-center lg:gap-2 lg:p-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
