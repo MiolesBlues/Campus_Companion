@@ -10,7 +10,7 @@ import { getSocieties } from "@/lib/societies";
 import type { Society } from "@/types/database";
 
 export default function AccountPage() {
-  const { loading, user, profile, isConfigured, refreshProfile } = useAuth();
+  const { loading, user, profile, isConfigured, refreshProfile, signOut } = useAuth();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,12 +121,21 @@ export default function AccountPage() {
           <p className="text-slate-600">You are not logged in.</p>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <Avatar src={avatarUrl || profile?.avatar_url || null} alt={profile?.full_name ?? user.email ?? "Profile picture"} size="lg" />
-              <div>
-                <p className="text-sm font-medium text-slate-500">Profile picture</p>
-                <p className="text-slate-900">Set an image URL or leave blank to use the default picture.</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Avatar src={avatarUrl || profile?.avatar_url || null} alt={profile?.full_name ?? user.email ?? "Profile picture"} size="lg" />
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Profile picture</p>
+                  <p className="text-slate-900">Set an image URL or leave blank to use the default picture.</p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+              >
+                Sign out
+              </button>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

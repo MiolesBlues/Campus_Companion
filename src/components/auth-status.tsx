@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Avatar } from "@/components/avatar";
 
 export function AuthStatus() {
-  const { loading, user, profile, signOut, isConfigured } = useAuth();
+  const { loading, user, profile, isConfigured } = useAuth();
 
   if (!isConfigured) {
     return (
@@ -43,13 +43,6 @@ export function AuthStatus() {
           {profile?.role === "admin" ? " (Admin)" : ""}
         </span>
       </Link>
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-      >
-        Sign out
-      </button>
     </div>
   );
 }
