@@ -1,23 +1,31 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { courseOptions, yearOptions } from "@/lib/constants";
-import { getEffectiveYearOfStudy } from "@/lib/profile";
+import { courseOptions } from "@/lib/constants";
+import { calculateAcademicYear, getEffectiveYearOfStudy } from "@/lib/profile";
 
 export default function AccountPage() {
-  const { loading, user, profile, isConfigured } = useAuth();
+  const { loading, user, profile, isConfigured, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
-  const [course, setCourse] = useState(profile?.course ?? courseOptions[0]);
-  const [startYear, setStartYear] = useState(String(profile?.start_year ?? new Date().getFullYear()));
-  const [societies, setSocieties] = useState<string[]>(
-    profile?.societies?.length ? profile.societies.map((item) => item.name) : [""]
-  );
+  const [course, setCourse] = useState(courseOptions[0]);
+  const [startYear, setStartYear] = useState(String(new Date().getFullYear()));
+  const [societies, setSocieties] = useState<string[]>([""]);
+
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    setCourse(profile.course ?? courseOptions[0]);
+    setStartYear(String(profile.start_year ?? new Date().getFullYear()));
+    setSocieties(profile.societies?.length ? profile.societies.map((item) => item.name) : [""]);
+  }, [profile]);
 
   const updateSociety = (index: number, value: string) => {
     setSocieties((current) => current.map((item, i) => (i === index ? value : item)));
@@ -44,18 +52,19 @@ export default function AccountPage() {
       return;
     }
 
+    const parsedStartYear = Number(startYear);
     const cleanSocieties = societies
       .map((name) => name.trim())
       .filter(Boolean)
       .map((name) => ({ name }));
 
-    const nextYear = profile?.role === "student" ? Number(yearOptions.includes(Number(getEffectiveYearOfStudy({ ...profile, course, start_year: Number(startYear), societies: cleanSocieties, year_of_study: profile?.year_of_study ?? 1 } as never) ?? 1)) ? getEffectiveYearOfStudy({ ...profile, course, start_year: Number(startYear), societies: cleanSocieties, year_of_study: profile?.year_of_study ?? 1 } as never) : profile?.year_of_study ?? 1) : null;
+    const nextYear = profile?.role === "student" ? calculateAcademicYear(parsedStartYear) : null;
 
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
         course,
-        start_year: Number(startYear),
+        start_year: parsedStartYear,
         year_of_study: nextYear,
         societies: cleanSocieties,
       })
@@ -67,6 +76,7 @@ export default function AccountPage() {
       return;
     }
 
+    await refreshProfile();
     setMessage("Account details updated successfully.");
     setSaving(false);
   };

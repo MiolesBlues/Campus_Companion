@@ -19,6 +19,7 @@ type AuthContextValue = {
   loading: boolean;
   isConfigured: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -30,18 +31,23 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
 
-  if (error) {
-    console.error("Failed to fetch profile", error);
+    if (error) {
+      console.error("Failed to fetch profile", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected profile fetch failure", error);
     return null;
   }
-
-  return data;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,21 +72,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let mounted = true;
 
-    const initialise = async () => {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
+    const applySession = async (nextSession: Session | null) => {
+      if (!mounted) {
+        return;
+      }
 
-      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user) {
-        const profileData = await fetchProfile(currentSession.user.id);
+      if (nextSession?.user) {
+        const profileData = await fetchProfile(nextSession.user.id);
         if (mounted) {
           setProfile(profileData);
         }
+      } else if (mounted) {
+        setProfile(null);
       }
 
       if (mounted) {
@@ -88,26 +94,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    initialise();
+    const initialise = async () => {
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
+        await applySession(currentSession);
+      } catch (error) {
+        console.error("Failed to initialise auth session", error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    void initialise();
+
+    const timeoutId = window.setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 4000);
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-
-      if (nextSession?.user) {
-        const profileData = await fetchProfile(nextSession.user.id);
-        setProfile(profileData);
-      } else {
-        setProfile(null);
-      }
-
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      void applySession(nextSession);
     });
 
     return () => {
       mounted = false;
+      window.clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [configured]);
@@ -125,6 +146,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         await supabase.auth.signOut();
+      },
+      refreshProfile: async () => {
+        if (!user) {
+          setProfile(null);
+          return;
+        }
+
+        const profileData = await fetchProfile(user.id);
+        setProfile(profileData);
       },
     }),
     [configured, loading, profile, session, user]
