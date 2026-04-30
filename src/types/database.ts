@@ -1,4 +1,8 @@
-export type UserRole = "user" | "admin";
+export type UserRole = "student" | "teacher" | "admin";
+
+export type Society = {
+  name: string;
+};
 
 export type Profile = {
   id: string;
@@ -8,6 +12,8 @@ export type Profile = {
   student_id: string | null;
   course: string | null;
   year_of_study: number | null;
+  start_year: number | null;
+  societies: Society[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -30,16 +36,18 @@ export type TimetableRecord = {
   id: number;
   course_code: string;
   course_name: string;
-  year_of_study: number;
+  year_of_study: number | null;
   semester: number;
   day_of_week: string;
   module_code: string;
   module_name: string;
   lecturer_name: string;
+  lecturer_email: string | null;
   room: string;
   building: string;
   start_time: string;
   end_time: string;
   delivery_mode: string;
+  owner_role: "student" | "teacher";
   published: boolean;
 };

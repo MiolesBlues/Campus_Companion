@@ -1,6 +1,6 @@
 # Campus Companion
 
-Campus Companion is a Next.js web app designed to help students navigate campus life with quick access to events, timetables, locations, support services, and account-based features.
+Campus Companion is a Next.js web app designed to help students and teachers navigate campus life with quick access to events, timetables, locations, support services, and account-based features.
 
 ## Stack
 - Next.js (App Router)
@@ -12,10 +12,12 @@ Campus Companion is a Next.js web app designed to help students navigate campus 
 - Home dashboard with quick links
 - Events page with category filtering and date sorting
 - Timetables page with course and year filtering
+- Automatic student timetable selection based on account profile
+- Teacher timetable support
 - Campus locations directory
 - Helpdesk form with client-side submission feedback
 - Login / signup pages prepared for Supabase Auth
-- Account page with user/admin role visibility
+- Account page with role visibility and editable student profile fields
 - Skip-to-content accessibility link
 
 ## Project Rules
@@ -50,18 +52,32 @@ A starter example is provided in `.env.example`.
 - `helpdesk_tickets`
 - `announcements`
 - row-level security policies
-- two roles: `user` and `admin`
+- three roles: `student`, `teacher`, and `admin`
 - trigger to create a profile automatically when a user signs up
-- large starter seed dataset for events, locations, timetables, and announcements
+- automatic student year-of-study sync based on academic start year
+- editable societies stored as JSON
+- large starter seed dataset for events, locations, student timetables, teacher timetables, and announcements
 
-### Admin access
-Users sign up with the default role `user`.
-To promote someone to admin, update their profile row in Supabase:
+### Roles and access
+- New signups default to `student`
+- Only admins should grant `teacher` or `admin`
+- Teachers can see their own timetable
+- Admins can manage role changes in Supabase
+
+To promote someone to admin:
 
 ```sql
 update public.profiles
 set role = 'admin'
 where email = 'admin@example.com';
+```
+
+To grant teacher access:
+
+```sql
+update public.profiles
+set role = 'teacher'
+where email = 'teacher@example.com';
 ```
 
 ## Getting Started

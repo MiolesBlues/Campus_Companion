@@ -7,10 +7,12 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text unique,
   full_name text not null,
-  role text not null default 'user' check (role in ('user', 'admin')),
+  role text not null default 'student' check (role in ('student', 'teacher', 'admin')),
   student_id text unique,
   course text,
   year_of_study integer check (year_of_study between 1 and 6),
+  start_year integer check (start_year between 2010 and 2100),
+  societies jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -58,17 +60,19 @@ create table if not exists public.timetables (
   id bigserial primary key,
   course_code text not null,
   course_name text not null,
-  year_of_study integer not null check (year_of_study between 1 and 6),
+  year_of_study integer check (year_of_study between 1 and 6),
   semester integer not null check (semester in (1, 2)),
   day_of_week text not null check (day_of_week in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')),
   module_code text not null,
   module_name text not null,
   lecturer_name text not null,
+  lecturer_email text,
   room text not null,
   building text not null,
   start_time time not null,
   end_time time not null,
   delivery_mode text not null default 'In Person' check (delivery_mode in ('In Person', 'Online', 'Hybrid')),
+  owner_role text not null default 'student' check (owner_role in ('student', 'teacher')),
   published boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -99,6 +103,42 @@ create table if not exists public.announcements (
   updated_at timestamptz not null default now()
 );
 
+create or replace function public.calculate_year_of_study(profile_start_year integer)
+returns integer
+language plpgsql
+stable
+as $$
+declare
+  current_year integer := extract(year from now());
+  current_month integer := extract(month from now());
+  calculated_year integer;
+begin
+  if profile_start_year is null then
+    return null;
+  end if;
+
+  if current_month >= 8 then
+    calculated_year := current_year - profile_start_year + 1;
+  else
+    calculated_year := current_year - profile_start_year;
+  end if;
+
+  return greatest(1, calculated_year);
+end;
+$$;
+
+create or replace function public.sync_profile_year_of_study()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.role = 'student' and new.start_year is not null then
+    new.year_of_study := public.calculate_year_of_study(new.start_year);
+  end if;
+  return new;
+end;
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -106,12 +146,16 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name, role)
+  insert into public.profiles (id, email, full_name, role, course, year_of_study, start_year, societies)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data ->> 'role', 'user')
+    coalesce(new.raw_user_meta_data ->> 'role', 'student'),
+    new.raw_user_meta_data ->> 'course',
+    coalesce((new.raw_user_meta_data ->> 'year_of_study')::integer, 1),
+    coalesce((new.raw_user_meta_data ->> 'start_year')::integer, extract(year from now())::integer),
+    coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb)
   )
   on conflict (id) do nothing;
 
@@ -137,6 +181,10 @@ $$;
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at before update on public.profiles
 for each row execute procedure public.set_updated_at();
+
+drop trigger if exists profiles_sync_year on public.profiles;
+create trigger profiles_sync_year before insert or update on public.profiles
+for each row execute procedure public.sync_profile_year_of_study();
 
 drop trigger if exists events_set_updated_at on public.events;
 create trigger events_set_updated_at before update on public.events
@@ -187,7 +235,10 @@ create policy "profiles_update_own_or_admin"
 on public.profiles
 for update
 using (auth.uid() = id or public.is_admin())
-with check (auth.uid() = id or public.is_admin());
+with check (
+  (auth.uid() = id and role = (select role from public.profiles where id = auth.uid()))
+  or public.is_admin()
+);
 
 create policy "profiles_insert_own"
 on public.profiles
@@ -230,7 +281,18 @@ with check (public.is_admin());
 create policy "timetables_read_published"
 on public.timetables
 for select
-using (published = true or public.is_admin());
+using (
+  published = true
+  or public.is_admin()
+  or (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role = 'teacher'
+      and email = public.timetables.lecturer_email
+    )
+  )
+);
 
 create policy "timetables_admin_all"
 on public.timetables
@@ -286,7 +348,8 @@ values
 ('Time Management Workshop', 'Academic', 'Practical planning for assignments and deadlines.', 'T-Main-201', '2026-09-25', '12:00', '13:00', 'all', 75, true),
 ('Cybersecurity Awareness Talk', 'Technology', 'Practical cybersecurity tips for students.', 'T-North-102', '2026-09-26', '13:00', '14:00', 'all', 100, true),
 ('Healthy Eating for Students', 'Wellness', 'Nutrition advice for busy student life.', 'Health Centre', '2026-09-28', '11:30', '12:30', 'all', 50, true),
-('Mock Interview Practice', 'Careers', 'Practice interviews with advisor feedback.', 'Careers Office', '2026-09-29', '15:00', '17:00', 'all', 45, true)
+('Mock Interview Practice', 'Careers', 'Practice interviews with advisor feedback.', 'Careers Office', '2026-09-29', '15:00', '17:00', 'all', 45, true),
+('Societies Showcase Fair', 'Social', 'Meet clubs and societies and sign up for the semester.', 'Student Union Hall', '2026-09-30', '12:00', '15:00', 'all', 180, true)
 on conflict do nothing;
 
 insert into public.locations (name, type, description, building_code, opening_hours, accessibility_notes, contact_email, contact_phone, published)
@@ -305,39 +368,44 @@ values
 ('Student Union Hall', 'Event Space', 'Large hall for festivals, quiz nights, and society events.', 'SUH', 'Mon-Sun 10:00-22:00', 'Accessible entrance and accessible toilets.', 'events@campuscompanion.edu', '+353100000012', true)
 on conflict do nothing;
 
-insert into public.timetables (course_code, course_name, year_of_study, semester, day_of_week, module_code, module_name, lecturer_name, room, building, start_time, end_time, delivery_mode, published)
+insert into public.timetables (course_code, course_name, year_of_study, semester, day_of_week, module_code, module_name, lecturer_name, lecturer_email, room, building, start_time, end_time, delivery_mode, owner_role, published)
 values
-('CS', 'Computer Science', 1, 1, 'Monday', 'CS101', 'Introduction to Programming', 'Dr. Ryan', 'E201', 'Engineering Block', '09:00', '10:30', 'In Person', true),
-('CS', 'Computer Science', 1, 1, 'Monday', 'MA101', 'Discrete Mathematics', 'Prof. Walsh', 'S104', 'Science Centre', '11:00', '12:30', 'In Person', true),
-('CS', 'Computer Science', 1, 1, 'Tuesday', 'CS103', 'Computer Systems', 'Dr. Doyle', 'E105', 'Engineering Block', '10:00', '11:30', 'In Person', true),
-('CS', 'Computer Science', 1, 1, 'Wednesday', 'CS104', 'Web Development Lab', 'Ms. Keane', 'Lab 2', 'Tech Lab', '14:00', '16:00', 'In Person', true),
-('CS', 'Computer Science', 1, 1, 'Thursday', 'CS105', 'Databases Fundamentals', 'Mr. Ahmed', 'I110', 'ICT Building', '13:00', '14:30', 'Hybrid', true),
-('CS', 'Computer Science', 1, 1, 'Friday', 'CS106', 'Professional Skills', 'Ms. Murphy', 'E010', 'Engineering Block', '10:00', '11:00', 'In Person', true),
-('CS', 'Computer Science', 2, 1, 'Monday', 'CS201', 'Data Structures', 'Dr. Byrne', 'E305', 'Engineering Block', '10:00', '11:30', 'In Person', true),
-('CS', 'Computer Science', 2, 1, 'Tuesday', 'CS202', 'Object Oriented Programming', 'Dr. Ryan', 'E302', 'Engineering Block', '09:00', '10:30', 'In Person', true),
-('CS', 'Computer Science', 2, 1, 'Wednesday', 'CS203', 'Database Systems', 'Mr. Ahmed', 'I210', 'ICT Building', '13:00', '14:30', 'Hybrid', true),
-('CS', 'Computer Science', 2, 1, 'Thursday', 'CS204', 'Networks', 'Dr. Kelly', 'N102', 'North Block', '11:00', '12:30', 'In Person', true),
-('CS', 'Computer Science', 2, 1, 'Friday', 'CS205', 'Software Engineering', 'Prof. Walsh', 'E401', 'Engineering Block', '15:00', '16:30', 'In Person', true),
-('BUS', 'Business', 1, 1, 'Monday', 'BU101', 'Principles of Marketing', 'Dr. Murphy', 'B101', 'Business School', '10:00', '11:30', 'In Person', true),
-('BUS', 'Business', 1, 1, 'Tuesday', 'BU102', 'Business Communication', 'Ms. Nolan', 'B203', 'Business School', '09:00', '10:30', 'In Person', true),
-('BUS', 'Business', 1, 1, 'Wednesday', 'BU103', 'Economics for Business', 'Dr. Lane', 'B210', 'Business School', '12:00', '13:30', 'In Person', true),
-('BUS', 'Business', 1, 1, 'Thursday', 'BU104', 'Accounting Basics', 'Mr. O\'Connell', 'B115', 'Business School', '14:00', '15:30', 'In Person', true),
-('BUS', 'Business', 1, 1, 'Friday', 'BU105', 'Business Analytics', 'Ms. Reid', 'B118', 'Business School', '11:00', '12:30', 'Hybrid', true),
-('BUS', 'Business', 2, 1, 'Monday', 'BU201', 'Financial Accounting', 'Mr. O\'Connell', 'B115', 'Business School', '12:00', '13:30', 'In Person', true),
-('BUS', 'Business', 2, 1, 'Tuesday', 'BU202', 'Project Management', 'Dr. Smith', 'H12', 'Innovation Hub', '15:00', '16:30', 'In Person', true),
-('BUS', 'Business', 2, 1, 'Wednesday', 'BU203', 'Organisational Behaviour', 'Dr. Murphy', 'B220', 'Business School', '10:00', '11:30', 'In Person', true),
-('BUS', 'Business', 2, 1, 'Thursday', 'BU204', 'Digital Marketing', 'Ms. Nolan', 'B202', 'Business School', '09:00', '10:30', 'In Person', true),
-('BUS', 'Business', 2, 1, 'Friday', 'BU205', 'Entrepreneurship', 'Dr. Lane', 'IH-03', 'Innovation Hub', '13:00', '14:30', 'Hybrid', true),
-('ENG', 'Engineering', 1, 1, 'Monday', 'EN101', 'Engineering Mathematics', 'Prof. Keating', 'E101', 'Engineering Block', '09:00', '10:30', 'In Person', true),
-('ENG', 'Engineering', 1, 1, 'Tuesday', 'EN102', 'Mechanics', 'Dr. Byrne', 'E204', 'Engineering Block', '11:00', '12:30', 'In Person', true),
-('ENG', 'Engineering', 1, 1, 'Wednesday', 'EN103', 'Materials Science', 'Dr. Shaw', 'S205', 'Science Centre', '14:00', '15:30', 'In Person', true),
-('ENG', 'Engineering', 1, 1, 'Thursday', 'EN104', 'CAD Fundamentals', 'Ms. Nolan', 'Lab 4', 'Engineering Block', '10:00', '12:00', 'In Person', true),
-('ENG', 'Engineering', 1, 1, 'Friday', 'EN105', 'Engineering Design', 'Prof. Keating', 'E301', 'Engineering Block', '13:00', '14:30', 'In Person', true),
-('ENG', 'Engineering', 2, 1, 'Monday', 'EN201', 'Thermodynamics', 'Dr. Shaw', 'E208', 'Engineering Block', '13:00', '14:30', 'In Person', true),
-('ENG', 'Engineering', 2, 1, 'Tuesday', 'EN202', 'Fluid Mechanics', 'Dr. Doyle', 'E210', 'Engineering Block', '09:00', '10:30', 'In Person', true),
-('ENG', 'Engineering', 2, 1, 'Wednesday', 'EN203', 'Electrical Principles', 'Ms. Reid', 'E112', 'Engineering Block', '11:00', '12:30', 'In Person', true),
-('ENG', 'Engineering', 2, 1, 'Thursday', 'EN204', 'Control Systems', 'Dr. Ryan', 'E405', 'Engineering Block', '14:00', '15:30', 'Hybrid', true),
-('ENG', 'Engineering', 2, 1, 'Friday', 'EN205', 'Engineering Project Lab', 'Mr. Ahmed', 'Lab 7', 'Engineering Block', '09:00', '11:00', 'In Person', true)
+('CS', 'Computer Science', 1, 1, 'Monday', 'CS101', 'Introduction to Programming', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E201', 'Engineering Block', '09:00', '10:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 1, 1, 'Monday', 'MA101', 'Discrete Mathematics', 'Prof. Walsh', 'prof.walsh@campuscompanion.edu', 'S104', 'Science Centre', '11:00', '12:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 1, 1, 'Tuesday', 'CS103', 'Computer Systems', 'Dr. Doyle', 'dr.doyle@campuscompanion.edu', 'E105', 'Engineering Block', '10:00', '11:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 1, 1, 'Wednesday', 'CS104', 'Web Development Lab', 'Ms. Keane', 'ms.keane@campuscompanion.edu', 'Lab 2', 'Tech Lab', '14:00', '16:00', 'In Person', 'student', true),
+('CS', 'Computer Science', 1, 1, 'Thursday', 'CS105', 'Databases Fundamentals', 'Mr. Ahmed', 'mr.ahmed@campuscompanion.edu', 'I110', 'ICT Building', '13:00', '14:30', 'Hybrid', 'student', true),
+('CS', 'Computer Science', 1, 1, 'Friday', 'CS106', 'Professional Skills', 'Ms. Murphy', 'ms.murphy@campuscompanion.edu', 'E010', 'Engineering Block', '10:00', '11:00', 'In Person', 'student', true),
+('CS', 'Computer Science', 2, 1, 'Monday', 'CS201', 'Data Structures', 'Dr. Byrne', 'dr.byrne@campuscompanion.edu', 'E305', 'Engineering Block', '10:00', '11:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 2, 1, 'Tuesday', 'CS202', 'Object Oriented Programming', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E302', 'Engineering Block', '09:00', '10:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 2, 1, 'Wednesday', 'CS203', 'Database Systems', 'Mr. Ahmed', 'mr.ahmed@campuscompanion.edu', 'I210', 'ICT Building', '13:00', '14:30', 'Hybrid', 'student', true),
+('CS', 'Computer Science', 2, 1, 'Thursday', 'CS204', 'Networks', 'Dr. Kelly', 'dr.kelly@campuscompanion.edu', 'N102', 'North Block', '11:00', '12:30', 'In Person', 'student', true),
+('CS', 'Computer Science', 2, 1, 'Friday', 'CS205', 'Software Engineering', 'Prof. Walsh', 'prof.walsh@campuscompanion.edu', 'E401', 'Engineering Block', '15:00', '16:30', 'In Person', 'student', true),
+('BUS', 'Business', 1, 1, 'Monday', 'BU101', 'Principles of Marketing', 'Dr. Murphy', 'dr.murphy@campuscompanion.edu', 'B101', 'Business School', '10:00', '11:30', 'In Person', 'student', true),
+('BUS', 'Business', 1, 1, 'Tuesday', 'BU102', 'Business Communication', 'Ms. Nolan', 'ms.nolan@campuscompanion.edu', 'B203', 'Business School', '09:00', '10:30', 'In Person', 'student', true),
+('BUS', 'Business', 1, 1, 'Wednesday', 'BU103', 'Economics for Business', 'Dr. Lane', 'dr.lane@campuscompanion.edu', 'B210', 'Business School', '12:00', '13:30', 'In Person', 'student', true),
+('BUS', 'Business', 1, 1, 'Thursday', 'BU104', 'Accounting Basics', 'Mr. O''Connell', 'mr.oconnell@campuscompanion.edu', 'B115', 'Business School', '14:00', '15:30', 'In Person', 'student', true),
+('BUS', 'Business', 1, 1, 'Friday', 'BU105', 'Business Analytics', 'Ms. Reid', 'ms.reid@campuscompanion.edu', 'B118', 'Business School', '11:00', '12:30', 'Hybrid', 'student', true),
+('BUS', 'Business', 2, 1, 'Monday', 'BU201', 'Financial Accounting', 'Mr. O''Connell', 'mr.oconnell@campuscompanion.edu', 'B115', 'Business School', '12:00', '13:30', 'In Person', 'student', true),
+('BUS', 'Business', 2, 1, 'Tuesday', 'BU202', 'Project Management', 'Dr. Smith', 'dr.smith@campuscompanion.edu', 'H12', 'Innovation Hub', '15:00', '16:30', 'In Person', 'student', true),
+('BUS', 'Business', 2, 1, 'Wednesday', 'BU203', 'Organisational Behaviour', 'Dr. Murphy', 'dr.murphy@campuscompanion.edu', 'B220', 'Business School', '10:00', '11:30', 'In Person', 'student', true),
+('BUS', 'Business', 2, 1, 'Thursday', 'BU204', 'Digital Marketing', 'Ms. Nolan', 'ms.nolan@campuscompanion.edu', 'B202', 'Business School', '09:00', '10:30', 'In Person', 'student', true),
+('BUS', 'Business', 2, 1, 'Friday', 'BU205', 'Entrepreneurship', 'Dr. Lane', 'dr.lane@campuscompanion.edu', 'IH-03', 'Innovation Hub', '13:00', '14:30', 'Hybrid', 'student', true),
+('ENG', 'Engineering', 1, 1, 'Monday', 'EN101', 'Engineering Mathematics', 'Prof. Keating', 'prof.keating@campuscompanion.edu', 'E101', 'Engineering Block', '09:00', '10:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 1, 1, 'Tuesday', 'EN102', 'Mechanics', 'Dr. Byrne', 'dr.byrne@campuscompanion.edu', 'E204', 'Engineering Block', '11:00', '12:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 1, 1, 'Wednesday', 'EN103', 'Materials Science', 'Dr. Shaw', 'dr.shaw@campuscompanion.edu', 'S205', 'Science Centre', '14:00', '15:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 1, 1, 'Thursday', 'EN104', 'CAD Fundamentals', 'Ms. Nolan', 'ms.nolan@campuscompanion.edu', 'Lab 4', 'Engineering Block', '10:00', '12:00', 'In Person', 'student', true),
+('ENG', 'Engineering', 1, 1, 'Friday', 'EN105', 'Engineering Design', 'Prof. Keating', 'prof.keating@campuscompanion.edu', 'E301', 'Engineering Block', '13:00', '14:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 2, 1, 'Monday', 'EN201', 'Thermodynamics', 'Dr. Shaw', 'dr.shaw@campuscompanion.edu', 'E208', 'Engineering Block', '13:00', '14:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 2, 1, 'Tuesday', 'EN202', 'Fluid Mechanics', 'Dr. Doyle', 'dr.doyle@campuscompanion.edu', 'E210', 'Engineering Block', '09:00', '10:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 2, 1, 'Wednesday', 'EN203', 'Electrical Principles', 'Ms. Reid', 'ms.reid@campuscompanion.edu', 'E112', 'Engineering Block', '11:00', '12:30', 'In Person', 'student', true),
+('ENG', 'Engineering', 2, 1, 'Thursday', 'EN204', 'Control Systems', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E405', 'Engineering Block', '14:00', '15:30', 'Hybrid', 'student', true),
+('ENG', 'Engineering', 2, 1, 'Friday', 'EN205', 'Engineering Project Lab', 'Mr. Ahmed', 'mr.ahmed@campuscompanion.edu', 'Lab 7', 'Engineering Block', '09:00', '11:00', 'In Person', 'student', true),
+('STAFF', 'Teacher Timetable', null, 1, 'Monday', 'CS101', 'Introduction to Programming', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E201', 'Engineering Block', '09:00', '10:30', 'In Person', 'teacher', true),
+('STAFF', 'Teacher Timetable', null, 1, 'Tuesday', 'CS202', 'Object Oriented Programming', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E302', 'Engineering Block', '09:00', '10:30', 'In Person', 'teacher', true),
+('STAFF', 'Teacher Timetable', null, 1, 'Thursday', 'EN204', 'Control Systems', 'Dr. Ryan', 'dr.ryan@campuscompanion.edu', 'E405', 'Engineering Block', '14:00', '15:30', 'Hybrid', 'teacher', true),
+('STAFF', 'Teacher Timetable', null, 1, 'Monday', 'MA101', 'Discrete Mathematics', 'Prof. Walsh', 'prof.walsh@campuscompanion.edu', 'S104', 'Science Centre', '11:00', '12:30', 'In Person', 'teacher', true),
+('STAFF', 'Teacher Timetable', null, 1, 'Friday', 'CS205', 'Software Engineering', 'Prof. Walsh', 'prof.walsh@campuscompanion.edu', 'E401', 'Engineering Block', '15:00', '16:30', 'In Person', 'teacher', true)
 on conflict do nothing;
 
 insert into public.announcements (title, body, audience, published)
