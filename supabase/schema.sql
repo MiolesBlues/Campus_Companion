@@ -33,6 +33,14 @@ create table if not exists public.societies (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.society_memberships (
+  id bigserial primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  society_id bigint not null references public.societies(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(user_id, society_id)
+);
+
 create table if not exists public.events (
   id bigserial primary key,
   title text not null,
@@ -55,6 +63,14 @@ create table if not exists public.event_tags (
   event_id bigint not null references public.events(id) on delete cascade,
   tag text not null,
   unique (event_id, tag)
+);
+
+create table if not exists public.event_registrations (
+  id bigserial primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  event_id bigint not null references public.events(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(user_id, event_id)
 );
 
 create table if not exists public.locations (
@@ -121,8 +137,10 @@ create table if not exists public.announcements (
 
 grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.societies to authenticated;
+grant select, insert, delete on public.society_memberships to authenticated;
 grant select, insert, update, delete on public.events to authenticated;
 grant select, insert, update, delete on public.event_tags to authenticated;
+grant select, insert, delete on public.event_registrations to authenticated;
 grant select, insert, update, delete on public.locations to authenticated;
 grant select, insert, update, delete on public.timetables to authenticated;
 grant select, insert, update, delete on public.helpdesk_tickets to authenticated;
@@ -132,7 +150,6 @@ grant select on public.event_tags to anon;
 grant select on public.locations to anon;
 grant select on public.timetables to anon;
 grant select on public.announcements to anon, authenticated;
-
 grant usage, select on all sequences in schema public to anon, authenticated;
 
 create or replace function public.calculate_year_of_study(profile_start_year integer)
@@ -148,13 +165,11 @@ begin
   if profile_start_year is null then
     return null;
   end if;
-
   if current_month >= 8 then
     calculated_year := current_year - profile_start_year + 1;
   else
     calculated_year := current_year - profile_start_year;
   end if;
-
   return greatest(1, calculated_year);
 end;
 $$;
@@ -192,15 +207,12 @@ begin
     coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb)
   )
   on conflict (id) do nothing;
-
   return new;
 end;
 $$;
 
 drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -213,36 +225,21 @@ end;
 $$;
 
 drop trigger if exists profiles_set_updated_at on public.profiles;
-create trigger profiles_set_updated_at before update on public.profiles
-for each row execute procedure public.set_updated_at();
-
+create trigger profiles_set_updated_at before update on public.profiles for each row execute procedure public.set_updated_at();
 drop trigger if exists profiles_sync_year on public.profiles;
-create trigger profiles_sync_year before insert or update on public.profiles
-for each row execute procedure public.sync_profile_year_of_study();
-
+create trigger profiles_sync_year before insert or update on public.profiles for each row execute procedure public.sync_profile_year_of_study();
 drop trigger if exists societies_set_updated_at on public.societies;
-create trigger societies_set_updated_at before update on public.societies
-for each row execute procedure public.set_updated_at();
-
+create trigger societies_set_updated_at before update on public.societies for each row execute procedure public.set_updated_at();
 drop trigger if exists events_set_updated_at on public.events;
-create trigger events_set_updated_at before update on public.events
-for each row execute procedure public.set_updated_at();
-
+create trigger events_set_updated_at before update on public.events for each row execute procedure public.set_updated_at();
 drop trigger if exists locations_set_updated_at on public.locations;
-create trigger locations_set_updated_at before update on public.locations
-for each row execute procedure public.set_updated_at();
-
+create trigger locations_set_updated_at before update on public.locations for each row execute procedure public.set_updated_at();
 drop trigger if exists timetables_set_updated_at on public.timetables;
-create trigger timetables_set_updated_at before update on public.timetables
-for each row execute procedure public.set_updated_at();
-
+create trigger timetables_set_updated_at before update on public.timetables for each row execute procedure public.set_updated_at();
 drop trigger if exists helpdesk_tickets_set_updated_at on public.helpdesk_tickets;
-create trigger helpdesk_tickets_set_updated_at before update on public.helpdesk_tickets
-for each row execute procedure public.set_updated_at();
-
+create trigger helpdesk_tickets_set_updated_at before update on public.helpdesk_tickets for each row execute procedure public.set_updated_at();
 drop trigger if exists announcements_set_updated_at on public.announcements;
-create trigger announcements_set_updated_at before update on public.announcements
-for each row execute procedure public.set_updated_at();
+create trigger announcements_set_updated_at before update on public.announcements for each row execute procedure public.set_updated_at();
 
 create or replace function public.is_admin()
 returns boolean
@@ -250,137 +247,49 @@ language sql
 stable
 as $$
   select exists (
-    select 1
-    from public.profiles
-    where id = auth.uid() and role = 'admin'
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
   );
 $$;
 
 alter table public.profiles enable row level security;
 alter table public.societies enable row level security;
+alter table public.society_memberships enable row level security;
 alter table public.events enable row level security;
 alter table public.event_tags enable row level security;
+alter table public.event_registrations enable row level security;
 alter table public.locations enable row level security;
 alter table public.timetables enable row level security;
 alter table public.helpdesk_tickets enable row level security;
 alter table public.announcements enable row level security;
 
-create policy "profiles_select_own_or_admin"
-on public.profiles
-for select
-using (auth.uid() = id or public.is_admin());
+create policy "profiles_select_own_or_admin" on public.profiles for select using (auth.uid() = id or public.is_admin());
+create policy "profiles_update_own_or_admin" on public.profiles for update using (auth.uid() = id or public.is_admin()) with check ((auth.uid() = id and role = (select role from public.profiles where id = auth.uid())) or public.is_admin());
+create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id or public.is_admin());
 
-create policy "profiles_update_own_or_admin"
-on public.profiles
-for update
-using (auth.uid() = id or public.is_admin())
-with check (
-  (auth.uid() = id and role = (select role from public.profiles where id = auth.uid()))
-  or public.is_admin()
-);
+create policy "societies_read_published" on public.societies for select using (published = true or public.is_admin());
+create policy "societies_admin_all" on public.societies for all using (public.is_admin()) with check (public.is_admin());
+create policy "society_memberships_own_or_admin_select" on public.society_memberships for select using (auth.uid() = user_id or public.is_admin());
+create policy "society_memberships_own_insert" on public.society_memberships for insert with check (auth.uid() = user_id or public.is_admin());
+create policy "society_memberships_own_delete" on public.society_memberships for delete using (auth.uid() = user_id or public.is_admin());
 
-create policy "profiles_insert_own"
-on public.profiles
-for insert
-with check (auth.uid() = id or public.is_admin());
+create policy "events_read_published" on public.events for select using (published = true or public.is_admin());
+create policy "events_admin_all" on public.events for all using (public.is_admin()) with check (public.is_admin());
+create policy "event_tags_read_all" on public.event_tags for select using (true);
+create policy "event_tags_admin_all" on public.event_tags for all using (public.is_admin()) with check (public.is_admin());
+create policy "event_registrations_own_or_admin_select" on public.event_registrations for select using (auth.uid() = user_id or public.is_admin());
+create policy "event_registrations_own_insert" on public.event_registrations for insert with check (auth.uid() = user_id or public.is_admin());
+create policy "event_registrations_own_delete" on public.event_registrations for delete using (auth.uid() = user_id or public.is_admin());
 
-create policy "societies_read_published"
-on public.societies
-for select
-using (published = true or public.is_admin());
-
-create policy "societies_admin_all"
-on public.societies
-for all
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "events_read_published"
-on public.events
-for select
-using (published = true or public.is_admin());
-
-create policy "events_admin_all"
-on public.events
-for all
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "event_tags_read_all"
-on public.event_tags
-for select
-using (true);
-
-create policy "event_tags_admin_all"
-on public.event_tags
-for all
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "locations_read_published"
-on public.locations
-for select
-using (published = true or public.is_admin());
-
-create policy "locations_admin_all"
-on public.locations
-for all
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "timetables_read_published"
-on public.timetables
-for select
-using (
-  published = true
-  or public.is_admin()
-  or (
-    exists (
-      select 1 from public.profiles
-      where id = auth.uid()
-      and role = 'teacher'
-      and email = public.timetables.lecturer_email
-    )
-  )
-);
-
-create policy "timetables_admin_all"
-on public.timetables
-for all
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "tickets_user_read_own_or_admin"
-on public.helpdesk_tickets
-for select
-using (auth.uid() = user_id or public.is_admin());
-
-create policy "tickets_user_insert_own"
-on public.helpdesk_tickets
-for insert
-with check (auth.uid() = user_id or public.is_admin());
-
-create policy "tickets_user_update_own_or_admin"
-on public.helpdesk_tickets
-for update
-using (auth.uid() = user_id or public.is_admin())
-with check (auth.uid() = user_id or public.is_admin());
-
-create policy "tickets_admin_delete"
-on public.helpdesk_tickets
-for delete
-using (public.is_admin());
-
-create policy "announcements_read_published"
-on public.announcements
-for select
-using (published = true or public.is_admin());
-
-create policy "announcements_admin_all"
-on public.announcements
-for all
-using (public.is_admin())
-with check (public.is_admin());
+create policy "locations_read_published" on public.locations for select using (published = true or public.is_admin());
+create policy "locations_admin_all" on public.locations for all using (public.is_admin()) with check (public.is_admin());
+create policy "timetables_read_published" on public.timetables for select using (published = true or public.is_admin() or exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = public.timetables.lecturer_email));
+create policy "timetables_admin_all" on public.timetables for all using (public.is_admin()) with check (public.is_admin());
+create policy "tickets_user_read_own_or_admin" on public.helpdesk_tickets for select using (auth.uid() = user_id or public.is_admin());
+create policy "tickets_user_insert_own" on public.helpdesk_tickets for insert with check (auth.uid() = user_id or public.is_admin());
+create policy "tickets_user_update_own_or_admin" on public.helpdesk_tickets for update using (auth.uid() = user_id or public.is_admin()) with check (auth.uid() = user_id or public.is_admin());
+create policy "tickets_admin_delete" on public.helpdesk_tickets for delete using (public.is_admin());
+create policy "announcements_read_published" on public.announcements for select using (published = true or public.is_admin());
+create policy "announcements_admin_all" on public.announcements for all using (public.is_admin()) with check (public.is_admin());
 
 insert into public.societies (name, category, description, contact_email, meeting_day, published)
 values

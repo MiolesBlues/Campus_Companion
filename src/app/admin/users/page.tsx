@@ -76,12 +76,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search users by name, email, role, or course"
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900"
-        />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users by name, email, role, or course" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900" />
       </div>
 
       <div className="grid gap-4">
@@ -95,42 +90,22 @@ export default function AdminUsersPage() {
                   <h2 className="text-lg font-semibold text-slate-900">{userProfile.full_name}</h2>
                   <p className="text-sm text-slate-500">{userProfile.email}</p>
                   <p className="mt-1 text-sm text-slate-600">Current role: {userProfile.role}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Status: {isMuted ? `Muted until ${userProfile.muted_until}` : "Active"}
-                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Status: {isMuted ? `Muted until ${userProfile.muted_until}` : "Active"}</p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <select
-                    value={userProfile.role}
-                    onChange={(event) => void updateRole(userProfile.id, event.target.value as UserRole)}
-                    className="rounded-xl border border-slate-300 px-4 py-3 text-slate-900"
-                  >
+                  <select value={userProfile.role} onChange={(event) => void updateRole(userProfile.id, event.target.value as UserRole)} className="rounded-xl border border-slate-300 px-4 py-3 text-slate-900">
                     <option value="student">student</option>
                     <option value="teacher">teacher</option>
                     <option value="admin">admin</option>
                   </select>
-
                   {!isMuted ? (
                     <div className="flex flex-wrap gap-2">
                       {muteOptions.map((option) => (
-                        <button
-                          key={option.days}
-                          type="button"
-                          onClick={() => void muteUser(userProfile.id, option.days)}
-                          className="rounded-xl bg-amber-600 px-3 py-2 text-sm font-medium text-white"
-                        >
-                          Mute {option.label}
-                        </button>
+                        <button key={option.days} type="button" onClick={() => void muteUser(userProfile.id, option.days)} className="rounded-xl bg-amber-600 px-3 py-2 text-sm font-medium text-white">Mute {option.label}</button>
                       ))}
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => void clearMute(userProfile.id)}
-                      className="rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white"
-                    >
-                      Unmute
-                    </button>
+                    <button type="button" onClick={() => void clearMute(userProfile.id)} className="rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white">Unmute</button>
                   )}
                 </div>
               </div>

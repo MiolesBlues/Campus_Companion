@@ -15,6 +15,13 @@ export type Society = {
   published: boolean;
 };
 
+export type SocietyJoinRecord = {
+  id: number;
+  user_id: string;
+  society_id: number;
+  created_at: string;
+};
+
 export type Profile = {
   id: string;
   email: string | null;
@@ -35,6 +42,13 @@ export type EventTagRecord = {
   id: number;
   event_id: number;
   tag: string;
+};
+
+export type EventRegistrationRecord = {
+  id: number;
+  user_id: string;
+  event_id: number;
+  created_at: string;
 };
 
 export type EventRecord = {

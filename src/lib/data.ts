@@ -3,7 +3,18 @@ import { fallbackSocieties } from "@/lib/societies";
 import fallbackEvents from "@/data/events.json";
 import fallbackLocations from "@/data/locations.json";
 import fallbackTimetables from "@/data/timetables.json";
-import type { EventRecord, EventTagRecord, EventWithTags, HelpdeskTicketRecord, LocationRecord, Society, TimetableRecord } from "@/types/database";
+import type {
+  EventRecord,
+  EventRegistrationRecord,
+  EventTagRecord,
+  EventWithTags,
+  HelpdeskTicketRecord,
+  LocationRecord,
+  Profile,
+  Society,
+  SocietyJoinRecord,
+  TimetableRecord,
+} from "@/types/database";
 
 type FallbackEvent = {
   id: number;
@@ -43,32 +54,42 @@ const locationFallback = fallbackLocations as FallbackLocation[];
 const timetableFallback = fallbackTimetables as FallbackTimetable[];
 
 function mapFallbackEvents(): EventWithTags[] {
-  return eventFallback.map((event) => ({
-    id: event.id,
-    title: event.title,
-    category: event.category,
-    description: event.description,
-    location: event.location,
-    event_date: event.date,
-    start_time: event.time,
-    end_time: event.time,
-    audience: "all",
-    capacity: null,
-    published: true,
-    tags: event.tags,
-  }));
+  const today = new Date().toISOString().slice(0, 10);
+  return eventFallback
+    .map((event) => ({
+      id: event.id,
+      title: event.title,
+      category: event.category,
+      description: event.description,
+      location: event.location,
+      event_date: event.date,
+      start_time: event.time,
+      end_time: event.time,
+      audience: "all",
+      capacity: null,
+      published: true,
+      tags: event.tags,
+    }))
+    .filter((event) => event.event_date >= today);
 }
 
 export async function getEvents() {
   const supabase = getSupabaseClient();
+  const today = new Date().toISOString().slice(0, 10);
 
   if (!supabase) {
     return mapFallbackEvents();
   }
 
   const [{ data: events, error: eventsError }, { data: tags, error: tagsError }] = await Promise.all([
-    supabase.from("events").select("*").eq("published", true).order("event_date", { ascending: true }).order("start_time", { ascending: true }),
-    supabase.from("event_tags").select("*")
+    supabase
+      .from("events")
+      .select("*")
+      .eq("published", true)
+      .gte("event_date", today)
+      .order("event_date", { ascending: true })
+      .order("start_time", { ascending: true }),
+    supabase.from("event_tags").select("*"),
   ]);
 
   if (eventsError || !events || tagsError || !tags) {
@@ -83,7 +104,10 @@ export async function getEvents() {
     tagsByEvent.set(tag.event_id, current);
   });
 
-  return (events as EventRecord[]).map((event) => ({ ...event, tags: tagsByEvent.get(event.id) ?? [] }));
+  return (events as EventRecord[]).map((event) => ({
+    ...event,
+    tags: tagsByEvent.get(event.id) ?? [],
+  }));
 }
 
 export async function getLocations() {
@@ -132,7 +156,12 @@ export async function getTimetables() {
     })) as TimetableRecord[];
   }
 
-  const { data, error } = await supabase.from("timetables").select("*").eq("published", true).order("day_of_week", { ascending: true }).order("start_time", { ascending: true });
+  const { data, error } = await supabase
+    .from("timetables")
+    .select("*")
+    .eq("published", true)
+    .order("day_of_week", { ascending: true })
+    .order("start_time", { ascending: true });
 
   if (error || !data) {
     console.error("Failed to load timetables", error);
@@ -167,7 +196,11 @@ export async function getSocietiesList() {
     return fallbackSocieties;
   }
 
-  const { data, error } = await supabase.from("societies").select("*").eq("published", true).order("name", { ascending: true });
+  const { data, error } = await supabase
+    .from("societies")
+    .select("*")
+    .eq("published", true)
+    .order("name", { ascending: true });
 
   if (error || !data) {
     console.error("Failed to load societies list", error);
@@ -183,7 +216,7 @@ export async function getProfilesList() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, course, year_of_study, start_year, avatar_url, societies, created_at, updated_at, student_id")
+    .select("id, email, full_name, role, course, year_of_study, start_year, avatar_url, muted_until, societies, created_at, updated_at, student_id")
     .order("full_name", { ascending: true });
 
   if (error || !data) {
@@ -191,7 +224,7 @@ export async function getProfilesList() {
     return [];
   }
 
-  return data;
+  return data as Profile[];
 }
 
 export async function getHelpdeskTickets() {
@@ -209,4 +242,38 @@ export async function getHelpdeskTickets() {
   }
 
   return data as HelpdeskTicketRecord[];
+}
+
+export async function getUserSocietyMemberships(userId: string) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("society_memberships")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (error || !data) {
+    console.error("Failed to load society memberships", error);
+    return [];
+  }
+
+  return data as SocietyJoinRecord[];
+}
+
+export async function getUserEventRegistrations(userId: string) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("event_registrations")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (error || !data) {
+    console.error("Failed to load event registrations", error);
+    return [];
+  }
+
+  return data as EventRegistrationRecord[];
 }
