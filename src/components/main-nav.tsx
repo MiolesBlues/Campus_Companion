@@ -19,7 +19,6 @@ export function MainNav() {
 
   if (!loading && !user) {
     navLinks.push({ href: "/login", label: "Log in" });
-    navLinks.push({ href: "/signup", label: "Sign up" });
   }
 
   if (user) {
