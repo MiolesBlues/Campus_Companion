@@ -1,13 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import events from "@/data/events.json";
-
-const categories = ["All", ...new Set(events.map((event) => event.category))];
+import { useEffect, useMemo, useState } from "react";
+import { getEvents } from "@/lib/data";
+import type { EventRecord } from "@/types/database";
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<EventRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      const data = await getEvents();
+      setEvents(data);
+    };
+
+    void loadEvents();
+  }, []);
+
+  const categories = useMemo(
+    () => ["All", ...new Set(events.map((event) => event.category))],
+    [events]
+  );
 
   const filteredEvents = useMemo(() => {
     let result =
@@ -16,15 +30,18 @@ export default function EventsPage() {
         : events.filter((event) => event.category === selectedCategory);
 
     result = [...result].sort((a, b) => {
+      const aValue = `${a.event_date} ${a.start_time}`;
+      const bValue = `${b.event_date} ${b.start_time}`;
+
       if (sortOrder === "asc") {
-        return a.date < b.date ? -1 : 1;
+        return aValue < bValue ? -1 : 1;
       }
 
-      return a.date > b.date ? -1 : 1;
+      return aValue > bValue ? -1 : 1;
     });
 
     return result;
-  }, [selectedCategory, sortOrder]);
+  }, [events, selectedCategory, sortOrder]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -42,10 +59,7 @@ export default function EventsPage() {
 
       <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 sm:p-6">
         <div>
-          <label
-            htmlFor="event-category"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="event-category" className="mb-2 block text-sm font-medium text-slate-700">
             Filter by category
           </label>
           <select
@@ -63,10 +77,7 @@ export default function EventsPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="sort-order"
-            className="mb-2 block text-sm font-medium text-slate-700"
-          >
+          <label htmlFor="sort-order" className="mb-2 block text-sm font-medium text-slate-700">
             Sort by date
           </label>
           <select
@@ -83,38 +94,20 @@ export default function EventsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredEvents.map((event) => (
-          <article
-            key={event.id}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
-          >
+          <article key={event.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
               {event.category}
             </span>
 
-            <h2 className="mt-4 text-xl font-semibold text-slate-900">
-              {event.title}
-            </h2>
+            <h2 className="mt-4 text-xl font-semibold text-slate-900">{event.title}</h2>
 
             <p className="mt-2 text-sm text-slate-500">
-              {event.date} • {event.time}
+              {event.event_date} • {event.start_time}
             </p>
 
             <p className="mt-1 text-sm text-slate-500">{event.location}</p>
 
-            <p className="mt-4 text-sm text-slate-600 sm:text-base">
-              {event.description}
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {event.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            <p className="mt-4 text-sm text-slate-600 sm:text-base">{event.description}</p>
           </article>
         ))}
       </div>

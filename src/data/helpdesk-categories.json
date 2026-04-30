@@ -1,8 +1,10 @@
 [
-  "Wi-Fi Issue",
-  "Library Access Problem",
-  "Room Access Issue",
-  "Student ID Card Problem",
-  "Timetable Question",
-  "IT Support Request"
+  "IT Support",
+  "Account Access",
+  "Timetable Issue",
+  "Course Registration",
+  "Campus Facilities",
+  "Student Services",
+  "Library Support",
+  "Other"
 ]

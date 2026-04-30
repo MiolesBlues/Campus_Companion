@@ -1,33 +1,43 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import timetables from "@/data/timetables.json";
 import { useAuth } from "@/components/auth-provider";
+import { getTimetables } from "@/lib/data";
 import { getEffectiveYearOfStudy } from "@/lib/profile";
+import type { TimetableRecord } from "@/types/database";
 
-type TimetableEntry = {
-  id: number;
-  course: string;
-  year: string;
-  day: string;
-  module: string;
-  time: string;
-  location: string;
-  lecturer: string;
-  role?: "student" | "teacher";
-  lecturerEmail?: string;
-};
-
-const entries = timetables as TimetableEntry[];
-const courses = ["All", ...new Set(entries.filter((entry) => (entry.role ?? "student") === "student").map((entry) => entry.course))];
-const years = ["All", ...new Set(entries.filter((entry) => (entry.role ?? "student") === "student").map((entry) => entry.year))];
 const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export default function TimetablesPage() {
   const { profile, user } = useAuth();
+  const [entries, setEntries] = useState<TimetableRecord[]>([]);
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
   const effectiveYear = getEffectiveYearOfStudy(profile);
+
+  useEffect(() => {
+    const loadTimetables = async () => {
+      const data = await getTimetables();
+      setEntries(data);
+    };
+
+    void loadTimetables();
+  }, []);
+
+  const studentEntries = useMemo(
+    () => entries.filter((entry) => entry.owner_role === "student"),
+    [entries]
+  );
+
+  const courses = useMemo(
+    () => ["All", ...new Set(studentEntries.map((entry) => entry.course_name))],
+    [studentEntries]
+  );
+
+  const years = useMemo(
+    () => ["All", ...new Set(studentEntries.map((entry) => `Year ${entry.year_of_study}`))],
+    [studentEntries]
+  );
 
   useEffect(() => {
     if (profile?.role === "student") {
@@ -43,31 +53,24 @@ export default function TimetablesPage() {
   const filteredEntries = useMemo(() => {
     if (profile?.role === "teacher") {
       return entries
-        .filter((entry) => (entry.role ?? "student") === "teacher")
-        .filter((entry) => !user?.email || entry.lecturerEmail === user.email)
+        .filter((entry) => entry.owner_role === "teacher")
+        .filter((entry) => !user?.email || entry.lecturer_email === user.email)
         .sort((a, b) => {
-          const dayDifference = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
-          if (dayDifference !== 0) {
-            return dayDifference;
-          }
-
-          return a.time.localeCompare(b.time);
+          const dayDifference = daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week);
+          if (dayDifference !== 0) return dayDifference;
+          return a.start_time.localeCompare(b.start_time);
         });
     }
 
-    return entries
-      .filter((entry) => (entry.role ?? "student") === "student")
-      .filter((entry) => (selectedCourse === "All" ? true : entry.course === selectedCourse))
-      .filter((entry) => (selectedYear === "All" ? true : entry.year === selectedYear))
+    return studentEntries
+      .filter((entry) => (selectedCourse === "All" ? true : entry.course_name === selectedCourse))
+      .filter((entry) => (selectedYear === "All" ? true : `Year ${entry.year_of_study}` === selectedYear))
       .sort((a, b) => {
-        const dayDifference = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
-        if (dayDifference !== 0) {
-          return dayDifference;
-        }
-
-        return a.time.localeCompare(b.time);
+        const dayDifference = daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week);
+        if (dayDifference !== 0) return dayDifference;
+        return a.start_time.localeCompare(b.start_time);
       });
-  }, [profile?.role, selectedCourse, selectedYear, user?.email]);
+  }, [entries, profile?.role, selectedCourse, selectedYear, studentEntries, user?.email]);
 
   return (
     <section className="space-y-8">
@@ -144,13 +147,13 @@ export default function TimetablesPage() {
             <tbody>
               {filteredEntries.map((entry, index) => (
                 <tr key={entry.id} className={index % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.day}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.time}</td>
-                  <td className="px-4 py-4 text-sm font-medium text-slate-900">{entry.module}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.course}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.year}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.location}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700">{entry.lecturer}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.day_of_week}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.start_time} - {entry.end_time}</td>
+                  <td className="px-4 py-4 text-sm font-medium text-slate-900">{entry.module_name}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.course_name}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.year_of_study ? `Year ${entry.year_of_study}` : "Staff"}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.building}, {entry.room}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700">{entry.lecturer_name}</td>
                 </tr>
               ))}
             </tbody>
