@@ -36,11 +36,12 @@ export function AuthStatus() {
       {profile?.role === "admin" && (
         <Link
           href="/admin"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-base text-slate-900 transition hover:bg-slate-50"
+          className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
           title="Settings"
           aria-label="Settings"
         >
-          ⚙️
+          <span className="text-sm">⚙</span>
+          <span>Settings</span>
         </Link>
       )}
 
