@@ -119,7 +119,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
 
     setLoading(false);
-    router.push("/account");
+    router.push("/");
     router.refresh();
   };
 
