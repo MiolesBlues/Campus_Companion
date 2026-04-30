@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { AdminModal } from "@/components/admin/admin-modal";
+import { AdminSearch } from "@/components/admin/admin-search";
 import { getEvents } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
@@ -150,9 +152,7 @@ export default function AdminEventsPage() {
         <button type="button" onClick={openCreateModal} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search events by title, category, location, description, or tags" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900" />
-      </div>
+      <AdminSearch value={search} onChange={setSearch} placeholder="Search events by title, category, location, description, or tags" />
 
       {message && <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">{message}</div>}
 
@@ -176,7 +176,21 @@ export default function AdminEventsPage() {
         ))}
       </div>
 
-      {isModalOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"><div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"><div className="mb-5 flex items-start justify-between gap-4"><div><h2 className="text-2xl font-bold text-slate-900">{editingId ? "Edit Event" : "Add Event"}</h2><p className="mt-1 text-sm text-slate-600">Fill in the details below and save the event.</p></div><button type="button" onClick={resetForm} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">Close</button></div><form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}><input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} placeholder="Event title" className="rounded-xl border border-slate-300 px-4 py-3" required /><input value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} placeholder="Category" className="rounded-xl border border-slate-300 px-4 py-3" required /><input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder="Location" className="rounded-xl border border-slate-300 px-4 py-3" required /><input type="date" value={form.eventDate} onChange={(e) => setForm((current) => ({ ...current, eventDate: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required /><input type="time" value={form.startTime} onChange={(e) => setForm((current) => ({ ...current, startTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required /><input type="time" value={form.endTime} onChange={(e) => setForm((current) => ({ ...current, endTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required /><input value={form.tags} onChange={(e) => setForm((current) => ({ ...current, tags: e.target.value }))} placeholder="Tags comma separated" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" /><textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} placeholder="Description" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" rows={5} required /><div className="flex gap-3 md:col-span-2"><button type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-white">{editingId ? "Update event" : "Create event"}</button><button type="button" onClick={resetForm} className="rounded-xl border border-slate-300 px-5 py-3 text-slate-900">Cancel</button></div></form></div></div>}
+      {isModalOpen && (
+        <AdminModal title={editingId ? "Edit Event" : "Add Event"} description="Fill in the details below and save the event." onClose={resetForm}>
+          <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+            <input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} placeholder="Event title" className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} placeholder="Category" className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder="Location" className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input type="date" value={form.eventDate} onChange={(e) => setForm((current) => ({ ...current, eventDate: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input type="time" value={form.startTime} onChange={(e) => setForm((current) => ({ ...current, startTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input type="time" value={form.endTime} onChange={(e) => setForm((current) => ({ ...current, endTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <input value={form.tags} onChange={(e) => setForm((current) => ({ ...current, tags: e.target.value }))} placeholder="Tags comma separated" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" />
+            <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} placeholder="Description" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" rows={5} required />
+            <div className="flex gap-3 md:col-span-2"><button type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-white">{editingId ? "Update event" : "Create event"}</button><button type="button" onClick={resetForm} className="rounded-xl border border-slate-300 px-5 py-3 text-slate-900">Cancel</button></div>
+          </form>
+        </AdminModal>
+      )}
     </section>
   );
 }

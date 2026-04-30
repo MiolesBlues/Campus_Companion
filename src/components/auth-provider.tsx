@@ -20,6 +20,7 @@ type AuthContextValue = {
   isConfigured: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  isBanned: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -85,6 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setProfile(profileData);
         }
+
+        if (profileData?.banned) {
+          await supabase.auth.signOut();
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setProfile(profileData);
+          }
+        }
       } else if (mounted) {
         setProfile(null);
       }
@@ -140,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       loading,
       isConfigured: configured,
+      isBanned: Boolean(profile?.banned),
       signOut: async () => {
         const supabase = getSupabaseClient();
         if (!supabase) {
