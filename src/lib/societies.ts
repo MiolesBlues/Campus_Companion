@@ -27,7 +27,12 @@ export async function getSocieties() {
       .order("name", { ascending: true });
 
     if (error || !data) {
-      console.error("Failed to load societies", error);
+      console.error("Failed to load societies", {
+        code: error?.code,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+      });
       return fallbackSocieties;
     }
 

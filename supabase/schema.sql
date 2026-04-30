@@ -3,6 +3,8 @@
 
 create extension if not exists pgcrypto;
 
+grant usage on schema public to anon, authenticated;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text unique,
@@ -114,6 +116,17 @@ create table if not exists public.announcements (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+grant select, insert, update on public.profiles to authenticated;
+grant select on public.societies to anon, authenticated;
+grant select on public.events to anon, authenticated;
+grant select on public.event_tags to anon, authenticated;
+grant select on public.locations to anon, authenticated;
+grant select on public.timetables to anon, authenticated;
+grant select, insert, update on public.helpdesk_tickets to authenticated;
+grant select on public.announcements to anon, authenticated;
+
+grant usage, select on all sequences in schema public to anon, authenticated;
 
 create or replace function public.calculate_year_of_study(profile_start_year integer)
 returns integer
