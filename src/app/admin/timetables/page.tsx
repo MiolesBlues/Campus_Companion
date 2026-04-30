@@ -30,6 +30,7 @@ export default function AdminTimetablesPage() {
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadTimetables = async () => {
     const data = await getTimetables();
@@ -41,12 +42,28 @@ export default function AdminTimetablesPage() {
   }, []);
 
   if (!profile || (profile.role !== "admin" && profile.role !== "teacher")) {
-    return <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm">Teacher or admin access only.</section>;
+    return (
+      <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm">
+        Teacher or admin access only.
+      </section>
+    );
   }
 
   const resetForm = () => {
     setForm(initialForm);
     setEditingId(null);
+    setIsModalOpen(false);
+  };
+
+  const openCreateModal = () => {
+    setMessage(null);
+    setForm({
+      ...initialForm,
+      lecturer_email: profile.role === "teacher" ? user?.email ?? "" : "",
+      owner_role: profile.role === "teacher" ? "teacher" : "student",
+    });
+    setEditingId(null);
+    setIsModalOpen(true);
   };
 
   const canManageEntry = (entry: TimetableRecord) => {
@@ -71,13 +88,21 @@ export default function AdminTimetablesPage() {
 
     if (profile.role === "teacher") {
       payload.lecturer_email = user?.email ?? form.lecturer_email;
+      payload.owner_role = "teacher";
     }
 
     const response = editingId
       ? await supabase.from("timetables").update(payload).eq("id", editingId)
       : await supabase.from("timetables").insert(payload);
 
-    setMessage(response.error ? response.error.message : editingId ? "Timetable entry updated." : "Timetable entry created.");
+    setMessage(
+      response.error
+        ? response.error.message
+        : editingId
+          ? "Timetable entry updated."
+          : "Timetable entry created."
+    );
+
     if (!response.error) {
       resetForm();
       await loadTimetables();
@@ -107,6 +132,8 @@ export default function AdminTimetablesPage() {
       delivery_mode: entry.delivery_mode,
       owner_role: entry.owner_role,
     });
+    setMessage(null);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number, entry: TimetableRecord) => {
@@ -129,37 +156,30 @@ export default function AdminTimetablesPage() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Manage Timetables</h1>
-        <p className="mt-2 text-slate-600">Add, edit, and delete student or teacher timetable entries.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Manage Timetables</h1>
+          <p className="mt-2 text-slate-600">
+            View, edit, and delete student or teacher timetable entries.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm transition hover:bg-slate-700"
+          aria-label="Add timetable entry"
+          title="Add timetable entry"
+        >
+          +
+        </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-          {Object.entries(form).map(([key, value]) => (
-            <input
-              key={key}
-              value={value}
-              onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
-              placeholder={key.replaceAll("_", " ")}
-              className="rounded-xl border border-slate-300 px-4 py-3"
-              required={!['lecturer_email'].includes(key)}
-              disabled={profile.role === "teacher" && ["owner_role", "lecturer_email"].includes(key)}
-            />
-          ))}
-          <div className="flex gap-3 md:col-span-2">
-            <button type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-white">
-              {editingId ? "Update timetable entry" : "Create timetable entry"}
-            </button>
-            {editingId && (
-              <button type="button" onClick={resetForm} className="rounded-xl border border-slate-300 px-5 py-3 text-slate-900">
-                Cancel edit
-              </button>
-            )}
-          </div>
-        </form>
-        {message && <p className="mt-4 text-sm text-slate-600">{message}</p>}
-      </div>
+      {message && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
+          {message}
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -182,8 +202,22 @@ export default function AdminTimetablesPage() {
                   <td className="px-4 py-4 text-sm text-slate-700">{entry.lecturer_name}</td>
                   <td className="px-4 py-4 text-sm text-slate-700">
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => handleEdit(entry)} disabled={!canManageEntry(entry)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:opacity-50">Edit</button>
-                      <button type="button" onClick={() => void handleDelete(entry.id, entry)} disabled={!canManageEntry(entry)} className="rounded-xl bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50">Delete</button>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(entry)}
+                        disabled={!canManageEntry(entry)}
+                        className="rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:opacity-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(entry.id, entry)}
+                        disabled={!canManageEntry(entry)}
+                        className="rounded-xl bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -192,6 +226,56 @@ export default function AdminTimetablesPage() {
           </table>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {editingId ? "Edit Timetable Entry" : "Add Timetable Entry"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Fill in the timetable details below and save the entry.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
+
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+              {Object.entries(form).map(([key, value]) => (
+                <input
+                  key={key}
+                  value={value}
+                  onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
+                  placeholder={key.replaceAll("_", " ")}
+                  className="rounded-xl border border-slate-300 px-4 py-3"
+                  required={!['lecturer_email'].includes(key)}
+                  disabled={profile.role === "teacher" && ["owner_role", "lecturer_email"].includes(key)}
+                />
+              ))}
+              <div className="flex gap-3 md:col-span-2">
+                <button type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-white">
+                  {editingId ? "Update timetable entry" : "Create timetable entry"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="rounded-xl border border-slate-300 px-5 py-3 text-slate-900"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
