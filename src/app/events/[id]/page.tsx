@@ -1,10 +1,3 @@
-/**
- * src/app/events/[id]/page.tsx
- *
- * Individual event detail page.
- * Shows full event info + "Similar Events" section powered by TF-IDF recommender.
- */
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSimilarEvents, type Event } from "@/lib/ml/recommender";
@@ -14,14 +7,12 @@ const allEvents: Event[] = (
   eventsData as Array<Omit<Event, "id"> & { id: number | string }>
 ).map((e) => ({ ...e, id: String(e.id), tags: e.tags ?? [] }));
 
-// ---------------------------------------------------------------------------
-// Static params (pre-render all event pages at build time)
-// ---------------------------------------------------------------------------
-
 export function generateStaticParams() {
   return allEvents.map((e) => ({ id: e.id }));
 }
 
+<<<<<<< HEAD
+=======
 // ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
@@ -101,6 +92,7 @@ function SimilarEventCard({ event, score }: { event: Event; score: number }) {
 // Date formatter
 // ---------------------------------------------------------------------------
 
+>>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-IE", {
@@ -111,23 +103,47 @@ function formatDate(dateStr: string): string {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Page component
-// ---------------------------------------------------------------------------
-
 export default async function EventDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const event = allEvents.find((e) => e.id === id);
+  const event = allEvents.find((e) => e.id === params.id);
 
   if (!event) notFound();
 
   const similar = getSimilarEvents(event.id, allEvents, 3);
 
   return (
+<<<<<<< HEAD
+    <main className="p-6">
+      <h1 className="text-2xl font-bold">{event.title}</h1>
+      <p>{formatDate(event.date)}</p>
+      <p>{event.time}</p>
+      <p>{event.location}</p>
+      <p className="mt-4">{event.description}</p>
+
+      <h2 className="mt-8 text-xl font-semibold">Similar Events</h2>
+
+      <ul className="mt-4 space-y-2">
+        {similar.map((item: any) => {
+          const simEvt = item.event ?? item;
+
+          return (
+            <li key={simEvt.id}>
+              <Link href={`/events/${simEvt.id}`} className="text-blue-600 underline">
+                {simEvt.title} ({simEvt.category})
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="mt-6">
+        <Link href="/events" className="text-blue-600 underline">
+          ← Back to events
+        </Link>
+=======
     <section className="min-h-[100dvh] bg-[#F7F6F3]">
       {/* ── Header / nav ─────────────────────────────────────────── */}
       <header className="bg-white border-b border-[#EAEAEA]">
@@ -254,6 +270,7 @@ export default async function EventDetailPage({
             Back to all events
           </Link>
         </div>
+>>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
       </div>
     </section>
   );
