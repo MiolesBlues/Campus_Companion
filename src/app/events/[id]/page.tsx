@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { getSimilarEvents, type Event } from "@/lib/ml/recommender";
 import eventsData from "@/data/events.json";
 
+export const dynamicParams = false;
+
 const allEvents: Event[] = (
   eventsData as Array<Omit<Event, "id"> & { id: number | string }>
 ).map((e) => ({ ...e, id: String(e.id), tags: e.tags ?? [] }));
 
 export function generateStaticParams() {
-  return allEvents.map((e) => ({ id: e.id }));
+  return allEvents.map((e) => ({ id: String(e.id) }));
 }
 
 export function generateMetadata({
