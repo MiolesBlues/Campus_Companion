@@ -31,7 +31,7 @@ export function MainNav() {
   }
 
   return (
-    <div className="grid w-full grid-cols-2 gap-1.5 rounded-xl border border-[#EAEAEA] bg-[#F7F6F3] p-1.5 sm:grid-cols-4 lg:grid-cols-8">
+    <div className="grid w-full grid-cols-2 gap-1.5 rounded-xl border border-[#EAEAEA] bg-[#F7F6F3] p-1.5 sm:grid-cols-4 lg:grid-cols-7">
       {navLinks.map((link) => {
         const active = pathname === link.href;
         return (
