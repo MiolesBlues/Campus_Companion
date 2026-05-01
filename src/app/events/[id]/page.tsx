@@ -11,13 +11,12 @@ export function generateStaticParams() {
   return allEvents.map((e) => ({ id: e.id }));
 }
 
-export async function generateMetadata({
+export function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const event = allEvents.find((e) => e.id === id);
+  const event = allEvents.find((e) => e.id === params.id);
   if (!event) return { title: "Event Not Found" };
   return {
     title: `${event.title} | Campus Companion`,
@@ -86,13 +85,12 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default async function EventDetailPage({
+export default function EventDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const event = allEvents.find((e) => e.id === id);
+  const event = allEvents.find((e) => e.id === params.id);
 
   if (!event) notFound();
 
