@@ -216,6 +216,10 @@ security definer
 set search_path = public
 as $$
 begin
+  if pg_trigger_depth() > 1 then
+    return new;
+  end if;
+
   delete from public.society_memberships where user_id = new.id;
 
   insert into public.society_memberships (user_id, society_id)
