@@ -85,10 +85,14 @@ export default function AdminTimetablesPage() {
 
   const openCreateModal = () => {
     setMessage(null);
+    const defaultOwnerRole = profile.role === "teacher" ? "teacher" : "student";
     setForm({
       ...initialForm,
+      owner_role: defaultOwnerRole,
+      course_code: defaultOwnerRole === "teacher" ? teacherCourseCode : initialForm.course_code,
+      course_name: defaultOwnerRole === "teacher" ? teacherCourseName : initialForm.course_name,
+      year_of_study: defaultOwnerRole === "teacher" ? "1" : initialForm.year_of_study,
       lecturer_email: profile.role === "teacher" ? (user?.email ?? "") : "",
-      owner_role: profile.role === "teacher" ? "teacher" : "student",
     });
     setEditingId(null);
     setIsModalOpen(true);
@@ -381,17 +385,18 @@ export default function AdminTimetablesPage() {
               />
               <select
                 value={form.owner_role}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextRole = e.target.value;
                   setForm((current) => ({
                     ...current,
-                    owner_role: e.target.value,
+                    owner_role: nextRole,
                     course_code:
-                      e.target.value === "teacher" ? teacherCourseCode : current.course_code,
+                      nextRole === "teacher" ? teacherCourseCode : current.course_code === teacherCourseCode ? initialForm.course_code : current.course_code,
                     course_name:
-                      e.target.value === "teacher" ? teacherCourseName : current.course_name,
-                    year_of_study: e.target.value === "teacher" ? "1" : current.year_of_study,
-                  }))
-                }
+                      nextRole === "teacher" ? teacherCourseName : current.course_name === teacherCourseName ? initialForm.course_name : current.course_name,
+                    year_of_study: nextRole === "teacher" ? "1" : current.year_of_study,
+                  }));
+                }}
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
                 disabled={profile.role === "teacher"}
               >

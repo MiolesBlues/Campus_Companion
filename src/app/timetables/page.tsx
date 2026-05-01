@@ -351,13 +351,9 @@ export default function TimetablesPage() {
                     {entry.module_name}
                   </h2>
                   <p className="mt-1 text-sm text-[#64615C]">
-                    {entry.course_name}
-                    {entry.year_of_study
-                      ? ` · Year ${entry.year_of_study}`
-                      : ""}
-                    {extractGroup(entry) !== "All"
-                      ? ` · ${extractGroup(entry)}`
-                      : ""}
+                    {entry.owner_role === "teacher"
+                      ? "Teacher timetable"
+                      : `${entry.course_name}${entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}${extractGroup(entry) !== "All" ? ` · ${extractGroup(entry)}` : ""}`}
                   </p>
                   <p className="mt-1 text-sm text-[#64615C]">
                     {entry.building}, {entry.room}
