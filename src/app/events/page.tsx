@@ -1,109 +1,365 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import eventsData from "@/data/events.json";
-import type { Event } from "@/lib/ml/recommender";
-
-const allEvents = eventsData as Event[];
-
-const CATEGORIES = ["All", ...Array.from(new Set(allEvents.map((e) => e.category))).sort()];
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-IE", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { getEvents, getUserEventRegistrations } from "@/lib/data";
+import { downloadEventIcs } from "@/lib/ics";
+import { eventRecommendationScore } from "@/lib/preferences";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import type { EventWithTags } from "@/types/database";
 
 export default function EventsPage() {
+  const { user, profile } = useAuth();
+  const [events, setEvents] = useState<EventWithTags[]>([]);
+  const [registrations, setRegistrations] = useState<number[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [showIcsHelp, setShowIcsHelp] = useState(true);
+  const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedCampus, setSelectedCampus] = useState("All");
+  const [sortOrder, setSortOrder] = useState("recommended");
 
-  const displayedEvents = useMemo(() => {
-    const filtered =
+  useEffect(() => {
+    const loadEvents = async () => {
+      const data = await getEvents();
+      setEvents(data);
+    };
+
+    void loadEvents();
+  }, []);
+
+  useEffect(() => {
+    const loadRegistrations = async () => {
+      if (!user) {
+        setRegistrations([]);
+        return;
+      }
+
+      const data = await getUserEventRegistrations(user.id);
+      setRegistrations(data.map((item) => item.event_id));
+    };
+
+    void loadRegistrations();
+  }, [user]);
+
+  const categories = useMemo(
+    () => ["All", ...new Set(events.map((event) => event.category))],
+    [events],
+  );
+
+  const campuses = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        events.map((event) => event.campus).filter(Boolean) as string[],
+      ),
+    ],
+    [events],
+  );
+
+  const scoreByEventId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const event of events) {
+      map.set(
+        event.id,
+        eventRecommendationScore(
+          event,
+          profile?.campus,
+          profile?.interests,
+          profile?.preferred_event_categories,
+        ),
+      );
+    }
+    return map;
+  }, [
+    events,
+    profile?.campus,
+    profile?.interests,
+    profile?.preferred_event_categories,
+  ]);
+
+  const filteredEvents = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    let result =
       selectedCategory === "All"
-        ? allEvents
-        : allEvents.filter((e) => e.category === selectedCategory);
+        ? events
+        : events.filter((event) => event.category === selectedCategory);
 
-    return [...filtered].sort((a, b) => {
-      const diff = a.date.localeCompare(b.date);
-      return sortOrder === "asc" ? diff : -diff;
+    if (selectedCampus !== "All") {
+      result = result.filter((event) => event.campus === selectedCampus);
+    }
+
+    if (query) {
+      result = result.filter((event) =>
+        [
+          event.title,
+          event.category,
+          event.location,
+          event.campus ?? "",
+          event.description,
+          event.tags.join(" "),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query),
+      );
+    }
+
+    return [...result].sort((a, b) => {
+      if (sortOrder === "recommended") {
+        const scoreDiff =
+          (scoreByEventId.get(b.id) ?? 0) - (scoreByEventId.get(a.id) ?? 0);
+        if (scoreDiff !== 0) return scoreDiff;
+      }
+
+      const aValue = `${a.event_date} ${a.start_time}`;
+      const bValue = `${b.event_date} ${b.start_time}`;
+      return sortOrder === "desc"
+        ? aValue > bValue
+          ? -1
+          : 1
+        : aValue < bValue
+          ? -1
+          : 1;
     });
-  }, [selectedCategory, sortOrder]);
+  }, [events, scoreByEventId, search, selectedCategory, selectedCampus, sortOrder]);
+
+  const toggleRegister = async (eventItem: EventWithTags) => {
+    if (!user) {
+      setMessage("Please log in to register for events.");
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage("Supabase is not configured.");
+      return;
+    }
+
+    const isRegistered = registrations.includes(eventItem.id);
+    if (isRegistered) {
+      await supabase
+        .from("event_registrations")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("event_id", eventItem.id);
+      setRegistrations((current) =>
+        current.filter((id) => id !== eventItem.id),
+      );
+      setMessage(`Unregistered from ${eventItem.title}.`);
+      return;
+    }
+
+    await supabase
+      .from("event_registrations")
+      .insert({ user_id: user.id, event_id: eventItem.id });
+    setRegistrations((current) => [...current, eventItem.id]);
+    setMessage(`Registered for ${eventItem.title}.`);
+  };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Campus Events</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Click any event to view details and similar recommendations.
-          </p>
+    <section className="space-y-6 sm:space-y-8">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-4 sm:items-center">
+          <div>
+            <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
+              What&apos;s Happening
+            </span>
+            <h1 className="mt-4 text-3xl font-bold text-[#111111]">
+              Campus Events
+            </h1>
+            <p className="mt-2 text-sm text-[#64615C] sm:text-base">
+              Discover upcoming events, workshops, and activities around campus.
+            </p>
+            <p className="mt-2 text-sm font-medium text-[#1F6C9F]">
+              How not to miss your events
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowIcsHelp((current) => !current)}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#CFE6F4] bg-[#E1F3FE] text-base font-semibold text-[#1F6C9F] transition hover:border-[#A9D2E8] hover:bg-[#E1F3FE] sm:h-10 sm:w-10 sm:self-center"
+            aria-label="How to add events to your calendar"
+          >
+            ?
+          </button>
         </div>
-      </header>
+      </div>
 
-      <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-        <section aria-label="Filter and sort events">
-          <div className="flex flex-wrap items-center gap-3">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+      {showIcsHelp && (
+        <div className="rounded-xl border border-[#CFE6F4] bg-[#E1F3FE] p-5 text-sm text-[#164E73] ">
+          <p className="font-semibold">How to add an event to your calendar</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>
+              Click <strong>Download ICS</strong> on an event.
+            </li>
+            <li>
+              Open the downloaded file from your browser or downloads folder.
+            </li>
+            <li>
+              Choose Microsoft Outlook / Calendar when prompted, or import the
+              file manually.
+            </li>
+            <li>
+              Confirm the event save so reminders show up when you need them.
+            </li>
+          </ol>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
+        <div>
+          <label
+            htmlFor="event-search"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Search events
+          </label>
+          <input
+            id="event-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title, location, campus, description, or tag"
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+          />
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="event-category"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
             >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              Filter by category
+            </label>
+            <select
+              id="event-category"
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
                 </option>
               ))}
             </select>
-
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="asc">Date: Earliest first</option>
-              <option value="desc">Date: Latest first</option>
-            </select>
-
-            <p className="ml-auto text-sm text-gray-500">
-              {displayedEvents.length} events
-            </p>
           </div>
-        </section>
+          <div>
+            <label
+              htmlFor="event-campus"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
+            >
+              Filter by campus
+            </label>
+            <select
+              id="event-campus"
+              value={selectedCampus}
+              onChange={(event) => setSelectedCampus(event.target.value)}
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+            >
+              {campuses.map((campus) => (
+                <option key={campus} value={campus}>
+                  {campus}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="sort-order"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
+            >
+              Sort events
+            </label>
+            <select
+              id="sort-order"
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value)}
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+            >
+              <option value="recommended">Recommended for me</option>
+              <option value="asc">Soonest first</option>
+              <option value="desc">Latest first</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {displayedEvents.map((event) => (
-            <li key={event.id}>
-              <Link
-                href={`/events/${event.id}`}
-                className="block h-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:border-indigo-400 hover:shadow-md"
-              >
-                <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+      {message && (
+        <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 text-sm text-[#64615C] ">
+          {message}
+        </div>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+        {filteredEvents.map((event) => {
+          const isRegistered = registrations.includes(event.id);
+          const score = scoreByEventId.get(event.id) ?? 0;
+          return (
+            <article
+              key={event.id}
+              className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6"
+            >
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block rounded-full bg-[#F7F6F3] px-3 py-1 text-sm font-medium text-[#4A4844]">
                   {event.category}
                 </span>
-
-                <h2 className="mt-3 text-base font-semibold text-gray-900">
-                  {event.title}
-                </h2>
-
-                <p className="mt-2 text-sm text-gray-500">
-                  📅 {formatDate(event.date)}
-                </p>
-                <p className="text-sm text-gray-500">🕐 {event.time}</p>
-                <p className="text-sm text-gray-500">📍 {event.location}</p>
-
-                <p className="mt-3 text-sm text-gray-600">
-                  {event.description}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                {score > 0 && (
+                  <span className="inline-block rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
+                    Recommended
+                  </span>
+                )}
+              </div>
+              <h2 className="mt-4 text-xl font-semibold text-[#111111]">
+                {event.title}
+              </h2>
+              <p className="mt-2 text-sm text-[#787774]">
+                {event.event_date} - {event.start_time} - {event.end_time}
+              </p>
+              <p className="mt-1 text-sm text-[#787774]">
+                {event.location}
+                {event.campus ? ` - ${event.campus}` : ""}
+              </p>
+              <p className="mt-4 text-sm text-[#64615C] sm:text-base">
+                {event.description}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {event.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium text-[#1F6C9F]"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => void toggleRegister(event)}
+                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${isRegistered ? "bg-[#4A4844]" : "bg-[#111111]"}`}
+                >
+                  {isRegistered ? "Registered" : "Register"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadEventIcs(event)}
+                  className="rounded-xl border border-[#D8D6D0] bg-white px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#FBFBFA]"
+                >
+                  Download ICS
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
-    </main>
+
+      {filteredEvents.length === 0 && (
+        <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-6 text-center text-[#64615C] sm:p-8">
+          No events found for your current search or filters.
+        </div>
+      )}
+    </section>
   );
 }
