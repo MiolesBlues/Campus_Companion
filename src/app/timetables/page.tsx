@@ -112,29 +112,26 @@ export default function TimetablesPage() {
 
   useEffect(() => {
     if (profile?.role === "student") {
-      if (profile.course) {
+      if (profile.course && courses.includes(profile.course)) {
         setSelectedCourse(profile.course);
-      } else if (courses[0]) {
-        setSelectedCourse(courses[0]);
       }
-
-      if (effectiveYear) {
+      if (effectiveYear && years.includes(`Year ${effectiveYear}`)) {
         setSelectedYear(`Year ${effectiveYear}`);
-      } else if (years[0]) {
-        setSelectedYear(years[0]);
       }
     }
   }, [courses, effectiveYear, profile, years]);
 
   useEffect(() => {
-    if (selectedCourse && !courses.includes(selectedCourse)) {
-      setSelectedCourse(courses[0] ?? "");
+    if (courses.length === 0) return;
+    if (!selectedCourse || !courses.includes(selectedCourse)) {
+      setSelectedCourse(courses[0]);
     }
   }, [courses, selectedCourse]);
 
   useEffect(() => {
-    if (selectedYear && !years.includes(selectedYear)) {
-      setSelectedYear(years[0] ?? "");
+    if (years.length === 0) return;
+    if (!selectedYear || !years.includes(selectedYear)) {
+      setSelectedYear(years[0]);
     }
   }, [selectedYear, years]);
 
