@@ -1,8 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getEvents } from "@/lib/data";
+import type { EventWithTags } from "@/types/database";
 
 export default function Home() {
+  const [upcomingEvents, setUpcomingEvents] = useState<EventWithTags[]>([]);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      const events = await getEvents();
+      setUpcomingEvents(events.slice(0, 3));
+    };
+
+    void loadEvents();
+  }, []);
+
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -45,6 +59,27 @@ export default function Home() {
           <p className="mt-2 text-sm text-slate-600 sm:text-base">Send support requests quickly when something on campus goes sideways.</p>
           <p className="mt-4 text-sm font-medium text-blue-700">Open helpdesk →</p>
         </Link>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Upcoming events</h2>
+            <p className="mt-1 text-sm text-slate-600">A quick look at the next 3 things happening on campus.</p>
+          </div>
+          <Link href="/events" className="text-sm font-medium text-blue-700 hover:text-blue-900">View all</Link>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {upcomingEvents.map((event) => (
+            <article key={event.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <p className="text-sm font-medium text-slate-500">{event.event_date} • {event.start_time}</p>
+              <h3 className="mt-2 text-lg font-semibold text-slate-900">{event.title}</h3>
+              <p className="mt-1 text-sm text-slate-600">{event.location}{event.campus ? ` • ${event.campus}` : ""}</p>
+              <p className="mt-3 text-sm text-slate-600 sm:text-base">{event.description}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
