@@ -18,18 +18,18 @@ export function Avatar({ src, alt, size = "md" }: AvatarProps) {
       <img
         src={src}
         alt={alt}
-        className={`${classes} rounded-full object-cover border border-slate-200 bg-slate-100`}
+        className={`${classes} rounded-lg object-cover border border-[#EAEAEA] bg-[#F7F6F3]`}
       />
     );
   }
 
   return (
     <div
-      className={`${classes} flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 font-semibold text-slate-500`}
+      className={`${classes} flex items-center justify-center rounded-lg border border-[#EAEAEA] bg-[#F7F6F3] font-semibold text-[#787774]`}
       aria-label={alt}
       title={alt}
     >
-      👤
+      <span aria-hidden="true">CC</span>
     </div>
   );
 }

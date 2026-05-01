@@ -32,14 +32,16 @@ export default function HelpdeskPage() {
 
     setSubmitting(true);
 
-    const { error: insertError } = await supabase.from("helpdesk_tickets").insert({
-      user_id: user.id,
-      category,
-      urgency,
-      subject: `${category} request`,
-      description,
-      status: "open",
-    });
+    const { error: insertError } = await supabase
+      .from("helpdesk_tickets")
+      .insert({
+        user_id: user.id,
+        category,
+        urgency,
+        subject: `${category} request`,
+        description,
+        status: "open",
+      });
 
     if (insertError) {
       setError(insertError.message);
@@ -57,27 +59,33 @@ export default function HelpdeskPage() {
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
-        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+        <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
           Support Desk
         </span>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Helpdesk Support</h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Submit a support request for common campus and student service issues.
+          <h1 className="text-3xl font-bold text-[#111111]">
+            Helpdesk Support
+          </h1>
+          <p className="mt-2 text-sm text-[#64615C] sm:text-base">
+            Submit a support request for common campus and student service
+            issues.
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="category" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="category"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
+            >
               Issue category
             </label>
             <select
               id="category"
               name="category"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
               required
@@ -94,13 +102,16 @@ export default function HelpdeskPage() {
           </div>
 
           <div>
-            <label htmlFor="urgency" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="urgency"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
+            >
               Urgency
             </label>
             <select
               id="urgency"
               name="urgency"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
               value={urgency}
               onChange={(event) => setUrgency(event.target.value)}
               required
@@ -115,7 +126,10 @@ export default function HelpdeskPage() {
           </div>
 
           <div>
-            <label htmlFor="description" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="description"
+              className="mb-2 block text-sm font-medium text-[#4A4844]"
+            >
               Describe the issue
             </label>
             <textarea
@@ -123,7 +137,7 @@ export default function HelpdeskPage() {
               name="description"
               rows={5}
               placeholder="Describe the issue here..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               required
@@ -133,7 +147,7 @@ export default function HelpdeskPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+            className="w-full rounded-xl bg-[#111111] px-5 py-3 text-white transition hover:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
           >
             {submitting ? "Submitting..." : "Submit request"}
           </button>
@@ -141,13 +155,17 @@ export default function HelpdeskPage() {
       </div>
 
       {submitted && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-sm sm:text-base">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-[#D5E5D1] bg-[#EDF3EC] p-4 text-sm text-[#346538] sm:text-base"
+        >
           Your helpdesk request has been submitted successfully.
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm sm:text-base">
+        <div className="rounded-xl border border-[#F4C8CA] bg-[#FDEBEC] p-4 text-sm text-[#9F2F2D] sm:text-base">
           {error}
         </div>
       )}

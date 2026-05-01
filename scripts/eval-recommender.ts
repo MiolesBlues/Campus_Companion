@@ -1,7 +1,9 @@
 import { getSimilarEvents, type Event } from "../src/lib/ml/recommender";
 import eventsData from "../src/data/events.json";
 
-const allEvents = eventsData as Event[];
+const allEvents: Event[] = (eventsData as Array<Omit<Event, "id"> & { id: number | string }>).map(
+  (e) => ({ ...e, id: String(e.id), tags: e.tags ?? [] }),
+);
 const K = 3;
 
 // Colours

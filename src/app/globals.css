@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f7f6f3;
+  --foreground: #111111;
+  --surface: #fbfbfa;
+  --line: #eaeaea;
+  --muted: #787774;
+  --accent-bg: #e1f3fe;
+  --accent: #1f6c9f;
 }
 
 html {
@@ -12,7 +17,10 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "SF Pro Display", "Helvetica Neue", Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -23,11 +31,406 @@ a {
   z-index: 1000;
 }
 
-.skip-link:focus {
-  outline: 3px solid #bfdbfe;
-  outline-offset: 2px;
+.cc-loading-sheen {
+  position: relative;
+  overflow: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+::selection {
+  background: #fbf3db;
+  color: #111111;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:active:not(:disabled),
+a:active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.98);
+}
+
+/* ─── Cursor affordance ─────────────────────────────────────────────────────
+   Native <button> defaults to the arrow cursor, which reads as non-clickable.
+   Promote real interactive controls to the hand pointer, and demote anything
+   the user can't actually activate (disabled, aria-disabled) to not-allowed
+   so the cue matches the affordance.                                          */
+button,
+summary,
+label[for],
+select,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="menuitemcheckbox"],
+[role="menuitemradio"],
+[role="option"],
+[role="switch"],
+[role="checkbox"],
+[role="radio"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="color"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+fieldset:disabled button,
+fieldset:disabled input,
+fieldset:disabled select,
+[aria-disabled="true"],
+[aria-disabled="true"] * {
+  cursor: not-allowed;
+}
+
+/* Subtle universal hover lift for any clickable that didn't define its own
+   visual change. Brightness combines unobtrusively with explicit hover:bg-*
+   utilities — components keep full control of color, this just guarantees a
+   minimum feedback floor. Skipped on coarse pointers to avoid sticky hover. */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover,
+  summary:hover,
+  a:hover {
+    filter: brightness(0.97);
+  }
+}
+
+@keyframes cc-paper-open {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 18% 0 round 12px);
+    filter: blur(2px);
+    transform: translateY(6px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 12px);
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes cc-quiet-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleX(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #main-content > section,
+  #main-content > main,
+  #main-content > div {
+    animation: cc-paper-open 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  #main-content > section > *,
+  #main-content article,
+  #main-content fieldset {
+    animation: cc-paper-open 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  #main-content > section > *:nth-child(1) {
+    animation-delay: 40ms;
+  }
+
+  #main-content > section > *:nth-child(2) {
+    animation-delay: 90ms;
+  }
+
+  #main-content > section > *:nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  #main-content > section > *:nth-child(4) {
+    animation-delay: 190ms;
+  }
+
+  #main-content article:nth-child(1),
+  #main-content fieldset:nth-child(1) {
+    animation-delay: 80ms;
+  }
+
+  #main-content article:nth-child(2),
+  #main-content fieldset:nth-child(2) {
+    animation-delay: 130ms;
+  }
+
+  #main-content article:nth-child(3),
+  #main-content fieldset:nth-child(3) {
+    animation-delay: 180ms;
+  }
+
+  #main-content article:nth-child(4),
+  #main-content fieldset:nth-child(4) {
+    animation-delay: 230ms;
+  }
+
+  #main-content article,
+  #main-content a[class*="border"],
+  #main-content button,
+  header a,
+  header button {
+    transition-property: background-color, border-color, color, opacity;
+  }
+
+  #main-content input:focus,
+  #main-content select:focus,
+  #main-content textarea:focus {
+    box-shadow: 0 0 0 4px rgba(31, 108, 159, 0.08);
+  }
+
+  .cc-loading-sheen {
+    border-color: #d8d6d0;
+  }
+
+  .cc-loading-sheen::after {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.55rem;
+    height: 1px;
+    background: #1f6c9f;
+    transform-origin: left;
+    animation: cc-quiet-pulse 1450ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+}
+
+/* ─── Accessibility: Focus Visible ──────────────────────────────────────────
+   3 px outline, 2 px offset, dark blue — passes 3:1 against white and black.
+   Replaces the per-component focus rings scattered around the codebase.       */
+:focus-visible {
+  outline: 3px solid #1d4ed8 !important;
+  outline-offset: 2px !important;
+}
+
+/* ─── Accessibility: High Contrast ──────────────────────────────────────────
+   Activated by data-contrast="high" on <html>. Collapses the page to a true
+   black canvas with white text and strong borders, while preserving state
+   cues (links, buttons, focus, current page, errors) through distinct colors
+   and border styles — meeting WCAG 1.4.11 (Non-text Contrast) and 1.4.1
+   (Use of Color).
+
+   Tailwind utility classes (bg-*, shadow-*, border-*, divide-*) are
+   neutralised below so component code keeps working in both modes without a
+   parallel design system.                                                      */
+
+[data-contrast="high"] {
+  color-scheme: dark;
+  background-color: #000;
+  color: #fff;
+}
+
+/* Strip authored backgrounds, gradients and decorative shadows so utility
+   classes like bg-white / bg-blue-50 / shadow-sm / backdrop-blur don't leak
+   color or hide white text on white surfaces. */
+[data-contrast="high"] *,
+[data-contrast="high"] *::before,
+[data-contrast="high"] *::after {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: #fff !important;
+  accent-color: #ff0;
+}
+
+/* Re-assert opaque black on structural regions to defeat any utility that
+   sets a translucent background underneath the universal reset. */
+[data-contrast="high"] body,
+[data-contrast="high"] header,
+[data-contrast="high"] main,
+[data-contrast="high"] aside,
+[data-contrast="high"] footer,
+[data-contrast="high"] dialog,
+[data-contrast="high"] [role="dialog"] {
+  background-color: #000 !important;
+}
+
+/* Borders are the primary structural cue in HC. Re-color any element that
+   declared a border (Tailwind: border, border-*, divide-*) and the form
+   primitives whose default chrome is replaced below. */
+[data-contrast="high"] [class*="border"],
+[data-contrast="high"] [class*="divide"],
+[data-contrast="high"] fieldset,
+[data-contrast="high"] hr,
+[data-contrast="high"] table,
+[data-contrast="high"] th,
+[data-contrast="high"] td,
+[data-contrast="high"] input,
+[data-contrast="high"] select,
+[data-contrast="high"] textarea,
+[data-contrast="high"] button,
+[data-contrast="high"] [role="button"] {
+  border-color: #fff !important;
+}
+
+/* Links: yellow on black (≈19.6:1), always underlined. Visited stays
+   distinguishable; hover inverts to a yellow chip for a clear hit target.
+   The button rules below have higher specificity so <a role="button"> still
+   renders as a button. */
+[data-contrast="high"] a {
+  color: #ff0 !important;
+  text-decoration: underline !important;
+}
+[data-contrast="high"] a:visited {
+  color: #d8b4ff !important;
+}
+[data-contrast="high"] a:hover {
+  background-color: #ff0 !important;
+  color: #000 !important;
+}
+
+/* Buttons: outlined by default; pressed / current page invert to filled;
+   disabled uses a dashed border + muted text, so the cue is not color-only. */
+[data-contrast="high"] button,
+[data-contrast="high"] [role="button"],
+[data-contrast="high"] input[type="button"],
+[data-contrast="high"] input[type="submit"],
+[data-contrast="high"] input[type="reset"] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+[data-contrast="high"] button[aria-pressed="true"],
+[data-contrast="high"] [aria-current="page"],
+[data-contrast="high"] [aria-current="true"] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+[data-contrast="high"] button:hover:not(:disabled),
+[data-contrast="high"] [role="button"]:not([aria-disabled="true"]):hover {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+[data-contrast="high"] button:disabled,
+[data-contrast="high"] [aria-disabled="true"] {
+  border-style: dashed !important;
+  color: #aaa !important;
+  cursor: not-allowed;
+}
+
+/* Form fields: visible default, double 4px border for invalid (so the cue
+   is not color-only — meets 1.4.1 Use of Color). */
+[data-contrast="high"] input,
+[data-contrast="high"] select,
+[data-contrast="high"] textarea {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+[data-contrast="high"] input::placeholder,
+[data-contrast="high"] textarea::placeholder {
+  color: #ccc !important;
+  opacity: 1;
+}
+[data-contrast="high"] input[aria-invalid="true"],
+[data-contrast="high"] textarea[aria-invalid="true"],
+[data-contrast="high"] select[aria-invalid="true"] {
+  border: 4px double #fff !important;
+}
+
+/* Focus indicator inside HC overrides the global blue with yellow — much
+   higher visibility on a black canvas. */
+[data-contrast="high"] :focus-visible {
+  outline: 3px solid #ff0 !important;
+  outline-offset: 2px !important;
+}
+
+/* Make text selection visible in HC. */
+[data-contrast="high"] ::selection {
+  background-color: #ff0 !important;
+  color: #000 !important;
+}
+
+/* Decorative images can lose meaning at a pure-black canvas; mark them with
+   data-decorative="true" in markup to dim instead of removing. */
+[data-contrast="high"] [data-decorative="true"] {
+  opacity: 0.6;
+}
+
+/* ─── Accessibility: Windows High Contrast / Forced Colors ──────────────────
+   When the OS forces a palette, surrender authored colors and map intent to
+   system color keywords. forced-color-adjust defaults to auto, which lets
+   the UA substitute Canvas/CanvasText/etc. We explicitly map focus, links
+   and buttons to the system equivalents.                                      */
+@media (forced-colors: active) {
+  :root {
+    --background: Canvas;
+    --foreground: CanvasText;
+    --surface: Canvas;
+    --line: CanvasText;
+    --muted: GrayText;
+    --accent-bg: Canvas;
+    --accent: LinkText;
+  }
+  :focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+  a {
+    color: LinkText;
+  }
+  a:visited {
+    color: VisitedText;
+  }
+  button,
+  [role="button"] {
+    background-color: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    color: GrayText;
+  }
+}
+
+/* ─── Accessibility: Reduced Motion ─────────────────────────────────────────
+   "auto"  → honour the OS prefers-reduced-motion media query (WCAG 2.3.3).
+   "on"    → always suppress motion regardless of OS setting.
+   "off"   → always allow motion (AccessibilityProvider sets nothing extra).   */
+@media (prefers-reduced-motion: reduce) {
+  [data-reduced-motion="auto"],
+  [data-reduced-motion="auto"] *,
+  [data-reduced-motion="auto"] *::before,
+  [data-reduced-motion="auto"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-reduced-motion="on"],
+[data-reduced-motion="on"] *,
+[data-reduced-motion="on"] *::before,
+[data-reduced-motion="on"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
