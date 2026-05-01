@@ -1,4 +1,4 @@
-import { courseOptions, yearOptions } from "@/lib/constants";
+import { campusOptions, courseOptions, yearOptions } from "@/lib/constants";
 import type { Society } from "@/types/database";
 
 type SignupFieldsProps = {
@@ -6,6 +6,8 @@ type SignupFieldsProps = {
   setFullName: (value: string) => void;
   course: string;
   setCourse: (value: string) => void;
+  campus: string;
+  setCampus: (value: string) => void;
   yearOfStudy: string;
   setYearOfStudy: (value: string) => void;
   startYear: string;
@@ -22,6 +24,8 @@ export function SignupFields({
   setFullName,
   course,
   setCourse,
+  campus,
+  setCampus,
   yearOfStudy,
   setYearOfStudy,
   startYear,
@@ -49,23 +53,44 @@ export function SignupFields({
         />
       </div>
 
-      <div>
-        <label htmlFor="course" className="mb-2 block text-sm font-medium text-slate-700">
-          Course
-        </label>
-        <select
-          id="course"
-          value={course}
-          onChange={(event) => setCourse(event.target.value)}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-          required
-        >
-          {courseOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="course" className="mb-2 block text-sm font-medium text-slate-700">
+            Course
+          </label>
+          <select
+            id="course"
+            value={course}
+            onChange={(event) => setCourse(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            required
+          >
+            {courseOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="campus" className="mb-2 block text-sm font-medium text-slate-700">
+            Campus
+          </label>
+          <select
+            id="campus"
+            value={campus}
+            onChange={(event) => setCampus(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            required
+          >
+            {campusOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

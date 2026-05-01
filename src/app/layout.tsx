@@ -29,18 +29,18 @@ export default function RootLayout({
             </a>
 
             <header className="border-b border-slate-200/80 bg-white">
-              <nav className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
+              <nav className="mx-auto flex max-w-6xl flex-col gap-2.5 px-4 py-3.5 sm:px-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <Link
                     href="/"
-                    className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 transition hover:bg-slate-100 lg:w-auto"
+                    className="flex w-full items-center gap-3 rounded-2xl px-2 py-1.5 transition hover:bg-slate-100 lg:w-auto"
                   >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-slate-900 shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-slate-900 shadow-sm">
                       <span className="text-sm font-semibold tracking-wide text-white">CC</span>
                     </div>
                     <div className="min-w-0 leading-tight">
-                      <p className="text-base font-semibold tracking-tight text-slate-900">Campus Companion</p>
-                      <p className="text-xs text-slate-500">Student life made simpler</p>
+                      <p className="text-[15px] font-semibold tracking-tight text-slate-900">Campus Companion</p>
+                      <p className="text-[11px] text-slate-500">Student life made simpler</p>
                     </div>
                   </Link>
 

@@ -62,6 +62,7 @@ function mapFallbackEvents(): EventWithTags[] {
       category: event.category,
       description: event.description,
       location: event.location,
+      campus: "Main Campus",
       event_date: event.date,
       start_time: event.time,
       end_time: event.time,
@@ -114,18 +115,18 @@ export async function getLocations() {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    return locationFallback as LocationRecord[];
+    return locationFallback.map((location) => ({ ...location, campus: "Main Campus" })) as LocationRecord[];
   }
 
   const { data, error } = await supabase
     .from("locations")
-    .select("id, name, type, description, opening_hours, accessibility_notes, contact_email, contact_phone, published")
+    .select("id, name, type, description, campus, opening_hours, accessibility_notes, contact_email, contact_phone, published")
     .eq("published", true)
     .order("name", { ascending: true });
 
   if (error || !data) {
     console.error("Failed to load locations", error);
-    return locationFallback as LocationRecord[];
+    return locationFallback.map((location) => ({ ...location, campus: "Main Campus" })) as LocationRecord[];
   }
 
   return data as LocationRecord[];
@@ -216,7 +217,7 @@ export async function getProfilesList() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, course, year_of_study, start_year, avatar_url, muted_until, societies, created_at, updated_at, student_id")
+    .select("id, email, full_name, role, course, campus, year_of_study, start_year, avatar_url, muted_until, societies, created_at, updated_at, student_id")
     .order("full_name", { ascending: true });
 
   if (error || !data) {

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { campusOptions } from "@/lib/constants";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { getSocieties } from "@/lib/societies";
 import { SignupFields } from "@/components/auth/signup-fields";
@@ -19,6 +20,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [course, setCourse] = useState("Computer Science");
+  const [campus, setCampus] = useState(campusOptions[0]);
   const [yearOfStudy, setYearOfStudy] = useState("1");
   const [startYear, setStartYear] = useState(String(currentAcademicStartYear()));
   const [societyOptions, setSocietyOptions] = useState<Society[]>([]);
@@ -75,12 +77,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
 
     if (isSignup) {
-      const cleanSocieties = selectedSocietyIds
-        .filter(Boolean)
+      const cleanSocieties = Array.from(new Set(selectedSocietyIds.filter(Boolean)))
         .map((id) => societyOptions.find((society) => society.id === Number(id)))
         .filter((society): society is Society => Boolean(society));
 
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -88,6 +89,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             full_name: fullName,
             role: "student",
             course,
+            campus,
             year_of_study: Number(yearOfStudy),
             start_year: Number(startYear),
             societies: cleanSocieties.map((society) => ({ society_id: society.id, name: society.name })),
@@ -99,13 +101,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         setError(signUpError.message);
         setLoading(false);
         return;
-      }
-
-      const newUserId = data.user?.id;
-      if (newUserId && cleanSocieties.length > 0) {
-        await supabase.from("society_memberships").insert(
-          cleanSocieties.map((society) => ({ user_id: newUserId, society_id: society.id }))
-        );
       }
 
       setMessage("Account created. Check your email to confirm your account.");
@@ -138,6 +133,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             setFullName={setFullName}
             course={course}
             setCourse={setCourse}
+            campus={campus}
+            setCampus={setCampus}
             yearOfStudy={yearOfStudy}
             setYearOfStudy={setYearOfStudy}
             startYear={startYear}

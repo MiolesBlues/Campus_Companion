@@ -8,7 +8,7 @@ import type { EventWithTags } from "@/types/database";
 
 function formatIcsDate(date: string, time: string) {
   const safeTime = time.slice(0, 5);
-  return `${date.replaceAll("-", "") }T${safeTime.replace(":", "")}00`;
+  return `${date.replaceAll("-", "")}T${safeTime.replace(":", "")}00`;
 }
 
 function downloadEventIcs(event: EventWithTags) {
@@ -23,7 +23,7 @@ function downloadEventIcs(event: EventWithTags) {
     `DTEND:${formatIcsDate(event.event_date, event.end_time)}`,
     `SUMMARY:${event.title}`,
     `DESCRIPTION:${event.description.replaceAll("\n", " ")}`,
-    `LOCATION:${event.location}`,
+    `LOCATION:${event.location}${event.campus ? `, ${event.campus}` : ""}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
@@ -44,8 +44,10 @@ export default function EventsPage() {
   const [events, setEvents] = useState<EventWithTags[]>([]);
   const [registrations, setRegistrations] = useState<number[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [showIcsHelp, setShowIcsHelp] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedLocation, setSelectedLocation] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
@@ -71,15 +73,20 @@ export default function EventsPage() {
   }, [user]);
 
   const categories = useMemo(() => ["All", ...new Set(events.map((event) => event.category))], [events]);
+  const locations = useMemo(() => ["All", ...new Set(events.map((event) => event.location))], [events]);
 
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     let result = selectedCategory === "All" ? events : events.filter((event) => event.category === selectedCategory);
 
+    if (selectedLocation !== "All") {
+      result = result.filter((event) => event.location === selectedLocation);
+    }
+
     if (query) {
       result = result.filter((event) =>
-        [event.title, event.category, event.location, event.description, event.tags.join(" ")]
+        [event.title, event.category, event.location, event.campus ?? "", event.description, event.tags.join(" ")]
           .join(" ")
           .toLowerCase()
           .includes(query)
@@ -93,7 +100,7 @@ export default function EventsPage() {
     });
 
     return result;
-  }, [events, search, selectedCategory, sortOrder]);
+  }, [events, search, selectedCategory, selectedLocation, sortOrder]);
 
   const toggleRegister = async (eventItem: EventWithTags) => {
     if (!user) {
@@ -122,30 +129,55 @@ export default function EventsPage() {
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
-        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">What&apos;s Happening</span>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Campus Events</h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">Discover upcoming events, workshops, and activities around campus.</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">What&apos;s Happening</span>
+            <h1 className="mt-4 text-3xl font-bold text-slate-900">Campus Events</h1>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">Discover upcoming events, workshops, and activities around campus.</p>
+          </div>
+          <button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="mt-2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-50" aria-label="How ICS downloads work">
+            ?
+          </button>
         </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-6">
+      {showIcsHelp && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900 shadow-sm">
+          <p className="font-semibold">How to use ICS downloads</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>Click <strong>Download ICS</strong> on an event.</li>
+            <li>Open the downloaded file from your browser or downloads folder.</li>
+            <li>Choose Microsoft Outlook / Calendar when prompted, or import the file manually.</li>
+            <li>Confirm the event save in your calendar.</li>
+          </ol>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div>
           <label htmlFor="event-search" className="mb-2 block text-sm font-medium text-slate-700">Search events</label>
-          <input id="event-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by title, location, description, or tag" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
+          <input id="event-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by title, location, campus, description, or tag" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
         </div>
-        <div>
-          <label htmlFor="event-category" className="mb-2 block text-sm font-medium text-slate-700">Filter by category</label>
-          <select id="event-category" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
-            {categories.map((category) => (<option key={category} value={category}>{category}</option>))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="sort-order" className="mb-2 block text-sm font-medium text-slate-700">Sort by date</label>
-          <select id="sort-order" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
-            <option value="asc">Soonest first</option>
-            <option value="desc">Latest first</option>
-          </select>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <label htmlFor="event-category" className="mb-2 block text-sm font-medium text-slate-700">Filter by category</label>
+            <select id="event-category" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+              {categories.map((category) => (<option key={category} value={category}>{category}</option>))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="event-location" className="mb-2 block text-sm font-medium text-slate-700">Filter by location</label>
+            <select id="event-location" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+              {locations.map((location) => (<option key={location} value={location}>{location}</option>))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="sort-order" className="mb-2 block text-sm font-medium text-slate-700">Sort by date</label>
+            <select id="sort-order" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+              <option value="asc">Soonest first</option>
+              <option value="desc">Latest first</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -159,7 +191,7 @@ export default function EventsPage() {
               <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{event.category}</span>
               <h2 className="mt-4 text-xl font-semibold text-slate-900">{event.title}</h2>
               <p className="mt-2 text-sm text-slate-500">{event.event_date} • {event.start_time} - {event.end_time}</p>
-              <p className="mt-1 text-sm text-slate-500">{event.location}</p>
+              <p className="mt-1 text-sm text-slate-500">{event.location}{event.campus ? ` • ${event.campus}` : ""}</p>
               <p className="mt-4 text-sm text-slate-600 sm:text-base">{event.description}</p>
               <div className="mt-4 flex flex-wrap gap-2">{event.tags.map((tag) => (<span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">#{tag}</span>))}</div>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -175,7 +207,7 @@ export default function EventsPage() {
         })}
       </div>
 
-      {filteredEvents.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">No events found for your current search or category.</div>}
+      {filteredEvents.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">No events found for your current search or filters.</div>}
     </section>
   );
 }

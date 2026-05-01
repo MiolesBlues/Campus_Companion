@@ -29,6 +29,7 @@ export type Profile = {
   role: UserRole;
   student_id: string | null;
   course: string | null;
+  campus: string | null;
   year_of_study: number | null;
   start_year: number | null;
   avatar_url?: string | null;
@@ -57,6 +58,7 @@ export type EventRecord = {
   category: string;
   description: string;
   location: string;
+  campus: string | null;
   event_date: string;
   start_time: string;
   end_time: string;
@@ -75,6 +77,7 @@ export type LocationRecord = {
   name: string;
   type: string;
   description: string;
+  campus: string | null;
   opening_hours: string | null;
   accessibility_notes: string | null;
   contact_email?: string | null;
