@@ -5,9 +5,10 @@ import { useAuth } from "@/components/auth-provider";
 import { Avatar } from "@/components/avatar";
 import { campusOptions, courseOptions } from "@/lib/constants";
 import { getEvents, getUserEventRegistrations } from "@/lib/data";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import { calculateAcademicYear, getEffectiveYearOfStudy } from "@/lib/profile";
-import type { EventWithTags } from "@/types/database";
+import { getSocieties } from "@/lib/societies";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import type { EventWithTags, Society } from "@/types/database";
 
 function formatIcsDate(date: string, time: string) {
   const safeTime = time.slice(0, 5);
@@ -48,6 +49,7 @@ export default function AccountPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [registeredEvents, setRegisteredEvents] = useState<EventWithTags[]>([]);
+  const [joinedSocieties, setJoinedSocieties] = useState<Society[]>([]);
   const [showIcsHelp, setShowIcsHelp] = useState(true);
 
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
@@ -68,7 +70,11 @@ export default function AccountPage() {
   }, [profile]);
 
   useEffect(() => {
-    const loadEvents = async () => {
+    const loadSidebarData = async () => {
+      const allSocieties = await getSocieties();
+      const joinedIds = new Set((profile?.societies ?? []).map((society) => society.society_id));
+      setJoinedSocieties(allSocieties.filter((society) => joinedIds.has(society.id)));
+
       if (!user) {
         setRegisteredEvents([]);
         return;
@@ -83,8 +89,8 @@ export default function AccountPage() {
       setRegisteredEvents(events.filter((event) => registeredIds.has(event.id)));
     };
 
-    void loadEvents();
-  }, [user]);
+    void loadSidebarData();
+  }, [profile?.societies, user]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -202,10 +208,18 @@ export default function AccountPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-slate-900">My societies</h2>
             <p className="mt-2 text-sm text-slate-600">The societies you joined across the platform.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {profile?.societies && profile.societies.length > 0 ? (
-                profile.societies.map((society) => (
-                  <span key={society.society_id} className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">{society.name}</span>
+            <div className="mt-4 space-y-3">
+              {joinedSocieties.length > 0 ? (
+                joinedSocieties.map((society) => (
+                  <article key={society.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">{society.category}</span>
+                      {society.meeting_day && <span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700">{society.meeting_day}</span>}
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold text-slate-900">{society.name}</h3>
+                    <p className="mt-2 text-sm text-slate-600">{society.description}</p>
+                    <p className="mt-3 text-sm text-slate-500">Contact: {society.contact_email ?? "Not listed"}</p>
+                  </article>
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">You haven&apos;t joined any societies yet.</div>
