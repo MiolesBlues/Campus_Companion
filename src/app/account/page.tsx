@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Avatar } from "@/components/avatar";
-import { campusOptions, courseOptions } from "@/lib/constants";
+import { academicGroupOptions, campusOptions, courseOptions, eventCategoryOptions, interestOptions } from "@/lib/constants";
 import { getEvents, getUserEventRegistrations } from "@/lib/data";
 import { calculateAcademicYear, getEffectiveYearOfStudy } from "@/lib/profile";
 import { getSocieties } from "@/lib/societies";
@@ -43,6 +43,10 @@ function downloadEventIcs(event: EventWithTags) {
   URL.revokeObjectURL(url);
 }
 
+function toggleValue(values: string[], value: string) {
+  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+}
+
 export default function AccountPage() {
   const { loading, user, profile, isConfigured, refreshProfile, signOut } = useAuth();
   const [saving, setSaving] = useState(false);
@@ -55,6 +59,9 @@ export default function AccountPage() {
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
   const [course, setCourse] = useState(courseOptions[0]);
   const [campus, setCampus] = useState(campusOptions[0]);
+  const [academicGroup, setAcademicGroup] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [preferredEventCategories, setPreferredEventCategories] = useState<string[]>([]);
   const [startYear, setStartYear] = useState(String(new Date().getFullYear()));
   const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -65,6 +72,9 @@ export default function AccountPage() {
 
     setCourse(profile.course ?? courseOptions[0]);
     setCampus(profile.campus ?? campusOptions[0]);
+    setAcademicGroup(profile.academic_group ?? "");
+    setSelectedInterests(profile.interests ?? []);
+    setPreferredEventCategories(profile.preferred_event_categories ?? []);
     setStartYear(String(profile.start_year ?? new Date().getFullYear()));
     setAvatarUrl(profile.avatar_url ?? "");
   }, [profile]);
@@ -113,6 +123,9 @@ export default function AccountPage() {
       .update({
         course,
         campus,
+        academic_group: academicGroup || null,
+        interests: selectedInterests,
+        preferred_event_categories: preferredEventCategories,
         start_year: parsedStartYear,
         year_of_study: nextYear,
         avatar_url: avatarUrl || null,
@@ -174,7 +187,7 @@ export default function AccountPage() {
                   <input id="account-avatar-url" type="url" value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" placeholder="https://example.com/avatar.jpg" />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <label htmlFor="account-course" className="mb-2 block text-sm font-medium text-slate-700">Course</label>
                     <select id="account-course" value={course} onChange={(event) => setCourse(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
@@ -188,11 +201,39 @@ export default function AccountPage() {
                       {campusOptions.map((option) => (<option key={option} value={option}>{option}</option>))}
                     </select>
                   </div>
+
+                  <div>
+                    <label htmlFor="account-group" className="mb-2 block text-sm font-medium text-slate-700">Group</label>
+                    <select id="account-group" value={academicGroup} onChange={(event) => setAcademicGroup(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+                      <option value="">Select group</option>
+                      {academicGroupOptions.map((option) => (<option key={option} value={option}>{option}</option>))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
                   <label htmlFor="account-start-year" className="mb-2 block text-sm font-medium text-slate-700">Academic start year</label>
                   <input id="account-start-year" type="number" min="2010" max="2100" value={startYear} onChange={(event) => setStartYear(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" />
+                </div>
+
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-slate-700">Interests</p>
+                  <div className="flex flex-wrap gap-2">
+                    {interestOptions.map((option) => {
+                      const active = selectedInterests.includes(option);
+                      return <button key={option} type="button" onClick={() => setSelectedInterests(toggleValue(selectedInterests, option))} className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}>{option}</button>;
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-slate-700">Preferred event categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    {eventCategoryOptions.map((option) => {
+                      const active = preferredEventCategories.includes(option);
+                      return <button key={option} type="button" onClick={() => setPreferredEventCategories(toggleValue(preferredEventCategories, option))} className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-slate-900 text-white" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}>{option}</button>;
+                    })}
+                  </div>
                 </div>
 
                 <button type="submit" disabled={saving} className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70">{saving ? "Saving..." : "Save changes"}</button>
@@ -209,63 +250,16 @@ export default function AccountPage() {
             <h2 className="text-xl font-semibold text-slate-900">My societies</h2>
             <p className="mt-2 text-sm text-slate-600">The societies you joined across the platform.</p>
             <div className="mt-4 space-y-3">
-              {joinedSocieties.length > 0 ? (
-                joinedSocieties.map((society) => (
-                  <article key={society.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">{society.category}</span>
-                      {society.meeting_day && <span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700">{society.meeting_day}</span>}
-                    </div>
-                    <h3 className="mt-3 text-lg font-semibold text-slate-900">{society.name}</h3>
-                    <p className="mt-2 text-sm text-slate-600">{society.description}</p>
-                    <p className="mt-3 text-sm text-slate-500">Contact: {society.contact_email ?? "Not listed"}</p>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">You haven&apos;t joined any societies yet.</div>
-              )}
+              {joinedSocieties.length > 0 ? joinedSocieties.map((society) => (<article key={society.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-wrap gap-2"><span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">{society.category}</span>{society.meeting_day && <span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700">{society.meeting_day}</span>}</div><h3 className="mt-3 text-lg font-semibold text-slate-900">{society.name}</h3><p className="mt-2 text-sm text-slate-600">{society.description}</p><p className="mt-3 text-sm text-slate-500">Contact: {society.contact_email ?? "Not listed"}</p></article>)) : <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">You haven&apos;t joined any societies yet.</div>}
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Registered events</h2>
-                <p className="mt-1 text-sm text-blue-700">How not to miss your events</p>
-              </div>
-              <button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-blue-200 bg-blue-50 text-base font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100" aria-label="How to add events to your calendar">
-                ?
-              </button>
-            </div>
+            <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-semibold text-slate-900">Registered events</h2><p className="mt-1 text-sm text-blue-700">How not to miss your events</p></div><button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-blue-200 bg-blue-50 text-base font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100" aria-label="How to add events to your calendar">?</button></div>
 
-            {showIcsHelp && (
-              <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-                <p className="font-semibold">How to add an event to your calendar</p>
-                <ol className="mt-2 list-decimal space-y-1 pl-5">
-                  <li>Click <strong>Download ICS</strong> on any registered event.</li>
-                  <li>Open the downloaded file from your browser or downloads folder.</li>
-                  <li>Choose Microsoft Outlook / Calendar when prompted, or import it manually into your calendar app.</li>
-                  <li>Confirm the event save so you get reminders later.</li>
-                </ol>
-              </div>
-            )}
+            {showIcsHelp && <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><p className="font-semibold">How to add an event to your calendar</p><ol className="mt-2 list-decimal space-y-1 pl-5"><li>Click <strong>Download ICS</strong> on any registered event.</li><li>Open the downloaded file from your browser or downloads folder.</li><li>Choose Microsoft Outlook / Calendar when prompted, or import it manually into your calendar app.</li><li>Confirm the event save so you get reminders later.</li></ol></div>}
 
-            <div className="mt-4 space-y-3">
-              {registeredEvents.length > 0 ? (
-                registeredEvents.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="font-medium text-slate-900">{event.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">{event.event_date} • {event.start_time} - {event.end_time}</p>
-                    <p className="mt-1 text-sm text-slate-600">{event.location}{event.campus ? ` • ${event.campus}` : ""}</p>
-                    <button type="button" onClick={() => downloadEventIcs(event)} className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
-                      Download ICS
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">No registered events yet.</div>
-              )}
-            </div>
+            <div className="mt-4 space-y-3">{registeredEvents.length > 0 ? registeredEvents.map((event) => (<div key={event.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="font-medium text-slate-900">{event.title}</p><p className="mt-1 text-sm text-slate-600">{event.event_date} • {event.start_time} - {event.end_time}</p><p className="mt-1 text-sm text-slate-600">{event.location}{event.campus ? ` • ${event.campus}` : ""}</p><button type="button" onClick={() => downloadEventIcs(event)} className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">Download ICS</button></div>)) : <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">No registered events yet.</div>}</div>
           </div>
         </div>
       </div>

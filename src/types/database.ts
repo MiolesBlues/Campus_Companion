@@ -30,6 +30,13 @@ export type Profile = {
   student_id: string | null;
   course: string | null;
   campus: string | null;
+  academic_group: string | null;
+  interests: string[] | null;
+  preferred_event_categories: string[] | null;
+  preferred_society_categories: string[] | null;
+  career_interest: string | null;
+  availability_preferences: string[] | null;
+  accessibility_preferences: string | null;
   year_of_study: number | null;
   start_year: number | null;
   avatar_url?: string | null;

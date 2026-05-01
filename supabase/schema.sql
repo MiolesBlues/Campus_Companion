@@ -13,6 +13,13 @@ create table if not exists public.profiles (
   student_id text unique,
   course text,
   campus text,
+  academic_group text,
+  interests jsonb not null default '[]'::jsonb,
+  preferred_event_categories jsonb not null default '[]'::jsonb,
+  preferred_society_categories jsonb not null default '[]'::jsonb,
+  career_interest text,
+  availability_preferences jsonb not null default '[]'::jsonb,
+  accessibility_preferences text,
   year_of_study integer check (year_of_study between 1 and 6),
   start_year integer check (start_year between 2010 and 2100),
   avatar_url text,
@@ -23,6 +30,13 @@ create table if not exists public.profiles (
 );
 
 alter table public.profiles add column if not exists campus text;
+alter table public.profiles add column if not exists academic_group text;
+alter table public.profiles add column if not exists interests jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists preferred_event_categories jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists preferred_society_categories jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists career_interest text;
+alter table public.profiles add column if not exists availability_preferences jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists accessibility_preferences text;
 
 create table if not exists public.societies (
   id bigserial primary key,
@@ -223,7 +237,7 @@ as $$
 declare
   new_societies jsonb := coalesce((new.raw_user_meta_data -> 'societies')::jsonb, '[]'::jsonb);
 begin
-  insert into public.profiles (id, email, full_name, role, course, campus, year_of_study, start_year, avatar_url, muted_until, societies)
+  insert into public.profiles (id, email, full_name, role, course, campus, academic_group, interests, preferred_event_categories, preferred_society_categories, career_interest, availability_preferences, accessibility_preferences, year_of_study, start_year, avatar_url, muted_until, societies)
   values (
     new.id,
     new.email,
@@ -231,6 +245,13 @@ begin
     coalesce(new.raw_user_meta_data ->> 'role', 'student'),
     new.raw_user_meta_data ->> 'course',
     new.raw_user_meta_data ->> 'campus',
+    new.raw_user_meta_data ->> 'academic_group',
+    coalesce((new.raw_user_meta_data -> 'interests')::jsonb, '[]'::jsonb),
+    coalesce((new.raw_user_meta_data -> 'preferred_event_categories')::jsonb, '[]'::jsonb),
+    coalesce((new.raw_user_meta_data -> 'preferred_society_categories')::jsonb, '[]'::jsonb),
+    new.raw_user_meta_data ->> 'career_interest',
+    coalesce((new.raw_user_meta_data -> 'availability_preferences')::jsonb, '[]'::jsonb),
+    new.raw_user_meta_data ->> 'accessibility_preferences',
     coalesce((new.raw_user_meta_data ->> 'year_of_study')::integer, 1),
     coalesce((new.raw_user_meta_data ->> 'start_year')::integer, extract(year from now())::integer),
     new.raw_user_meta_data ->> 'avatar_url',
