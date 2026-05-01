@@ -74,6 +74,10 @@ export default function AdminUsersPage() {
 
       <div className="grid gap-4">
         {filteredProfiles.map((userProfile) => {
+          const isMuted =
+            Boolean(userProfile.muted_until) &&
+            new Date(userProfile.muted_until as string) > new Date();
+
           return (
             <article
               key={userProfile.id}

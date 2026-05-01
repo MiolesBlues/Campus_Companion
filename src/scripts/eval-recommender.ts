@@ -12,8 +12,8 @@
  * Run with:  npm run eval:recs
  */
 
-import { getSimilarEvents, type Event } from "../src/lib/ml/recommender";
-import eventsData from "../src/data/events.json";
+import { getSimilarEvents, type Event } from "../lib/ml/recommender";
+import eventsData from "../data/events.json";
 
 const allEvents = eventsData as Event[];
 const K = 3;

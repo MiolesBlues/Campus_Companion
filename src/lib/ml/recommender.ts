@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * src/lib/ml/recommender.ts
  *
@@ -7,27 +6,6 @@
  *
  * No external ML libraries — all implemented from scratch in TypeScript.
  */
-=======
-export type Event = {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  tags: string[];
-};
-
-export type SimilarEvent = Event & { similarity: number };
-
-export function getSimilarEvents(
-  targetEventId: string,
-  allEvents: Event[],
-  k = 3,
-): SimilarEvent[] {
-  const targetEvent = allEvents.find((event) => event.id === targetEventId);
->>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,23 +22,11 @@ export interface Event {
   tags: string[];
 }
 
-<<<<<<< HEAD
 /** A scored event returned by the recommender */
 export interface ScoredEvent {
   event: Event;
   score: number; // cosine similarity [0, 1]
 }
-=======
-  function tokenize(event: Event): string[] {
-    const text = [
-      event.title,
-      event.description,
-      event.category,
-      ...(event.tags || []),
-      event.category,
-      ...(event.tags || [])
-    ].join(" ");
->>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
 
 // ---------------------------------------------------------------------------
 // Text helpers

@@ -58,7 +58,7 @@ for (const event of allEvents) {
   const similar = getSimilarEvents(event.id, allEvents, K);
 
   const matches = similar.filter(
-    (s) => s.category === event.category
+    (s) => s.event.category === event.category
   ).length;
 
   totalMatches += matches;
@@ -68,7 +68,7 @@ for (const event of allEvents) {
     title: event.title,
     category: event.category,
     recs: similar.map(
-      (s) => `${s.title} [${s.category}]`
+      (s) => `${s.event.title} [${s.event.category}] (${pct(s.score)})`
     ),
     matches,
     rate: pct(matches / similar.length),

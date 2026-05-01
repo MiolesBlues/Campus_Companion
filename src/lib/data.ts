@@ -17,7 +17,7 @@ import type {
 } from "@/types/database";
 
 type FallbackEvent = {
-  id: number;
+  id: string;
   title: string;
   category: string;
   date: string;
@@ -56,8 +56,8 @@ const timetableFallback = fallbackTimetables as FallbackTimetable[];
 function mapFallbackEvents(): EventWithTags[] {
   const today = new Date().toISOString().slice(0, 10);
   return eventFallback
-    .map((event) => ({
-      id: event.id,
+    .map((event, index) => ({
+      id: index + 1,
       title: event.title,
       category: event.category,
       description: event.description,
