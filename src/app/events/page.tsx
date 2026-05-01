@@ -22,7 +22,7 @@ function CategoryBadge({ category }: { category: string }) {
   const style = CATEGORY_STYLES[category] ?? "bg-[#F7F6F3] text-[#2F3437]";
   return (
     <span
-      className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${style}`}
+      className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 py-1 text-sm font-medium leading-none ${style}`}
     >
       {category}
     </span>
@@ -301,7 +301,7 @@ export default function EventsPage() {
               <div className="flex flex-wrap gap-2">
                 <CategoryBadge category={event.category} />
                 {event.campus && (
-                  <span className="rounded-full bg-[#EAEAEA] px-2.5 py-0.5 text-xs font-medium text-[#4A4844]">
+                  <span className="inline-flex min-h-7 items-center justify-center rounded-full bg-[#EAEAEA] px-2.5 py-0.5 text-xs font-medium leading-none text-[#4A4844]">
                     {event.campus}
                   </span>
                 )}
@@ -326,7 +326,7 @@ export default function EventsPage() {
                   {event.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-[#D8D6D0] bg-[#FBFBFA] px-2.5 py-1 text-xs font-medium text-[#4A4844]"
+                      className="inline-flex min-h-7 items-center justify-center rounded-full border border-[#D8D6D0] bg-[#FBFBFA] px-2.5 py-1 text-xs font-medium leading-none text-[#4A4844]"
                     >
                       #{tag}
                     </span>
