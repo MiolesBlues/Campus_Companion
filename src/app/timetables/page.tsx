@@ -31,7 +31,7 @@ function extractGroup(entry: TimetableRecord) {
   const match = entry.module_name.match(/\((Group\s+\d+)\)$/i) ?? entry.module_code.match(/-(G\d+)$/i);
   if (!match) return "All";
   const value = match[1];
-  return value.toLowerCase().startsWith("g") ? `Group ${value.slice(1)}` : value;
+  return /^g\d+$/i.test(value) ? `Group ${value.slice(1)}` : value;
 }
 
 export default function TimetablesPage() {
