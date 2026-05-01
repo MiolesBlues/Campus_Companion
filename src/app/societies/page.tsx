@@ -6,6 +6,13 @@ import { getSocietiesList, getUserSocietyMemberships } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Society } from "@/types/database";
 
+function societyRecommendationScore(society: Society, interests: string[] | null | undefined, preferredSocietyCategories: string[] | null | undefined) {
+  let score = 0;
+  if (preferredSocietyCategories?.includes(society.category)) score += 3;
+  if (interests?.includes(society.category)) score += 2;
+  return score;
+}
+
 export default function SocietiesPage() {
   const { user, profile, refreshProfile } = useAuth();
   const [societies, setSocieties] = useState<Society[]>([]);
@@ -43,16 +50,17 @@ export default function SocietiesPage() {
   const filteredSocieties = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return societies.filter((society) => {
-      const matchesSearch = !query || [society.name, society.category, society.description, society.contact_email ?? "", society.meeting_day ?? ""]
-        .join(" ")
-        .toLowerCase()
-        .includes(query);
+    return [...societies].filter((society) => {
+      const matchesSearch = !query || [society.name, society.category, society.description, society.contact_email ?? "", society.meeting_day ?? ""].join(" ").toLowerCase().includes(query);
       const matchesCategory = selectedCategory === "All" || society.category === selectedCategory;
       const matchesDay = selectedDay === "All" || society.meeting_day === selectedDay;
       return matchesSearch && matchesCategory && matchesDay;
+    }).sort((a, b) => {
+      const scoreDiff = societyRecommendationScore(b, profile?.interests, profile?.preferred_society_categories) - societyRecommendationScore(a, profile?.interests, profile?.preferred_society_categories);
+      if (scoreDiff !== 0) return scoreDiff;
+      return a.name.localeCompare(b.name);
     });
-  }, [search, selectedCategory, selectedDay, societies]);
+  }, [profile?.interests, profile?.preferred_society_categories, search, selectedCategory, selectedDay, societies]);
 
   const toggleJoin = async (society: Society) => {
     if (!user || !profile) {
@@ -119,9 +127,13 @@ export default function SocietiesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredSocieties.map((society) => {
           const joined = memberships.includes(society.id);
+          const score = societyRecommendationScore(society, profile?.interests, profile?.preferred_society_categories);
           return (
             <article key={society.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{society.category}</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">{society.category}</span>
+                {score > 0 && <span className="inline-block rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">Matches your interests</span>}
+              </div>
               <h2 className="mt-4 text-xl font-semibold text-slate-900">{society.name}</h2>
               <p className="mt-3 text-sm text-slate-600 sm:text-base">{society.description}</p>
               <div className="mt-4 space-y-2 text-sm text-slate-500">
@@ -129,11 +141,7 @@ export default function SocietiesPage() {
                 <p><span className="font-medium text-slate-700">Contact:</span> {society.contact_email ?? "Not listed"}</p>
               </div>
               <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={() => void toggleJoin(society)}
-                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${joined ? "bg-slate-600" : "bg-slate-900"}`}
-                >
+                <button type="button" onClick={() => void toggleJoin(society)} className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${joined ? "bg-slate-600" : "bg-slate-900"}`}>
                   {joined ? "Joined" : "Join society"}
                 </button>
               </div>
@@ -142,11 +150,7 @@ export default function SocietiesPage() {
         })}
       </div>
 
-      {filteredSocieties.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">
-          No societies found for your current filters.
-        </div>
-      )}
+      {filteredSocieties.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600 shadow-sm sm:p-8">No societies found for your current filters.</div>}
     </section>
   );
 }

@@ -62,6 +62,7 @@ export default function AccountPage() {
   const [academicGroup, setAcademicGroup] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [preferredEventCategories, setPreferredEventCategories] = useState<string[]>([]);
+  const [preferredSocietyCategories, setPreferredSocietyCategories] = useState<string[]>([]);
   const [startYear, setStartYear] = useState(String(new Date().getFullYear()));
   const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -75,6 +76,7 @@ export default function AccountPage() {
     setAcademicGroup(profile.academic_group ?? "");
     setSelectedInterests(profile.interests ?? []);
     setPreferredEventCategories(profile.preferred_event_categories ?? []);
+    setPreferredSocietyCategories(profile.preferred_society_categories ?? []);
     setStartYear(String(profile.start_year ?? new Date().getFullYear()));
     setAvatarUrl(profile.avatar_url ?? "");
   }, [profile]);
@@ -126,6 +128,7 @@ export default function AccountPage() {
         academic_group: academicGroup || null,
         interests: selectedInterests,
         preferred_event_categories: preferredEventCategories,
+        preferred_society_categories: preferredSocietyCategories,
         start_year: parsedStartYear,
         year_of_study: nextYear,
         avatar_url: avatarUrl || null,
@@ -232,6 +235,16 @@ export default function AccountPage() {
                     {eventCategoryOptions.map((option) => {
                       const active = preferredEventCategories.includes(option);
                       return <button key={option} type="button" onClick={() => setPreferredEventCategories(toggleValue(preferredEventCategories, option))} className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-slate-900 text-white" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}>{option}</button>;
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-slate-700">Preferred society categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    {interestOptions.map((option) => {
+                      const active = preferredSocietyCategories.includes(option);
+                      return <button key={option} type="button" onClick={() => setPreferredSocietyCategories(toggleValue(preferredSocietyCategories, option))} className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-emerald-600 text-white" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}>{option}</button>;
                     })}
                   </div>
                 </div>
