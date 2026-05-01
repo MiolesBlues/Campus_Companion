@@ -10,7 +10,9 @@ import { notFound } from "next/navigation";
 import { getSimilarEvents, type Event } from "@/lib/ml/recommender";
 import eventsData from "@/data/events.json";
 
-const allEvents = eventsData as Event[];
+const allEvents: Event[] = (eventsData as Array<Omit<Event, "id"> & { id: number | string }>).map(
+  (e) => ({ ...e, id: String(e.id), tags: e.tags ?? [] }),
+);
 
 // ---------------------------------------------------------------------------
 // Static params (pre-render all event pages at build time)
@@ -239,11 +241,11 @@ export default async function EventDetailPage({
             <p className="text-gray-500">No similar events found.</p>
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3" role="list">
-              {similar.map(({ event: simEvt, score }) => (
+              {similar.map((simEvt) => (
                 <SimilarEventCard
                   key={simEvt.id}
                   event={simEvt}
-                  score={score}
+                  score={simEvt.similarity}
                 />
               ))}
             </ul>

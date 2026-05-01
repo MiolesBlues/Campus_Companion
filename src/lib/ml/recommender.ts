@@ -1,4 +1,21 @@
-export function getSimilarEvents(targetEventId: string, allEvents: any[], k = 3) {
+export type Event = {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  tags: string[];
+};
+
+export type SimilarEvent = Event & { similarity: number };
+
+export function getSimilarEvents(
+  targetEventId: string,
+  allEvents: Event[],
+  k = 3,
+): SimilarEvent[] {
   const targetEvent = allEvents.find((event) => event.id === targetEventId);
 
   if (!targetEvent) return [];
@@ -7,7 +24,7 @@ export function getSimilarEvents(targetEventId: string, allEvents: any[], k = 3)
     "the", "and", "a", "an", "to", "of", "in", "for", "on", "with", "at", "is"
   ]);
 
-  function tokenize(event: any): string[] {
+  function tokenize(event: Event): string[] {
     const text = [
       event.title,
       event.description,
