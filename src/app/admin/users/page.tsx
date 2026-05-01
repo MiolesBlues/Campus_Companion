@@ -73,42 +73,48 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="grid gap-4">
-        {filteredProfiles.map((userProfile) => {
-          return (
-            <article
-              key={userProfile.id}
-              className="rounded-xl border border-[#EAEAEA] bg-white p-5 "
-            >
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-[#111111]">
-                    {userProfile.full_name}
-                  </h2>
-                  <p className="text-sm text-[#787774]">{userProfile.email}</p>
-                  <p className="mt-1 text-sm text-[#64615C]">
-                    Current role: {userProfile.role}
-                  </p>
+        {filteredProfiles.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C]">
+            No users found.
+          </div>
+        ) : (
+          filteredProfiles.map((userProfile) => {
+            return (
+              <article
+                key={userProfile.id}
+                className="rounded-xl border border-[#EAEAEA] bg-white p-5 "
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[#111111]">
+                      {userProfile.full_name}
+                    </h2>
+                    <p className="text-sm text-[#787774]">{userProfile.email}</p>
+                    <p className="mt-1 text-sm text-[#64615C]">
+                      Current role: {userProfile.role}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <select
+                      value={userProfile.role}
+                      onChange={(event) =>
+                        void updateRole(
+                          userProfile.id,
+                          event.target.value as UserRole,
+                        )
+                      }
+                      className="rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111]"
+                    >
+                      <option value="student">student</option>
+                      <option value="teacher">teacher</option>
+                      <option value="admin">admin</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <select
-                    value={userProfile.role}
-                    onChange={(event) =>
-                      void updateRole(
-                        userProfile.id,
-                        event.target.value as UserRole,
-                      )
-                    }
-                    className="rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111]"
-                  >
-                    <option value="student">student</option>
-                    <option value="teacher">teacher</option>
-                    <option value="admin">admin</option>
-                  </select>
-                </div>
-              </div>
-            </article>
-          );
-        })}
+              </article>
+            );
+          })
+        )}
       </div>
     </section>
   );

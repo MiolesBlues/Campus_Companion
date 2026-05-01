@@ -215,7 +215,7 @@ export async function getProfilesList() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, course, campus, year_of_study, start_year, avatar_url, societies, created_at, updated_at, bio")
+    .select("id, email, full_name, role, course, created_at, updated_at")
     .order("full_name", { ascending: true });
 
   if (error || !data) {
