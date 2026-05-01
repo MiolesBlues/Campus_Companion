@@ -219,7 +219,12 @@ export async function getProfilesList() {
     .order("full_name", { ascending: true });
 
   if (error || !data) {
-    console.error("Failed to load profiles list", error);
+    console.error("Failed to load profiles list", {
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
+      code: error?.code,
+    });
     return [];
   }
 
