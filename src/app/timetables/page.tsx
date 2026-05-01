@@ -49,27 +49,17 @@ function extractGroup(entry: TimetableRecord) {
   const match =
     entry.module_name.match(/\((Group\s+\d+)\)$/i) ??
     entry.module_code.match(/-(G\d+)$/i);
-  if (!match) return "All";
+  if (!match) return "";
   const value = match[1];
   return /^g\d+$/i.test(value) ? `Group ${value.slice(1)}` : value;
 }
 
-function matchesStudentFilters(
-  entry: TimetableRecord,
-  selectedCourse: string,
-  selectedYear: string,
-  selectedGroup: string,
-) {
-  if (entry.year_of_study === null) return false;
-  if (selectedCourse && entry.course_name !== selectedCourse) return false;
-  if (selectedYear && `Year ${entry.year_of_study}` !== selectedYear) return false;
-
-  if (selectedGroup) {
-    const group = extractGroup(entry);
-    if (group !== "All" && group !== selectedGroup) return false;
-  }
-
-  return true;
+function sortEntries(entries: TimetableRecord[]) {
+  return [...entries].sort(
+    (a, b) =>
+      daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) ||
+      normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)),
+  );
 }
 
 export default function TimetablesPage() {
@@ -79,8 +69,10 @@ export default function TimetablesPage() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
-  const [filtersReady, setFiltersReady] = useState(false);
+
   const effectiveYear = getEffectiveYearOfStudy(profile);
+  const isTeacher = profile?.role === "teacher";
+  const isStudent = profile?.role === "student";
 
   useEffect(() => {
     const loadTimetables = async () => {
@@ -92,168 +84,114 @@ export default function TimetablesPage() {
     void loadTimetables();
   }, []);
 
+  const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
+
   const studentEntries = useMemo(
     () => entries.filter((entry) => entry.year_of_study !== null),
     [entries],
   );
-  const courseEntries = useMemo(
+
+  const teacherEntries = useMemo(
     () =>
-      studentEntries.filter((entry) =>
-        !selectedCourse ? true : entry.course_name === selectedCourse,
+      sortEntries(
+        entries.filter(
+          (entry) =>
+            teacherEmail.length > 0 &&
+            (entry.lecturer_email ?? "").trim().toLowerCase() === teacherEmail,
+        ),
       ),
-    [selectedCourse, studentEntries],
+    [entries, teacherEmail],
   );
-  const yearScopedEntries = useMemo(
-    () =>
-      courseEntries.filter((entry) =>
-        !selectedYear ? true : `Year ${entry.year_of_study}` === selectedYear,
-      ),
-    [courseEntries, selectedYear],
-  );
+
   const courses = useMemo(
     () => [...new Set(studentEntries.map((entry) => entry.course_name))],
     [studentEntries],
   );
-  const years = useMemo(
-    () => [...new Set(courseEntries.map((entry) => `Year ${entry.year_of_study}`))],
-    [courseEntries],
-  );
-  const groups = useMemo(
-    () => [
-      ...new Set(
-        yearScopedEntries
-          .map((entry) => extractGroup(entry))
-          .filter((group) => group !== "All"),
-      ),
-    ],
-    [yearScopedEntries],
-  );
 
   useEffect(() => {
-    if (profile?.role === "teacher") {
-      setFiltersReady(true);
-      return;
-    }
+    if (!isStudent) return;
 
-    if (profile?.role !== "student") {
-      setFiltersReady(false);
-      return;
-    }
-
-    const nextCourse = profile.course && courses.includes(profile.course)
-      ? profile.course
-      : (courses[0] ?? "");
-
-    const preferredYear = effectiveYear ? `Year ${effectiveYear}` : "";
-    const nextYear = preferredYear && years.includes(preferredYear)
-      ? preferredYear
-      : (years[0] ?? "");
+    const nextCourse =
+      profile?.course && courses.includes(profile.course)
+        ? profile.course
+        : (courses[0] ?? "");
 
     if (nextCourse !== selectedCourse) {
       setSelectedCourse(nextCourse);
     }
+  }, [courses, isStudent, profile?.course, selectedCourse]);
+
+  const courseEntries = useMemo(
+    () =>
+      studentEntries.filter((entry) =>
+        selectedCourse ? entry.course_name === selectedCourse : false,
+      ),
+    [selectedCourse, studentEntries],
+  );
+
+  const years = useMemo(
+    () => [...new Set(courseEntries.map((entry) => `Year ${entry.year_of_study}`))],
+    [courseEntries],
+  );
+
+  useEffect(() => {
+    if (!isStudent) return;
+
+    const preferredYear = effectiveYear ? `Year ${effectiveYear}` : "";
+    const nextYear =
+      preferredYear && years.includes(preferredYear)
+        ? preferredYear
+        : (years[0] ?? "");
 
     if (nextYear !== selectedYear) {
       setSelectedYear(nextYear);
     }
+  }, [effectiveYear, isStudent, selectedYear, years]);
 
-    if (!nextCourse || !nextYear) {
-      setFiltersReady(false);
-      return;
-    }
+  const yearEntries = useMemo(
+    () =>
+      courseEntries.filter((entry) => `Year ${entry.year_of_study}` === selectedYear),
+    [courseEntries, selectedYear],
+  );
 
-    setFiltersReady(true);
-  }, [
-    courses,
-    effectiveYear,
-    profile,
-    selectedCourse,
-    selectedYear,
-    years,
-  ]);
+  const groups = useMemo(
+    () => [...new Set(yearEntries.map((entry) => extractGroup(entry)).filter(Boolean))],
+    [yearEntries],
+  );
 
   useEffect(() => {
-    if (selectedCourse && !courses.includes(selectedCourse)) {
-      setSelectedCourse(courses[0] ?? "");
-    }
-  }, [courses, selectedCourse]);
+    if (!isStudent) return;
 
-  useEffect(() => {
-    if (selectedYear && !years.includes(selectedYear)) {
-      setSelectedYear(years[0] ?? "");
-    }
-  }, [selectedYear, years]);
-
-  useEffect(() => {
     const preferredGroup = profile?.academic_group ?? "";
-    if (preferredGroup && groups.includes(preferredGroup)) {
-      setSelectedGroup(preferredGroup);
-      return;
+    const nextGroup =
+      preferredGroup && groups.includes(preferredGroup)
+        ? preferredGroup
+        : (groups[0] ?? "");
+
+    if (nextGroup !== selectedGroup) {
+      setSelectedGroup(nextGroup);
     }
+  }, [groups, isStudent, profile?.academic_group, selectedGroup]);
 
-    if (selectedGroup && !groups.includes(selectedGroup)) {
-      setSelectedGroup(groups[0] ?? "");
-      return;
-    }
+  const studentEntriesToShow = useMemo(() => {
+    if (!selectedCourse || !selectedYear) return [];
 
-    if (!selectedGroup && groups[0]) {
-      setSelectedGroup(groups[0]);
-    }
-  }, [groups, profile?.academic_group, selectedGroup]);
-
-  const filteredEntries = useMemo(() => {
-    const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
-    const teacherEntries = entries.filter((entry) => {
-      if (!teacherEmail) return false;
-      return (entry.lecturer_email ?? "").trim().toLowerCase() === teacherEmail;
-    });
-
-    if (profile?.role === "teacher") {
-      return teacherEntries.sort(
-        (a, b) =>
-          daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) ||
-          normalizeTime(a.start_time).localeCompare(
-            normalizeTime(b.start_time),
-          ),
-      );
-    }
-
-    if (!filtersReady) {
-      return [];
-    }
-
-    const filtered = entries.filter((entry) =>
-      matchesStudentFilters(
-        entry,
-        selectedCourse,
-        selectedYear,
-        selectedGroup,
-      ),
+    return sortEntries(
+      yearEntries.filter((entry) => {
+        if (!selectedGroup) return true;
+        const group = extractGroup(entry);
+        return !group || group === selectedGroup;
+      }),
     );
+  }, [selectedCourse, selectedGroup, selectedYear, yearEntries]);
 
-    return filtered.sort(
-      (a, b) =>
-        daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) ||
-        normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)),
-    );
-  }, [
-    entries,
-    filtersReady,
-    profile?.email,
-    profile?.role,
-    selectedCourse,
-    selectedGroup,
-    selectedYear,
-    user?.email,
-  ]);
-
-  const showGrid = true;
+  const filteredEntries = isTeacher ? teacherEntries : studentEntriesToShow;
 
   const timeSlots = useMemo(() => {
     const slotSet = new Set(defaultTimeSlots);
-    filteredEntries.forEach((entry) =>
-      slotSet.add(normalizeTime(entry.start_time)),
-    );
+    filteredEntries.forEach((entry) => {
+      slotSet.add(normalizeTime(entry.start_time));
+    });
     return Array.from(slotSet).sort();
   }, [filteredEntries]);
 
@@ -283,12 +221,10 @@ export default function TimetablesPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-[#111111]">
-            {profile?.role === "teacher"
-              ? "Teacher Timetable"
-              : "Student Timetable"}
+            {isTeacher ? "Teacher Timetable" : "Student Timetable"}
           </h1>
           <p className="mt-2 text-[#64615C]">
-            {profile?.role === "teacher"
+            {isTeacher
               ? `Your teaching schedule is shown automatically based on your account email${profile?.email ? ` (${profile.email})` : ""}.`
               : "Pick a course, year, and group for a focused timetable."}
           </p>
@@ -300,14 +236,14 @@ export default function TimetablesPage() {
         </div>
       </div>
 
-      {profile?.role !== "teacher" && (
-        <div className="grid gap-4 rounded-xl border border-[#EAEAEA] bg-white p-6 md:grid-cols-2">
+      {!isTeacher && (
+        <div className="grid gap-4 rounded-xl border border-[#EAEAEA] bg-white p-6 md:grid-cols-3">
           <div>
             <label
               htmlFor="course-filter"
               className="mb-2 block text-sm font-medium text-[#4A4844]"
             >
-              Filter by course
+              Course
             </label>
             <select
               id="course-filter"
@@ -322,12 +258,13 @@ export default function TimetablesPage() {
               ))}
             </select>
           </div>
+
           <div>
             <label
               htmlFor="year-filter"
               className="mb-2 block text-sm font-medium text-[#4A4844]"
             >
-              Filter by year
+              Year
             </label>
             <select
               id="year-filter"
@@ -342,12 +279,13 @@ export default function TimetablesPage() {
               ))}
             </select>
           </div>
+
           <div>
             <label
               htmlFor="group-filter"
               className="mb-2 block text-sm font-medium text-[#4A4844]"
             >
-              Filter by group
+              Group
             </label>
             <select
               id="group-filter"
@@ -355,125 +293,86 @@ export default function TimetablesPage() {
               onChange={(event) => setSelectedGroup(event.target.value)}
               className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
             >
-              {groups.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
+              {groups.length === 0 ? (
+                <option value="">No groups</option>
+              ) : (
+                groups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>
       )}
 
-      {showGrid ? (
-        <div className="overflow-hidden rounded-xl border border-[#EAEAEA] bg-white ">
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border border-[#D8D6D0] bg-[#F7F6F3] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[#4A4844]">
-                    Time
+      <div className="overflow-hidden rounded-xl border border-[#EAEAEA] bg-white">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border border-[#D8D6D0] bg-[#F7F6F3] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[#4A4844]">
+                  Time
+                </th>
+                {daysOrder.map((day) => (
+                  <th
+                    key={day}
+                    className={`border border-[#D8D6D0] px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-[#111111] ${dayColors[day]}`}
+                  >
+                    {day}
                   </th>
-                  {daysOrder.map((day) => (
-                    <th
-                      key={day}
-                      className={`border border-[#D8D6D0] px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-[#111111] ${dayColors[day]}`}
-                    >
-                      {day}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {timeSlots.map((time) => (
-                  <tr key={time}>
-                    <td className="border border-[#D8D6D0] bg-[#FBFBFA] px-3 py-3 text-xs font-medium text-[#4A4844]">
-                      {time}
-                    </td>
-                    {daysOrder.map((day) => {
-                      const cellEntries = cellMap.get(`${day}-${time}`) ?? [];
-                      return (
-                        <td
-                          key={`${day}-${time}`}
-                          className="min-w-[170px] border border-[#D8D6D0] px-1.5 py-1.5 align-top"
-                        >
-                          <div className="flex min-h-20 flex-col gap-1.5">
-                            {cellEntries.map((entry) => (
-                              <div
-                                key={entry.id}
-                                className={`rounded-lg border p-2 text-xs ${subjectColor(entry.module_code)}`}
-                              >
-                                <p className="font-semibold text-[#111111]">
-                                  {entry.module_name}
-                                </p>
-                                <p className="mt-0.5 text-[#4A4844]">
-                                  {normalizeTime(entry.start_time)} -{" "}
-                                  {normalizeTime(entry.end_time)}
-                                </p>
-                                <p className="mt-0.5 text-[#4A4844]">
-                                  {entry.room}
-                                </p>
-                                <p className="mt-0.5 text-[#4A4844]">
-                                  {entry.lecturer_name}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {timeSlots.map((time) => (
+                <tr key={time}>
+                  <td className="border border-[#D8D6D0] bg-[#FBFBFA] px-3 py-3 text-xs font-medium text-[#4A4844]">
+                    {time}
+                  </td>
+                  {daysOrder.map((day) => {
+                    const cellEntries = cellMap.get(`${day}-${time}`) ?? [];
+                    return (
+                      <td
+                        key={`${day}-${time}`}
+                        className="min-w-[170px] border border-[#D8D6D0] px-1.5 py-1.5 align-top"
+                      >
+                        <div className="flex min-h-20 flex-col gap-1.5">
+                          {cellEntries.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className={`rounded-lg border p-2 text-xs ${subjectColor(entry.module_code)}`}
+                            >
+                              <p className="font-semibold text-[#111111]">
+                                {entry.module_name}
+                              </p>
+                              <p className="mt-0.5 text-[#4A4844]">
+                                {normalizeTime(entry.start_time)} - {" "}
+                                {normalizeTime(entry.end_time)}
+                              </p>
+                              <p className="mt-0.5 text-[#4A4844]">{entry.room}</p>
+                              <p className="mt-0.5 text-[#4A4844]">
+                                {entry.lecturer_name}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredEntries.map((entry) => (
-            <article
-              key={entry.id}
-              className="rounded-xl border border-[#EAEAEA] bg-white p-5 "
-            >
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="text-sm font-medium text-[#787774]">
-                    {entry.day_of_week} • {normalizeTime(entry.start_time)} -{" "}
-                    {normalizeTime(entry.end_time)}
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold text-[#111111]">
-                    {entry.module_name}
-                  </h2>
-                  <p className="mt-1 text-sm text-[#64615C]">
-                    {profile?.role === "teacher"
-                      ? entry.course_name
-                      : `${entry.course_name}${entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}${extractGroup(entry) !== "All" ? ` · ${extractGroup(entry)}` : ""}`}
-                  </p>
-                  <p className="mt-1 text-sm text-[#64615C]">
-                    {entry.building}, {entry.room}
-                  </p>
-                  <p className="mt-1 text-sm text-[#64615C]">
-                    {entry.lecturer_name}
-                  </p>
-                </div>
-                <span
-                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium text-[#2F3437] ${subjectColor(entry.module_code)}`}
-                >
-                  {entry.module_code}
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      </div>
 
       {filteredEntries.length === 0 && (
-        <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C] ">
-          {profile?.role === "teacher"
+        <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C]">
+          {isTeacher
             ? `No timetable entries found for ${profile?.email ?? user?.email ?? "this teacher account"}. Check that the timetable lecturer email matches exactly.`
-            : !filtersReady
-              ? "Loading the correct timetable for your course filters..."
-              : "No timetable entries found for this account or filter."}
+            : "No timetable entries found for this course, year, or group."}
         </div>
       )}
     </section>
