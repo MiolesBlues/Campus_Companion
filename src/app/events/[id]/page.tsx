@@ -2,34 +2,39 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEvents } from "@/lib/data";
 import { getSimilarEvents, type Event } from "@/lib/ml/recommender";
+import { EventActions } from "./event-actions";
 
 export const dynamicParams = false;
 
 const CATEGORY_STYLES: Record<string, string> = {
-  Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
-  Career: "bg-[#FBF3DB] text-[#956400]",
-  Careers: "bg-[#FBF3DB] text-[#956400]",
-  Sport: "bg-[#EDF3EC] text-[#346538]",
-  Sports: "bg-[#EDF3EC] text-[#346538]",
-  Social: "bg-[#F1EDF8] text-[#6B5B7D]",
-  Wellness: "bg-[#FDEBEC] text-[#9F2F2D]",
-  Arts: "bg-[#FBF3DB] text-[#956400]",
-  Cultural: "bg-[#FFF1E6] text-[#B85C00]",
-  Technology: "bg-[#E1F3FE] text-[#1F6C9F]",
+  Academic: "border-[#B8DEF3] bg-[#E1F3FE] text-[#1F6C9F]",
+  Career: "border-[#ECD28B] bg-[#FBF3DB] text-[#956400]",
+  Careers: "border-[#ECD28B] bg-[#FBF3DB] text-[#956400]",
+  Sport: "border-[#BBD6B7] bg-[#EDF3EC] text-[#346538]",
+  Sports: "border-[#BBD6B7] bg-[#EDF3EC] text-[#346538]",
+  Social: "border-[#D8CBE8] bg-[#F1EDF8] text-[#6B5B7D]",
+  Wellness: "border-[#F0C6C7] bg-[#FDEBEC] text-[#9F2F2D]",
+  Arts: "border-[#ECD28B] bg-[#FBF3DB] text-[#956400]",
+  Cultural: "border-[#F2CDAA] bg-[#FFF1E6] text-[#B85C00]",
+  Technology: "border-[#B8DEF3] bg-[#E1F3FE] text-[#1F6C9F]",
 };
 
 function CategoryBadge({ category }: { category: string }) {
-  const style = CATEGORY_STYLES[category] ?? "bg-[#F7F6F3] text-[#2F3437]";
+  const style =
+    CATEGORY_STYLES[category] ??
+    "border-[#D8D6D0] bg-[#F7F6F3] text-[#2F3437]";
   return (
     <span
-      className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 py-1 text-sm font-medium leading-none ${style}`}
+      className={`inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-sm font-semibold leading-none ${style}`}
     >
       {category}
     </span>
   );
 }
 
-function mapEventForRecommendations(event: Awaited<ReturnType<typeof getEvents>>[number]): Event {
+function mapEventForRecommendations(
+  event: Awaited<ReturnType<typeof getEvents>>[number],
+): Event {
   return {
     id: String(event.id),
     title: event.title,
@@ -42,27 +47,58 @@ function mapEventForRecommendations(event: Awaited<ReturnType<typeof getEvents>>
   };
 }
 
+function InfoTile({
+  label,
+  value,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-[#E2E0DA] bg-white/85 p-4 shadow-[0_18px_40px_-34px_rgba(17,17,17,0.45)] ${className}`}
+    >
+      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[#787774]">
+        {label}
+      </dt>
+      <dd className="mt-2 text-base font-semibold leading-snug text-[#111111]">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 function SimilarEventCard({ event, score }: { event: Event; score: number }) {
   return (
     <li>
       <Link
         href={`/events/${event.id}`}
-        className="group flex flex-col gap-1 rounded-xl border border-[#EAEAEA] bg-white p-4 transition hover:border-[#A9D2E8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1F6C9F]"
+        className="group flex h-full flex-col gap-4 rounded-xl border border-[#E2E0DA] bg-[#FBFBFA] p-5 transition hover:-translate-y-1 hover:border-[#A9D2E8] hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1F6C9F]"
         aria-label={`View event: ${event.title}`}
       >
-        <div className="flex items-start justify-between gap-2">
-          <span className="font-semibold leading-snug text-[#111111] group-hover:text-[#1F6C9F]">
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-base font-semibold leading-snug text-[#111111] group-hover:text-[#1F6C9F]">
             {event.title}
           </span>
           <CategoryBadge category={event.category} />
         </div>
 
-        <p className="text-sm text-[#787774]">
-          {formatDate(event.date)} · {event.time}
-        </p>
-        <p className="text-sm text-[#787774]">{event.location}</p>
-        <p className="mt-1 text-xs text-[#9B9892]">
-          Similarity: {(score * 100).toFixed(1)}%
+        <div className="mt-auto space-y-2 border-t border-[#EAEAEA] pt-4 text-sm text-[#64615C]">
+          <p>{formatDate(event.date)}</p>
+          <p>{event.time}</p>
+          <p>{event.location}</p>
+        </div>
+
+        <div className="h-1.5 overflow-hidden rounded-full bg-[#EAEAEA]">
+          <div
+            className="h-full rounded-full bg-[#1F6C9F]"
+            style={{ width: `${Math.max(8, Math.round(score * 100))}%` }}
+          />
+        </div>
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#787774]">
+          {(score * 100).toFixed(1)}% match
         </p>
       </Link>
     </li>
@@ -112,11 +148,16 @@ export default async function EventDetailPage({
 
   const recommendationEvents = events.map(mapEventForRecommendations);
   const similar = getSimilarEvents(String(event.id), recommendationEvents, 3);
+  const dateLabel = formatDate(event.event_date);
+  const timeLabel = `${event.start_time} - ${event.end_time}`;
+  const campusLabel = event.campus ?? "Campus wide";
 
   return (
-    <section className="min-h-[100dvh] bg-[#F7F6F3]">
-      <header className="border-b border-[#EAEAEA] bg-white">
-        <div className="mx-auto max-w-3xl px-4 py-4">
+    <section className="relative -mx-4 -my-6 min-h-[100dvh] overflow-hidden bg-[#F7F6F3] sm:-mx-6 sm:-my-8 lg:-my-10">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_18%_10%,rgba(31,108,159,0.16),transparent_34%),radial-gradient(circle_at_88%_4%,rgba(251,243,219,0.9),transparent_30%)]" />
+
+      <header className="relative border-b border-[#E2E0DA] bg-[#FBFBFA]/85 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-[#787774]">
               <li>
@@ -137,7 +178,7 @@ export default async function EventDetailPage({
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
-              <li className="max-w-xs truncate font-medium text-[#111111]">
+              <li className="max-w-[12rem] truncate font-medium text-[#111111] sm:max-w-xs">
                 {event.title}
               </li>
             </ol>
@@ -145,82 +186,161 @@ export default async function EventDetailPage({
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+      <div className="relative mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 sm:py-12 lg:py-14">
         <article aria-labelledby="event-title">
-          <div className="space-y-5 rounded-xl border border-[#EAEAEA] bg-white p-6 md:p-8">
-            <div className="flex flex-wrap items-start gap-3">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.14fr)_minmax(320px,0.86fr)] lg:items-stretch">
+            <div className="relative overflow-hidden rounded-2xl border border-[#E2E0DA] bg-white p-6 shadow-[0_30px_80px_-58px_rgba(17,17,17,0.65)] sm:p-8 lg:p-10">
+              <div className="absolute right-0 top-0 h-36 w-36 translate-x-10 -translate-y-12 rounded-full bg-[#E1F3FE]" />
+              <div className="absolute bottom-0 right-10 h-20 w-40 translate-y-12 rounded-full bg-[#FBF3DB]" />
+
+              <div className="relative flex flex-wrap items-center gap-3">
+                <CategoryBadge category={event.category} />
+                <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#E2E0DA] bg-[#FBFBFA] px-3 py-1 text-sm font-semibold leading-none text-[#4A4844]">
+                  {campusLabel}
+                </span>
+              </div>
+
               <h1
                 id="event-title"
-                className="flex-1 text-2xl font-bold leading-tight text-[#111111]"
+                className="relative mt-7 max-w-4xl text-4xl font-bold leading-[0.98] tracking-tight text-[#111111] sm:text-5xl lg:text-6xl"
               >
                 {event.title}
               </h1>
-              <CategoryBadge category={event.category} />
-            </div>
 
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-medium text-[#787774]">Date</dt>
-                <dd className="text-[#111111]">{formatDate(event.event_date)}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-[#787774]">Time</dt>
-                <dd className="text-[#111111]">
-                  {event.start_time} - {event.end_time}
-                </dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="font-medium text-[#787774]">Location</dt>
-                <dd className="text-[#111111]">{event.location}</dd>
-              </div>
-              {event.campus && (
-                <div className="sm:col-span-2">
-                  <dt className="font-medium text-[#787774]">Campus</dt>
-                  <dd className="text-[#111111]">{event.campus}</dd>
-                </div>
-              )}
-            </dl>
-
-            <div>
-              <h2 className="mb-1 text-base font-semibold text-[#4A4844]">
-                About this event
-              </h2>
-              <p className="leading-relaxed text-[#4A4844]">
+              <p className="relative mt-6 max-w-2xl text-base leading-8 text-[#4A4844] sm:text-lg">
                 {event.description}
               </p>
+
+              <div className="relative mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/events"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#111111] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#333333]"
+                >
+                  Back to events
+                </Link>
+                <a
+                  href="#similar-heading"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D8D6D0] bg-white px-5 py-3 text-sm font-semibold text-[#111111] transition hover:border-[#A9D2E8] hover:bg-[#FBFBFA]"
+                >
+                  See similar events
+                </a>
+              </div>
             </div>
 
-            {event.tags.length > 0 && (
-              <div>
-                <h2 className="mb-2 text-sm font-semibold text-[#787774]">
-                  Tags
-                </h2>
-                <ul className="flex flex-wrap gap-2" aria-label="Event tags">
-                  {event.tags.map((tag) => (
-                    <li key={tag}>
-                      <span className="inline-flex min-h-7 items-center justify-center rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium leading-none text-[#1F6C9F]">
-                        #{tag}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <aside className="rounded-2xl border border-[#D8D6D0] bg-[#111111] p-5 text-white shadow-[0_26px_80px_-56px_rgba(17,17,17,0.75)] sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A9D2E8]">
+                Event snapshot
+              </p>
+              <dl className="mt-5 grid gap-3">
+                <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                    Date
+                  </dt>
+                  <dd className="mt-2 text-xl font-semibold leading-tight">
+                    {dateLabel}
+                  </dd>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                      Time
+                    </dt>
+                    <dd className="mt-2 font-semibold">{timeLabel}</dd>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                      Campus
+                    </dt>
+                    <dd className="mt-2 font-semibold">{campusLabel}</dd>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                    Location
+                  </dt>
+                  <dd className="mt-2 text-lg font-semibold leading-snug">
+                    {event.location}
+                  </dd>
+                </div>
+              </dl>
+            </aside>
           </div>
         </article>
 
-        <section aria-labelledby="similar-heading">
-          <h2
-            id="similar-heading"
-            className="mb-4 text-lg font-bold text-[#111111]"
-          >
-            Similar Events
-          </h2>
+        <section className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
+          <div className="rounded-2xl border border-[#E2E0DA] bg-white p-6 sm:p-7">
+            <h2 className="text-xl font-bold tracking-tight text-[#111111]">
+              Plan your visit
+            </h2>
+            <dl className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <InfoTile label="Date" value={dateLabel} />
+              <InfoTile label="Time" value={timeLabel} />
+              <InfoTile label="Location" value={event.location} />
+              <InfoTile label="Campus" value={campusLabel} />
+            </dl>
+          </div>
+
+          <div className="rounded-2xl border border-[#E2E0DA] bg-white p-6 sm:p-7">
+            <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.48fr)]">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-[#111111]">
+                  About this event
+                </h2>
+                <p className="mt-4 max-w-3xl text-base leading-8 text-[#4A4844]">
+                  {event.description}
+                </p>
+
+                {event.tags.length > 0 && (
+                  <div className="mt-7 border-t border-[#EAEAEA] pt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[#787774]">
+                      Tags
+                    </h3>
+                    <ul
+                      className="mt-3 flex flex-wrap gap-2"
+                      aria-label="Event tags"
+                    >
+                      {event.tags.map((tag) => (
+                        <li key={tag}>
+                          <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#CFE6F4] bg-[#E1F3FE] px-3 py-1 text-xs font-semibold leading-none text-[#1F6C9F]">
+                            #{tag}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <EventActions event={event} />
+            </div>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="similar-heading"
+          className="rounded-2xl border border-[#E2E0DA] bg-white p-6 sm:p-7"
+        >
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="similar-heading"
+                className="text-2xl font-bold tracking-tight text-[#111111]"
+              >
+                Similar Events
+              </h2>
+              <p className="mt-1 text-sm text-[#64615C]">
+                More campus moments that share this event&apos;s category, tags,
+                or theme.
+              </p>
+            </div>
+          </div>
 
           {similar.length === 0 ? (
-            <p className="text-[#787774]">No similar events found.</p>
+            <p className="rounded-xl border border-dashed border-[#D8D6D0] bg-[#FBFBFA] p-5 text-[#64615C]">
+              No similar events found.
+            </p>
           ) : (
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2" role="list">
+            <ul className="grid grid-cols-1 gap-4 md:grid-cols-3" role="list">
               {similar.map((simEvt) => (
                 <SimilarEventCard
                   key={simEvt.id}
@@ -231,15 +351,6 @@ export default async function EventDetailPage({
             </ul>
           )}
         </section>
-
-        <div>
-          <Link
-            href="/events"
-            className="inline-flex items-center gap-1 rounded text-sm text-[#1F6C9F] hover:text-[#164E73] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1F6C9F]"
-          >
-            Back to all events
-          </Link>
-        </div>
       </div>
     </section>
   );

@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { getEvents, getUserEventRegistrations } from "@/lib/data";
-import { downloadEventIcs } from "@/lib/ics";
+import { getEvents } from "@/lib/data";
 import { eventRecommendationScore } from "@/lib/preferences";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -30,10 +28,8 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 export default function EventsPage() {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [events, setEvents] = useState<EventWithTags[]>([]);
-  const [registrations, setRegistrations] = useState<number[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
   const [showIcsHelp, setShowIcsHelp] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -48,19 +44,6 @@ export default function EventsPage() {
 
     void loadEvents();
   }, []);
-
-  useEffect(() => {
-    const loadRegistrations = async () => {
-      if (!user) {
-        setRegistrations([]);
-        return;
-      }
-      const data = await getUserEventRegistrations(user.id);
-      setRegistrations(data.map((item) => item.event_id));
-    };
-
-    void loadRegistrations();
-  }, [user]);
 
   const categories = useMemo(
     () => ["All", ...new Set(events.map((event) => event.category))],
@@ -145,36 +128,6 @@ export default function EventsPage() {
     });
   }, [events, scoreByEventId, search, selectedCategory, selectedCampus, sortOrder]);
 
-  const toggleRegister = async (eventItem: EventWithTags) => {
-    if (!user) {
-      setMessage("Please log in to register for events.");
-      return;
-    }
-
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setMessage("Supabase is not configured.");
-      return;
-    }
-
-    const isRegistered = registrations.includes(eventItem.id);
-    if (isRegistered) {
-      await supabase
-        .from("event_registrations")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("event_id", eventItem.id);
-      setRegistrations((current) => current.filter((id) => id !== eventItem.id));
-      setMessage(`Unregistered from ${eventItem.title}.`);
-    } else {
-      await supabase
-        .from("event_registrations")
-        .insert({ user_id: user.id, event_id: eventItem.id });
-      setRegistrations((current) => [...current, eventItem.id]);
-      setMessage(`Registered for ${eventItem.title}.`);
-    }
-  };
-
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
@@ -207,7 +160,8 @@ export default function EventsPage() {
           <div className="rounded-xl border border-[#CFE6F4] bg-[#E1F3FE] p-4 text-sm text-[#164E73]">
             <p className="font-semibold">How to add an event to your calendar</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
-              <li>Click <strong>Download ICS</strong> on an event card.</li>
+              <li>Open an event by clicking <strong>View details</strong>.</li>
+              <li>On the event page, click <strong>Download ICS</strong>.</li>
               <li>Open the downloaded file from your browser or downloads folder.</li>
               <li>Choose your calendar app, or import it manually.</li>
               <li>Confirm the event save so you get reminders later.</li>
@@ -283,16 +237,8 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {message && (
-        <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 text-sm text-[#64615C]">
-          {message}
-        </div>
-      )}
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredEvents.map((event) => {
-          const isRegistered = registrations.includes(event.id);
-          const score = scoreByEventId.get(event.id) ?? 0;
           return (
             <article
               key={event.id}
@@ -335,20 +281,6 @@ export default function EventsPage() {
               )}
 
               <div className="mt-auto flex flex-wrap gap-3 pt-5">
-                <button
-                  type="button"
-                  onClick={() => void toggleRegister(event)}
-                  className={`rounded-xl px-4 py-2 text-sm font-medium transition ${isRegistered ? "border border-[#D8D6D0] bg-white text-[#111111] hover:bg-[#FBFBFA]" : "bg-[#111111] text-white hover:bg-[#333333]"}`}
-                >
-                  {isRegistered ? "Unregister" : "Register"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => downloadEventIcs(event)}
-                  className="rounded-xl border border-[#D8D6D0] bg-white px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#FBFBFA]"
-                >
-                  Download ICS
-                </button>
                 <Link
                   href={`/events/${event.id}`}
                   className="rounded-xl border border-[#D8D6D0] bg-white px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#FBFBFA]"
