@@ -107,6 +107,9 @@ src/
 supabase/
 ```
 
+## Product Planning Docs
+- Personalization / user-data expansion plan: `docs/user-personalization-plan.md`
+
 ## Deployment Notes
 - Deploy on Netlify
 - Connect the GitHub repo to Netlify for automatic deploys on push
