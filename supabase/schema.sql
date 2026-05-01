@@ -268,6 +268,17 @@ drop trigger if exists profiles_sync_year on public.profiles;
 create trigger profiles_sync_year before insert or update on public.profiles for each row execute procedure public.sync_profile_year_of_study();
 drop trigger if exists profiles_sync_societies on public.profiles;
 create trigger profiles_sync_societies after insert or update of societies on public.profiles for each row execute procedure public.sync_profile_society_memberships();
+
+do $$
+begin
+  insert into public.society_memberships (user_id, society_id)
+  select p.id, (value ->> 'society_id')::bigint
+  from public.profiles p,
+       jsonb_array_elements(coalesce(p.societies, '[]'::jsonb)) as value
+  where value ? 'society_id'
+  on conflict (user_id, society_id) do nothing;
+end $$;
+
 drop trigger if exists societies_set_updated_at on public.societies;
 create trigger societies_set_updated_at before update on public.societies for each row execute procedure public.set_updated_at();
 drop trigger if exists events_set_updated_at on public.events;
