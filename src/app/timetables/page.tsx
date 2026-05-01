@@ -57,9 +57,9 @@ function extractGroup(entry: TimetableRecord) {
 export default function TimetablesPage() {
   const { profile, user } = useAuth();
   const [entries, setEntries] = useState<TimetableRecord[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState("All");
-  const [selectedYear, setSelectedYear] = useState("All");
-  const [selectedGroup, setSelectedGroup] = useState("All");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
   const effectiveYear = getEffectiveYearOfStudy(profile);
 
   useEffect(() => {
@@ -79,31 +79,23 @@ export default function TimetablesPage() {
     () =>
       studentEntries
         .filter((entry) =>
-          selectedCourse === "All"
-            ? true
-            : entry.course_name === selectedCourse,
+          !selectedCourse ? true : entry.course_name === selectedCourse,
         )
         .filter((entry) =>
-          selectedYear === "All"
-            ? true
-            : `Year ${entry.year_of_study}` === selectedYear,
+          !selectedYear ? true : `Year ${entry.year_of_study}` === selectedYear,
         ),
     [selectedCourse, selectedYear, studentEntries],
   );
   const courses = useMemo(
-    () => ["All", ...new Set(studentEntries.map((entry) => entry.course_name))],
+    () => [...new Set(studentEntries.map((entry) => entry.course_name))],
     [studentEntries],
   );
   const years = useMemo(
-    () => [
-      "All",
-      ...new Set(studentEntries.map((entry) => `Year ${entry.year_of_study}`)),
-    ],
+    () => [...new Set(studentEntries.map((entry) => `Year ${entry.year_of_study}`))],
     [studentEntries],
   );
   const groups = useMemo(
     () => [
-      "All",
       ...new Set(
         courseScopedEntries
           .map((entry) => extractGroup(entry))
@@ -115,16 +107,27 @@ export default function TimetablesPage() {
 
   useEffect(() => {
     if (profile?.role === "student") {
-      if (profile.course) setSelectedCourse(profile.course);
-      if (effectiveYear) setSelectedYear(`Year ${effectiveYear}`);
+      if (profile.course) {
+        setSelectedCourse(profile.course);
+      } else if (courses[0]) {
+        setSelectedCourse(courses[0]);
+      }
+
+      if (effectiveYear) {
+        setSelectedYear(`Year ${effectiveYear}`);
+      } else if (years[0]) {
+        setSelectedYear(years[0]);
+      }
     }
-  }, [effectiveYear, profile]);
+  }, [courses, effectiveYear, profile, years]);
 
   useEffect(() => {
     if (profile?.academic_group) {
       setSelectedGroup(profile.academic_group);
+    } else if (groups[0]) {
+      setSelectedGroup(groups[0]);
     }
-  }, [profile?.academic_group]);
+  }, [groups, profile?.academic_group]);
 
   const filteredEntries = useMemo(() => {
     const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
@@ -144,7 +147,7 @@ export default function TimetablesPage() {
     }
 
     const filtered = courseScopedEntries.filter((entry) => {
-      if (selectedGroup === "All") return true;
+      if (!selectedGroup) return true;
       const group = extractGroup(entry);
       return group === "All" || group === selectedGroup;
     });
@@ -165,7 +168,7 @@ export default function TimetablesPage() {
 
   const showGrid =
     profile?.role === "teacher" ||
-    (selectedCourse !== "All" && selectedYear !== "All");
+    Boolean(selectedCourse && selectedYear);
 
   const timeSlots = useMemo(() => {
     const slotSet = new Set(defaultTimeSlots);
