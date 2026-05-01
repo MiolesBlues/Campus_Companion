@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getEvents, getUserEventRegistrations } from "@/lib/data";
@@ -7,6 +8,30 @@ import { downloadEventIcs } from "@/lib/ics";
 import { eventRecommendationScore } from "@/lib/preferences";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
+
+const CATEGORY_STYLES: Record<string, string> = {
+  Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
+  Career: "bg-[#FBF3DB] text-[#956400]",
+  Careers: "bg-[#FBF3DB] text-[#956400]",
+  Sport: "bg-[#EDF3EC] text-[#346538]",
+  Sports: "bg-[#EDF3EC] text-[#346538]",
+  Social: "bg-[#F1EDF8] text-[#6B5B7D]",
+  Wellness: "bg-[#FDEBEC] text-[#9F2F2D]",
+  Arts: "bg-[#FBF3DB] text-[#956400]",
+  Cultural: "bg-[#FFF1E6] text-[#B85C00]",
+  Technology: "bg-[#E1F3FE] text-[#1F6C9F]",
+};
+
+function CategoryBadge({ category }: { category: string }) {
+  const style = CATEGORY_STYLES[category] ?? "bg-[#F7F6F3] text-[#2F3437]";
+  return (
+    <span
+      className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${style}`}
+    >
+      {category}
+    </span>
+  );
+}
 
 export default function EventsPage() {
   const { user, profile } = useAuth();
@@ -144,9 +169,7 @@ export default function EventsPage() {
         .delete()
         .eq("user_id", user.id)
         .eq("event_id", eventItem.id);
-      setRegistrations((current) =>
-        current.filter((id) => id !== eventItem.id),
-      );
+      setRegistrations((current) => current.filter((id) => id !== eventItem.id));
       setMessage(`Unregistered from ${eventItem.title}.`);
       return;
     }
@@ -185,31 +208,26 @@ export default function EventsPage() {
             ?
           </button>
         </div>
+
+        {showIcsHelp && (
+          <div className="rounded-xl border border-[#CFE6F4] bg-[#E1F3FE] p-4 text-sm text-[#164E73]">
+            <p className="font-semibold">How to add an event to your calendar</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-5">
+              <li>
+                Click <strong>Download ICS</strong> on an event card.
+              </li>
+              <li>
+                Open the downloaded file from your browser or downloads folder.
+              </li>
+              <li>Choose your calendar app, or import it manually.</li>
+              <li>Confirm the event save so you get reminders later.</li>
+            </ol>
+          </div>
+        )}
       </div>
 
-      {showIcsHelp && (
-        <div className="rounded-xl border border-[#CFE6F4] bg-[#E1F3FE] p-5 text-sm text-[#164E73] ">
-          <p className="font-semibold">How to add an event to your calendar</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>
-              Click <strong>Download ICS</strong> on an event.
-            </li>
-            <li>
-              Open the downloaded file from your browser or downloads folder.
-            </li>
-            <li>
-              Choose Microsoft Outlook / Calendar when prompted, or import the
-              file manually.
-            </li>
-            <li>
-              Confirm the event save so reminders show up when you need them.
-            </li>
-          </ol>
-        </div>
-      )}
-
-      <div className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
-        <div>
+      <div className="grid gap-4 rounded-xl border border-[#EAEAEA] bg-white p-6 lg:grid-cols-4">
+        <div className="lg:col-span-2">
           <label
             htmlFor="event-search"
             className="mb-2 block text-sm font-medium text-[#4A4844]"
@@ -220,127 +238,130 @@ export default function EventsPage() {
             id="event-search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by title, location, campus, description, or tag"
+            placeholder="Search by title, category, campus, location, or tag"
             className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
           />
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="event-category"
-              className="mb-2 block text-sm font-medium text-[#4A4844]"
-            >
-              Filter by category
-            </label>
-            <select
-              id="event-category"
-              value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
-            >
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="event-campus"
-              className="mb-2 block text-sm font-medium text-[#4A4844]"
-            >
-              Filter by campus
-            </label>
-            <select
-              id="event-campus"
-              value={selectedCampus}
-              onChange={(event) => setSelectedCampus(event.target.value)}
-              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
-            >
-              {campuses.map((campus) => (
-                <option key={campus} value={campus}>
-                  {campus}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="sort-order"
-              className="mb-2 block text-sm font-medium text-[#4A4844]"
-            >
-              Sort events
-            </label>
-            <select
-              id="sort-order"
-              value={sortOrder}
-              onChange={(event) => setSortOrder(event.target.value)}
-              className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
-            >
-              <option value="recommended">Recommended for me</option>
-              <option value="asc">Soonest first</option>
-              <option value="desc">Latest first</option>
-            </select>
-          </div>
+
+        <div>
+          <label
+            htmlFor="event-category"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Category
+          </label>
+          <select
+            id="event-category"
+            value={selectedCategory}
+            onChange={(event) => setSelectedCategory(event.target.value)}
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="event-campus"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Campus
+          </label>
+          <select
+            id="event-campus"
+            value={selectedCampus}
+            onChange={(event) => setSelectedCampus(event.target.value)}
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+          >
+            {campuses.map((campus) => (
+              <option key={campus} value={campus}>
+                {campus}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="event-sort"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Sort by
+          </label>
+          <select
+            id="event-sort"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+          >
+            <option value="recommended">Recommended</option>
+            <option value="asc">Date ascending</option>
+            <option value="desc">Date descending</option>
+          </select>
         </div>
       </div>
 
       {message && (
-        <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 text-sm text-[#64615C] ">
+        <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 text-sm text-[#64615C]">
           {message}
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredEvents.map((event) => {
           const isRegistered = registrations.includes(event.id);
-          const score = scoreByEventId.get(event.id) ?? 0;
           return (
             <article
               key={event.id}
-              className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6"
+              className="flex h-full flex-col rounded-xl border border-[#EAEAEA] bg-white p-5"
             >
               <div className="flex flex-wrap gap-2">
-                <span className="inline-block rounded-full bg-[#F7F6F3] px-3 py-1 text-sm font-medium text-[#4A4844]">
-                  {event.category}
-                </span>
-                {score > 0 && (
-                  <span className="inline-block rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
-                    Recommended
+                <CategoryBadge category={event.category} />
+                {event.campus && (
+                  <span className="rounded-full bg-[#EAEAEA] px-2.5 py-0.5 text-xs font-medium text-[#4A4844]">
+                    {event.campus}
                   </span>
                 )}
               </div>
+
               <h2 className="mt-4 text-xl font-semibold text-[#111111]">
-                {event.title}
+                <Link href={`/events/${event.id}`} className="hover:underline">
+                  {event.title}
+                </Link>
               </h2>
-              <p className="mt-2 text-sm text-[#787774]">
+
+              <p className="mt-2 text-sm text-[#64615C]">
                 {event.event_date} - {event.start_time} - {event.end_time}
               </p>
-              <p className="mt-1 text-sm text-[#787774]">
-                {event.location}
-                {event.campus ? ` - ${event.campus}` : ""}
-              </p>
-              <p className="mt-4 text-sm text-[#64615C] sm:text-base">
+              <p className="mt-1 text-sm text-[#64615C]">{event.location}</p>
+              <p className="mt-3 text-sm text-[#64615C] sm:text-base">
                 {event.description}
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {event.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium text-[#1F6C9F]"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap gap-3">
+
+              {event.tags.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {event.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-[#D8D6D0] bg-[#FBFBFA] px-2.5 py-1 text-xs font-medium text-[#4A4844]"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-auto flex flex-wrap gap-3 pt-5">
                 <button
                   type="button"
                   onClick={() => void toggleRegister(event)}
-                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${isRegistered ? "bg-[#4A4844]" : "bg-[#111111]"}`}
+                  className={`rounded-xl px-4 py-2 text-sm font-medium transition ${isRegistered ? "border border-[#D8D6D0] bg-white text-[#111111] hover:bg-[#FBFBFA]" : "bg-[#111111] text-white hover:bg-[#333333]"}`}
                 >
-                  {isRegistered ? "Registered" : "Register"}
+                  {isRegistered ? "Unregister" : "Register"}
                 </button>
                 <button
                   type="button"
@@ -349,6 +370,12 @@ export default function EventsPage() {
                 >
                   Download ICS
                 </button>
+                <Link
+                  href={`/events/${event.id}`}
+                  className="rounded-xl border border-[#D8D6D0] bg-white px-4 py-2 text-sm font-medium text-[#111111] transition hover:bg-[#FBFBFA]"
+                >
+                  View details
+                </Link>
               </div>
             </article>
           );
@@ -356,8 +383,8 @@ export default function EventsPage() {
       </div>
 
       {filteredEvents.length === 0 && (
-        <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-6 text-center text-[#64615C] sm:p-8">
-          No events found for your current search or filters.
+        <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C]">
+          No events matched your filters.
         </div>
       )}
     </section>
