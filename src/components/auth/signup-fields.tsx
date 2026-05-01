@@ -6,6 +6,7 @@ import {
   interestOptions,
   yearOptions,
 } from "@/lib/constants";
+import { toggleValue } from "@/lib/preferences";
 
 type SignupFieldsProps = {
   fullName: string;
@@ -25,12 +26,6 @@ type SignupFieldsProps = {
   startYear: string;
   setStartYear: (value: string) => void;
 };
-
-function toggleValue(values: string[], value: string) {
-  return values.includes(value)
-    ? values.filter((item) => item !== value)
-    : [...values, value];
-}
 
 export function SignupFields({
   fullName,

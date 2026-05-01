@@ -3,19 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getSocietiesList, getUserSocietyMemberships } from "@/lib/data";
+import { societyRecommendationScore } from "@/lib/preferences";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Society } from "@/types/database";
-
-function societyRecommendationScore(
-  society: Society,
-  interests: string[] | null | undefined,
-  preferredSocietyCategories: string[] | null | undefined,
-) {
-  let score = 0;
-  if (preferredSocietyCategories?.includes(society.category)) score += 3;
-  if (interests?.includes(society.category)) score += 2;
-  return score;
-}
 
 export default function SocietiesPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -64,6 +54,21 @@ export default function SocietiesPage() {
     [societies],
   );
 
+  const scoreBySocietyId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const society of societies) {
+      map.set(
+        society.id,
+        societyRecommendationScore(
+          society,
+          profile?.interests,
+          profile?.preferred_society_categories,
+        ),
+      );
+    }
+    return map;
+  }, [societies, profile?.interests, profile?.preferred_society_categories]);
+
   const filteredSocieties = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -89,27 +94,12 @@ export default function SocietiesPage() {
       })
       .sort((a, b) => {
         const scoreDiff =
-          societyRecommendationScore(
-            b,
-            profile?.interests,
-            profile?.preferred_society_categories,
-          ) -
-          societyRecommendationScore(
-            a,
-            profile?.interests,
-            profile?.preferred_society_categories,
-          );
+          (scoreBySocietyId.get(b.id) ?? 0) -
+          (scoreBySocietyId.get(a.id) ?? 0);
         if (scoreDiff !== 0) return scoreDiff;
         return a.name.localeCompare(b.name);
       });
-  }, [
-    profile?.interests,
-    profile?.preferred_society_categories,
-    search,
-    selectedCategory,
-    selectedDay,
-    societies,
-  ]);
+  }, [scoreBySocietyId, search, selectedCategory, selectedDay, societies]);
 
   const toggleJoin = async (society: Society) => {
     if (!user || !profile) {
@@ -240,11 +230,7 @@ export default function SocietiesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         {filteredSocieties.map((society) => {
           const joined = memberships.includes(society.id);
-          const score = societyRecommendationScore(
-            society,
-            profile?.interests,
-            profile?.preferred_society_categories,
-          );
+          const score = scoreBySocietyId.get(society.id) ?? 0;
           return (
             <article
               key={society.id}

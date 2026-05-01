@@ -7,6 +7,12 @@ export function calculateAcademicYear(startYear: number, now = new Date()) {
   return Math.max(1, academicYearOffset);
 }
 
+export function currentAcademicStartYear(now = new Date()) {
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  return month >= 7 ? year : year - 1;
+}
+
 export function getEffectiveYearOfStudy(profile: Profile | null) {
   if (!profile) {
     return null;

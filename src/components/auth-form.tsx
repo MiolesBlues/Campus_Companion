@@ -3,14 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { campusOptions } from "@/lib/constants";
+import { currentAcademicStartYear } from "@/lib/profile";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { SignupFields } from "@/components/auth/signup-fields";
-
-function currentAcademicStartYear(now = new Date()) {
-  const month = now.getMonth();
-  const year = now.getFullYear();
-  return month >= 7 ? year : year - 1;
-}
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();

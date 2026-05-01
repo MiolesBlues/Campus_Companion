@@ -11,12 +11,6 @@ export function generateStaticParams() {
   return allEvents.map((e) => ({ id: e.id }));
 }
 
-<<<<<<< HEAD
-=======
-// ---------------------------------------------------------------------------
-// Metadata
-// ---------------------------------------------------------------------------
-
 export async function generateMetadata({
   params,
 }: {
@@ -30,10 +24,6 @@ export async function generateMetadata({
     description: event.description,
   };
 }
-
-// ---------------------------------------------------------------------------
-// Category badge colours (Tailwind safe-listed classes)
-// ---------------------------------------------------------------------------
 
 const CATEGORY_STYLES: Record<string, string> = {
   Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
@@ -55,10 +45,6 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Similar event card (compact)
-// ---------------------------------------------------------------------------
-
 function SimilarEventCard({ event, score }: { event: Event; score: number }) {
   return (
     <li>
@@ -79,7 +65,6 @@ function SimilarEventCard({ event, score }: { event: Event; score: number }) {
         </p>
         <p className="text-sm text-[#787774]">{event.location}</p>
 
-        {/* Similarity score — useful for development/demo */}
         <p className="mt-1 text-xs text-[#9B9892]">
           Similarity: {(score * 100).toFixed(1)}%
         </p>
@@ -88,11 +73,6 @@ function SimilarEventCard({ event, score }: { event: Event; score: number }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Date formatter
-// ---------------------------------------------------------------------------
-
->>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-IE", {
@@ -106,46 +86,17 @@ function formatDate(dateStr: string): string {
 export default async function EventDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const event = allEvents.find((e) => e.id === params.id);
+  const { id } = await params;
+  const event = allEvents.find((e) => e.id === id);
 
   if (!event) notFound();
 
   const similar = getSimilarEvents(event.id, allEvents, 3);
 
   return (
-<<<<<<< HEAD
-    <main className="p-6">
-      <h1 className="text-2xl font-bold">{event.title}</h1>
-      <p>{formatDate(event.date)}</p>
-      <p>{event.time}</p>
-      <p>{event.location}</p>
-      <p className="mt-4">{event.description}</p>
-
-      <h2 className="mt-8 text-xl font-semibold">Similar Events</h2>
-
-      <ul className="mt-4 space-y-2">
-        {similar.map((item: any) => {
-          const simEvt = item.event ?? item;
-
-          return (
-            <li key={simEvt.id}>
-              <Link href={`/events/${simEvt.id}`} className="text-blue-600 underline">
-                {simEvt.title} ({simEvt.category})
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="mt-6">
-        <Link href="/events" className="text-blue-600 underline">
-          ← Back to events
-        </Link>
-=======
     <section className="min-h-[100dvh] bg-[#F7F6F3]">
-      {/* ── Header / nav ─────────────────────────────────────────── */}
       <header className="bg-white border-b border-[#EAEAEA]">
         <div className="mx-auto max-w-3xl px-4 py-4">
           <nav aria-label="Breadcrumb">
@@ -176,11 +127,9 @@ export default async function EventDetailPage({
         </div>
       </header>
 
-      {/* ── Event detail ─────────────────────────────────────────── */}
       <div className="mx-auto max-w-3xl px-4 py-8 space-y-8">
         <article aria-labelledby="event-title">
           <div className="rounded-xl bg-white border border-[#EAEAEA] p-6 md:p-8 space-y-5">
-            {/* Title + category */}
             <div className="flex flex-wrap items-start gap-3">
               <h1
                 id="event-title"
@@ -191,7 +140,6 @@ export default async function EventDetailPage({
               <CategoryBadge category={event.category} />
             </div>
 
-            {/* Meta row */}
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="font-medium text-[#787774]">Date</dt>
@@ -207,7 +155,6 @@ export default async function EventDetailPage({
               </div>
             </dl>
 
-            {/* Description */}
             <div>
               <h2 className="text-base font-semibold text-[#4A4844] mb-1">
                 About this event
@@ -217,7 +164,6 @@ export default async function EventDetailPage({
               </p>
             </div>
 
-            {/* Tags */}
             {event.tags.length > 0 && (
               <div>
                 <h2 className="text-sm font-semibold text-[#787774] mb-2">
@@ -237,7 +183,6 @@ export default async function EventDetailPage({
           </div>
         </article>
 
-        {/* ── Similar events ───────────────────────────────────────── */}
         <section aria-labelledby="similar-heading">
           <h2
             id="similar-heading"
@@ -261,7 +206,6 @@ export default async function EventDetailPage({
           )}
         </section>
 
-        {/* ── Back link ────────────────────────────────────────────── */}
         <div>
           <Link
             href="/events"
@@ -270,7 +214,6 @@ export default async function EventDetailPage({
             Back to all events
           </Link>
         </div>
->>>>>>> 7b2d388c2a75330178304698715dbe15b052f76b
       </div>
     </section>
   );

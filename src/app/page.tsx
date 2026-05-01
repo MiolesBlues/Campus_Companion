@@ -1,34 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getEvents, getSocietiesList } from "@/lib/data";
+import {
+  eventRecommendationScore,
+  societyRecommendationScore,
+} from "@/lib/preferences";
 import type { EventWithTags, Society } from "@/types/database";
-
-function eventRecommendationScore(
-  event: EventWithTags,
-  campus: string | null | undefined,
-  interests: string[] | null | undefined,
-  preferredCategories: string[] | null | undefined,
-) {
-  let score = 0;
-  if (campus && event.campus === campus) score += 3;
-  if (preferredCategories?.includes(event.category)) score += 3;
-  if (interests?.includes(event.category)) score += 2;
-  return score;
-}
-
-function societyRecommendationScore(
-  society: Society,
-  interests: string[] | null | undefined,
-  preferredSocietyCategories: string[] | null | undefined,
-) {
-  let score = 0;
-  if (preferredSocietyCategories?.includes(society.category)) score += 3;
-  if (interests?.includes(society.category)) score += 2;
-  return score;
-}
 
 export default function Home() {
   const { profile } = useAuth();
@@ -48,57 +28,35 @@ export default function Home() {
       ]);
       setUpcomingEvents(events.slice(0, 3));
 
-      const rankedEvents = [...events]
-        .sort(
-          (a, b) =>
-            eventRecommendationScore(
-              b,
-              profile?.campus,
-              profile?.interests,
-              profile?.preferred_event_categories,
-            ) -
-            eventRecommendationScore(
-              a,
-              profile?.campus,
-              profile?.interests,
-              profile?.preferred_event_categories,
-            ),
-        )
-        .filter(
-          (event) =>
-            eventRecommendationScore(
-              event,
-              profile?.campus,
-              profile?.interests,
-              profile?.preferred_event_categories,
-            ) > 0,
-        )
-        .slice(0, 3);
+      const rankedEvents = events
+        .map((event) => ({
+          event,
+          score: eventRecommendationScore(
+            event,
+            profile?.campus,
+            profile?.interests,
+            profile?.preferred_event_categories,
+          ),
+        }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(({ event }) => event);
       setRecommendedEvents(rankedEvents);
 
-      const rankedSocieties = [...societies]
-        .sort(
-          (a, b) =>
-            societyRecommendationScore(
-              b,
-              profile?.interests,
-              profile?.preferred_society_categories,
-            ) -
-            societyRecommendationScore(
-              a,
-              profile?.interests,
-              profile?.preferred_society_categories,
-            ),
-        )
-        .filter(
-          (society) =>
-            societyRecommendationScore(
-              society,
-              profile?.interests,
-              profile?.preferred_society_categories,
-            ) > 0,
-        )
-        .slice(0, 3);
+      const rankedSocieties = societies
+        .map((society) => ({
+          society,
+          score: societyRecommendationScore(
+            society,
+            profile?.interests,
+            profile?.preferred_society_categories,
+          ),
+        }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(({ society }) => society);
       setRecommendedSocieties(rankedSocieties);
     };
 
@@ -110,10 +68,8 @@ export default function Home() {
     profile?.preferred_society_categories,
   ]);
 
-  const hasRecommendations = useMemo(
-    () => recommendedEvents.length > 0 || recommendedSocieties.length > 0,
-    [recommendedEvents.length, recommendedSocieties.length],
-  );
+  const hasRecommendations =
+    recommendedEvents.length > 0 || recommendedSocieties.length > 0;
 
   return (
     <section className="space-y-6 sm:space-y-8">
