@@ -47,7 +47,7 @@ export default function EventsPage() {
   const [showIcsHelp, setShowIcsHelp] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedLocation, setSelectedLocation] = useState("All");
+  const [selectedCampus, setSelectedCampus] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
@@ -73,15 +73,15 @@ export default function EventsPage() {
   }, [user]);
 
   const categories = useMemo(() => ["All", ...new Set(events.map((event) => event.category))], [events]);
-  const locations = useMemo(() => ["All", ...new Set(events.map((event) => event.location))], [events]);
+  const campuses = useMemo(() => ["All", ...new Set(events.map((event) => event.campus).filter(Boolean) as string[])], [events]);
 
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     let result = selectedCategory === "All" ? events : events.filter((event) => event.category === selectedCategory);
 
-    if (selectedLocation !== "All") {
-      result = result.filter((event) => event.location === selectedLocation);
+    if (selectedCampus !== "All") {
+      result = result.filter((event) => event.campus === selectedCampus);
     }
 
     if (query) {
@@ -100,7 +100,7 @@ export default function EventsPage() {
     });
 
     return result;
-  }, [events, search, selectedCategory, selectedLocation, sortOrder]);
+  }, [events, search, selectedCategory, selectedCampus, sortOrder]);
 
   const toggleRegister = async (eventItem: EventWithTags) => {
     if (!user) {
@@ -167,9 +167,9 @@ export default function EventsPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="event-location" className="mb-2 block text-sm font-medium text-slate-700">Filter by location</label>
-            <select id="event-location" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
-              {locations.map((location) => (<option key={location} value={location}>{location}</option>))}
+            <label htmlFor="event-campus" className="mb-2 block text-sm font-medium text-slate-700">Filter by campus</label>
+            <select id="event-campus" value={selectedCampus} onChange={(event) => setSelectedCampus(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+              {campuses.map((campus) => (<option key={campus} value={campus}>{campus}</option>))}
             </select>
           </div>
           <div>

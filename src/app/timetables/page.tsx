@@ -23,11 +23,19 @@ function subjectColor(moduleCode: string) {
   return subjectColors[sum % subjectColors.length];
 }
 
+function extractGroup(entry: TimetableRecord) {
+  const match = entry.module_name.match(/\((Group\s+\d+)\)$/i) ?? entry.module_code.match(/-(G\d+)$/i);
+  if (!match) return "All";
+  const value = match[1];
+  return value.toLowerCase().startsWith("g") ? `Group ${value.slice(1)}` : value;
+}
+
 export default function TimetablesPage() {
   const { profile, user } = useAuth();
   const [entries, setEntries] = useState<TimetableRecord[]>([]);
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
+  const [selectedGroup, setSelectedGroup] = useState("All");
   const effectiveYear = getEffectiveYearOfStudy(profile);
 
   useEffect(() => {
@@ -40,8 +48,13 @@ export default function TimetablesPage() {
   }, []);
 
   const studentEntries = useMemo(() => entries.filter((entry) => entry.owner_role === "student"), [entries]);
+  const courseScopedEntries = useMemo(
+    () => studentEntries.filter((entry) => (selectedCourse === "All" ? true : entry.course_name === selectedCourse)).filter((entry) => (selectedYear === "All" ? true : `Year ${entry.year_of_study}` === selectedYear)),
+    [selectedCourse, selectedYear, studentEntries]
+  );
   const courses = useMemo(() => ["All", ...new Set(studentEntries.map((entry) => entry.course_name))], [studentEntries]);
   const years = useMemo(() => ["All", ...new Set(studentEntries.map((entry) => `Year ${entry.year_of_study}`))], [studentEntries]);
+  const groups = useMemo(() => ["All", ...new Set(courseScopedEntries.map((entry) => extractGroup(entry)).filter((group) => group !== "All"))], [courseScopedEntries]);
 
   useEffect(() => {
     if (profile?.role === "student") {
@@ -49,6 +62,10 @@ export default function TimetablesPage() {
       if (effectiveYear) setSelectedYear(`Year ${effectiveYear}`);
     }
   }, [effectiveYear, profile]);
+
+  useEffect(() => {
+    setSelectedGroup("All");
+  }, [selectedCourse, selectedYear]);
 
   const filteredEntries = useMemo(() => {
     const teacherEntries = entries
@@ -59,16 +76,14 @@ export default function TimetablesPage() {
       return teacherEntries.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || a.start_time.localeCompare(b.start_time));
     }
 
-    let filtered = studentEntries
-      .filter((entry) => (selectedCourse === "All" ? true : entry.course_name === selectedCourse))
-      .filter((entry) => (selectedYear === "All" ? true : `Year ${entry.year_of_study}` === selectedYear));
+    let filtered = courseScopedEntries.filter((entry) => (selectedGroup === "All" ? true : extractGroup(entry) === selectedGroup));
 
     if (filtered.length === 0 && profile?.role === "student") {
       filtered = studentEntries;
     }
 
     return filtered.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || a.start_time.localeCompare(b.start_time));
-  }, [entries, profile?.role, selectedCourse, selectedYear, studentEntries, user?.email]);
+  }, [courseScopedEntries, entries, profile?.role, selectedGroup, studentEntries, user?.email]);
 
   const showGrid = selectedCourse !== "All" && selectedYear !== "All";
 
@@ -95,12 +110,12 @@ export default function TimetablesPage() {
         <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">Weekly Planner</span>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{profile?.role === "teacher" ? "Teacher Timetable" : "Student Timetable"}</h1>
-          <p className="mt-2 text-slate-600">{profile?.role === "teacher" ? "Your teaching schedule is shown automatically based on your account email." : "Choose all for a browsing list, or pick a course and year for the timetable grid."}</p>
+          <p className="mt-2 text-slate-600">{profile?.role === "teacher" ? "Your teaching schedule is shown automatically based on your account email." : "Choose all for a browsing list, or pick a course, year, and group for a more focused timetable."}</p>
         </div>
       </div>
 
       {profile?.role !== "teacher" && (
-        <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2">
+        <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-3">
           <div>
             <label htmlFor="course-filter" className="mb-2 block text-sm font-medium text-slate-700">Filter by course</label>
             <select id="course-filter" value={selectedCourse} onChange={(event) => setSelectedCourse(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
@@ -111,6 +126,12 @@ export default function TimetablesPage() {
             <label htmlFor="year-filter" className="mb-2 block text-sm font-medium text-slate-700">Filter by year</label>
             <select id="year-filter" value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
               {years.map((year) => (<option key={year} value={year}>{year}</option>))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="group-filter" className="mb-2 block text-sm font-medium text-slate-700">Filter by group</label>
+            <select id="group-filter" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none">
+              {groups.map((group) => (<option key={group} value={group}>{group}</option>))}
             </select>
           </div>
         </div>
@@ -165,7 +186,7 @@ export default function TimetablesPage() {
                 <div>
                   <p className="text-sm font-medium text-slate-500">{entry.day_of_week} • {entry.start_time} - {entry.end_time}</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">{entry.module_name}</h2>
-                  <p className="mt-1 text-sm text-slate-600">{entry.course_name}{entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}</p>
+                  <p className="mt-1 text-sm text-slate-600">{entry.course_name}{entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}{extractGroup(entry) !== "All" ? ` · ${extractGroup(entry)}` : ""}</p>
                   <p className="mt-1 text-sm text-slate-600">{entry.building}, {entry.room}</p>
                   <p className="mt-1 text-sm text-slate-600">{entry.lecturer_name}</p>
                 </div>
