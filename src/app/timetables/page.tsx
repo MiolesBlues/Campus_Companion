@@ -54,24 +54,6 @@ function extractGroup(entry: TimetableRecord) {
   return /^g\d+$/i.test(value) ? `Group ${value.slice(1)}` : value;
 }
 
-function matchesStudentFilters(
-  entry: TimetableRecord,
-  selectedCourse: string,
-  selectedYear: string,
-  selectedGroup: string,
-) {
-  if (entry.year_of_study === null) return false;
-  if (selectedCourse && entry.course_name !== selectedCourse) return false;
-  if (selectedYear && `Year ${entry.year_of_study}` !== selectedYear) return false;
-
-  if (selectedGroup) {
-    const group = extractGroup(entry);
-    if (group !== "All" && group !== selectedGroup) return false;
-  }
-
-  return true;
-}
-
 export default function TimetablesPage() {
   const { profile, user } = useAuth();
   const [entries, setEntries] = useState<TimetableRecord[]>([]);
@@ -190,14 +172,11 @@ export default function TimetablesPage() {
       );
     }
 
-    const filtered = entries.filter((entry) =>
-      matchesStudentFilters(
-        entry,
-        selectedCourse,
-        selectedYear,
-        selectedGroup,
-      ),
-    );
+    const filtered = yearScopedEntries.filter((entry) => {
+      if (!selectedGroup) return true;
+      const group = extractGroup(entry);
+      return group === "All" || group === selectedGroup;
+    });
 
     return filtered.sort(
       (a, b) =>
@@ -205,12 +184,11 @@ export default function TimetablesPage() {
         normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)),
     );
   }, [
+    yearScopedEntries,
     entries,
     profile?.email,
     profile?.role,
-    selectedCourse,
     selectedGroup,
-    selectedYear,
     user?.email,
   ]);
 
