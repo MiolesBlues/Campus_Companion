@@ -6,13 +6,6 @@ import { getProfilesList } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/types/database";
 
-const muteOptions = [
-  { label: "1 day", days: 1 },
-  { label: "3 days", days: 3 },
-  { label: "7 days", days: 7 },
-  { label: "30 days", days: 30 },
-];
-
 export default function AdminUsersPage() {
   const { profile } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -60,34 +53,13 @@ export default function AdminUsersPage() {
     await loadProfiles();
   };
 
-  const muteUser = async (id: string, days: number) => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    const mutedUntil = new Date(
-      Date.now() + days * 24 * 60 * 60 * 1000,
-    ).toISOString();
-    await supabase
-      .from("profiles")
-      .update({ muted_until: mutedUntil })
-      .eq("id", id);
-    await loadProfiles();
-  };
-
-  const clearMute = async (id: string) => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    await supabase.from("profiles").update({ muted_until: null }).eq("id", id);
-    await loadProfiles();
-  };
 
   return (
     <section className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-[#111111]">Manage Users</h1>
         <p className="mt-2 text-[#64615C]">
-          Assign roles, mute users for a period, and search the user list.
+          Assign roles and search the user list.
         </p>
       </div>
 
@@ -102,11 +74,6 @@ export default function AdminUsersPage() {
 
       <div className="grid gap-4">
         {filteredProfiles.map((userProfile) => {
-          const isMuted = Boolean(
-            userProfile.muted_until &&
-              new Date(userProfile.muted_until) > new Date(),
-          );
-
           return (
             <article
               key={userProfile.id}
@@ -143,30 +110,6 @@ export default function AdminUsersPage() {
                     <option value="teacher">teacher</option>
                     <option value="admin">admin</option>
                   </select>
-                  {!isMuted ? (
-                    <div className="flex flex-wrap gap-2">
-                      {muteOptions.map((option) => (
-                        <button
-                          key={option.days}
-                          type="button"
-                          onClick={() =>
-                            void muteUser(userProfile.id, option.days)
-                          }
-                          className="rounded-xl bg-[#956400] px-3 py-2.5 text-sm font-medium text-white sm:py-2"
-                        >
-                          Mute {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => void clearMute(userProfile.id)}
-                      className="rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white"
-                    >
-                      Unmute
-                    </button>
-                  )}
                 </div>
               </div>
             </article>
