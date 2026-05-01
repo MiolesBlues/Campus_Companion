@@ -120,7 +120,7 @@ export default function AdminTimetablesPage() {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-start justify-between gap-4"><div><h1 className="text-3xl font-bold text-slate-900">Manage Timetables</h1><p className="mt-2 text-slate-600">View, edit, and delete student or teacher timetable entries.</p></div><button type="button" onClick={openCreateModal} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button></div>
+      <div className="flex items-start justify-between gap-4"><div><h1 className="text-3xl font-bold text-slate-900">Manage Timetables</h1><p className="mt-2 text-slate-600">View, edit, and delete student or teacher timetable entries.</p></div><button type="button" onClick={openCreateModal} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button></div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search timetables by day, module, course, lecturer, or room" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900" />

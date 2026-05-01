@@ -149,7 +149,7 @@ export default function AdminEventsPage() {
           <h1 className="text-3xl font-bold text-slate-900">Manage Events</h1>
           <p className="mt-2 text-slate-600">View, edit, and delete events with live event tags.</p>
         </div>
-        <button type="button" onClick={openCreateModal} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button>
+        <button type="button" onClick={openCreateModal} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button>
       </div>
 
       <AdminSearch value={search} onChange={setSearch} placeholder="Search events by title, category, location, description, or tags" />
