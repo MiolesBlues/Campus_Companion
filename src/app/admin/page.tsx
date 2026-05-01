@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
         </Link>
         <Link href="/admin/helpdesk" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
           <h2 className="text-xl font-semibold text-slate-900">Helpdesk Requests</h2>
-          <p className="mt-2 text-slate-600">Read and delete support requests.</p>
+          <p className="mt-2 text-slate-600">Read, assign, update, and delete support requests.</p>
         </Link>
       </div>
     </section>

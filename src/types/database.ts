@@ -85,6 +85,7 @@ export type LocationRecord = {
   type: string;
   description: string;
   campus: string | null;
+  building_code?: string | null;
   opening_hours: string | null;
   accessibility_notes: string | null;
   contact_email?: string | null;

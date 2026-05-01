@@ -4,14 +4,17 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { AdminModal } from "@/components/admin/admin-modal";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { campusOptions, eventCategoryOptions } from "@/lib/constants";
 import { getEvents } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
 
 const initialForm = {
   title: "",
-  category: "",
+  category: eventCategoryOptions[0] ?? "Technology",
   location: "",
+  campus: campusOptions[0] ?? "Main Campus",
+  capacity: "",
   eventDate: "",
   startTime: "",
   endTime: "",
@@ -71,15 +74,23 @@ export default function AdminEventsPage() {
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
+    if (form.startTime >= form.endTime) {
+      setMessage("End time must be later than start time.");
+      return;
+    }
+
     const payload = {
-      title: form.title,
+      title: form.title.trim(),
       category: form.category,
-      location: form.location,
+      location: form.location.trim(),
+      campus: form.campus,
+      capacity: form.capacity ? Number(form.capacity) : null,
       event_date: form.eventDate,
       start_time: form.startTime,
       end_time: form.endTime,
-      description: form.description,
+      description: form.description.trim(),
       audience: "all",
+      created_by: profile.id,
       published: true,
     };
 
@@ -119,9 +130,11 @@ export default function AdminEventsPage() {
       title: eventItem.title,
       category: eventItem.category,
       location: eventItem.location,
+      campus: eventItem.campus ?? campusOptions[0] ?? "Main Campus",
+      capacity: eventItem.capacity ? String(eventItem.capacity) : "",
       eventDate: eventItem.event_date,
-      startTime: eventItem.start_time,
-      endTime: eventItem.end_time,
+      startTime: eventItem.start_time.slice(0, 5),
+      endTime: eventItem.end_time.slice(0, 5),
       description: eventItem.description,
       tags: eventItem.tags.join(", "),
     });
@@ -180,8 +193,10 @@ export default function AdminEventsPage() {
         <AdminModal title={editingId ? "Edit Event" : "Add Event"} description="Fill in the details below and save the event." onClose={resetForm}>
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
             <input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} placeholder="Event title" className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} placeholder="Category" className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <select value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required>{eventCategoryOptions.map((option) => (<option key={option} value={option}>{option}</option>))}</select>
             <input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder="Location" className="rounded-xl border border-slate-300 px-4 py-3" required />
+            <select value={form.campus} onChange={(e) => setForm((current) => ({ ...current, campus: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required>{campusOptions.map((option) => (<option key={option} value={option}>{option}</option>))}</select>
+            <input type="number" min="1" value={form.capacity} onChange={(e) => setForm((current) => ({ ...current, capacity: e.target.value }))} placeholder="Capacity (optional)" className="rounded-xl border border-slate-300 px-4 py-3" />
             <input type="date" value={form.eventDate} onChange={(e) => setForm((current) => ({ ...current, eventDate: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
             <input type="time" value={form.startTime} onChange={(e) => setForm((current) => ({ ...current, startTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
             <input type="time" value={form.endTime} onChange={(e) => setForm((current) => ({ ...current, endTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />

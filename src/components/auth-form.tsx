@@ -48,7 +48,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         options: {
           data: {
             full_name: fullName,
-            role: "user",
+            role: "student",
           },
         },
       });

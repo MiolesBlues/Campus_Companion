@@ -356,6 +356,9 @@ create policy "locations_read_published" on public.locations for select using (p
 create policy "locations_admin_all" on public.locations for all using (public.is_admin()) with check (public.is_admin());
 create policy "timetables_read_published" on public.timetables for select using (published = true or public.is_admin() or exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = public.timetables.lecturer_email));
 create policy "timetables_admin_all" on public.timetables for all using (public.is_admin()) with check (public.is_admin());
+create policy "timetables_teacher_insert" on public.timetables for insert with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = lecturer_email));
+create policy "timetables_teacher_update" on public.timetables for update using (exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = public.timetables.lecturer_email)) with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = lecturer_email));
+create policy "timetables_teacher_delete" on public.timetables for delete using (exists (select 1 from public.profiles where id = auth.uid() and role = 'teacher' and email = public.timetables.lecturer_email));
 create policy "tickets_user_read_own_or_admin" on public.helpdesk_tickets for select using (auth.uid() = user_id or public.is_admin());
 create policy "tickets_user_insert_own" on public.helpdesk_tickets for insert with check (auth.uid() = user_id or public.is_admin());
 create policy "tickets_user_update_own_or_admin" on public.helpdesk_tickets for update using (auth.uid() = user_id or public.is_admin()) with check (auth.uid() = user_id or public.is_admin());
