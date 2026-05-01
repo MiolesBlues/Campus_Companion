@@ -72,7 +72,7 @@ export default function TimetablesPage() {
   }, []);
 
   const studentEntries = useMemo(
-    () => entries.filter((entry) => entry.owner_role === "student"),
+    () => entries.filter((entry) => entry.year_of_study !== null),
     [entries],
   );
   const courseScopedEntries = useMemo(
@@ -128,12 +128,10 @@ export default function TimetablesPage() {
 
   const filteredEntries = useMemo(() => {
     const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
-    const teacherEntries = entries
-      .filter((entry) => entry.owner_role === "teacher")
-      .filter((entry) => {
-        if (!teacherEmail) return true;
-        return (entry.lecturer_email ?? "").trim().toLowerCase() === teacherEmail;
-      });
+    const teacherEntries = entries.filter((entry) => {
+      if (!teacherEmail) return false;
+      return (entry.lecturer_email ?? "").trim().toLowerCase() === teacherEmail;
+    });
 
     if (profile?.role === "teacher") {
       return teacherEntries.sort(
@@ -351,8 +349,8 @@ export default function TimetablesPage() {
                     {entry.module_name}
                   </h2>
                   <p className="mt-1 text-sm text-[#64615C]">
-                    {entry.owner_role === "teacher"
-                      ? "Teacher timetable"
+                    {profile?.role === "teacher"
+                      ? entry.course_name
                       : `${entry.course_name}${entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}${extractGroup(entry) !== "All" ? ` · ${extractGroup(entry)}` : ""}`}
                   </p>
                   <p className="mt-1 text-sm text-[#64615C]">

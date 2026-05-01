@@ -27,10 +27,7 @@ const initialForm = {
 const dayOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const semesterOptions = ["1", "2"];
 const deliveryModeOptions = ["In Person", "Online", "Hybrid"];
-const ownerRoleOptions = ["student", "teacher"];
 const yearOptions = ["1", "2", "3", "4", "5", "6"];
-const teacherCourseCode = "STAFF";
-const teacherCourseName = "Teacher Timetable";
 
 export default function AdminTimetablesPage() {
   const { profile, user } = useAuth();
@@ -85,13 +82,8 @@ export default function AdminTimetablesPage() {
 
   const openCreateModal = () => {
     setMessage(null);
-    const defaultOwnerRole = profile.role === "teacher" ? "teacher" : "student";
     setForm({
       ...initialForm,
-      owner_role: defaultOwnerRole,
-      course_code: defaultOwnerRole === "teacher" ? teacherCourseCode : initialForm.course_code,
-      course_name: defaultOwnerRole === "teacher" ? teacherCourseName : initialForm.course_name,
-      year_of_study: defaultOwnerRole === "teacher" ? "1" : initialForm.year_of_study,
       lecturer_email: profile.role === "teacher" ? (user?.email ?? "") : "",
     });
     setEditingId(null);
@@ -113,21 +105,17 @@ export default function AdminTimetablesPage() {
       return;
     }
 
-    const normalizedOwnerRole = profile.role === "teacher" ? "teacher" : form.owner_role;
-    const normalizedCourseCode = normalizedOwnerRole === "teacher" ? teacherCourseCode : form.course_code.trim().toUpperCase();
-    const normalizedCourseName = normalizedOwnerRole === "teacher" ? teacherCourseName : form.course_name.trim();
-    const normalizedYearOfStudy = normalizedOwnerRole === "teacher" ? null : Number(form.year_of_study);
+    const normalizedCourseCode = form.course_code.trim().toUpperCase();
+    const normalizedCourseName = form.course_name.trim();
+    const normalizedYearOfStudy = form.year_of_study ? Number(form.year_of_study) : null;
     const normalizedSemester = Number(form.semester);
     const normalizedStartTime = form.start_time.trim();
     const normalizedEndTime = form.end_time.trim();
+    const normalizedLecturerEmail = (profile.role === "teacher" ? user?.email : form.lecturer_email)?.trim() || "";
+    const inferredOwnerRole = normalizedLecturerEmail ? "teacher" : "student";
 
     if (!normalizedCourseCode || !normalizedCourseName || !form.module_code.trim() || !form.module_name.trim() || !form.lecturer_name.trim() || !form.room.trim() || !form.building.trim()) {
       setMessage("Please fill in all required timetable fields.");
-      return;
-    }
-
-    if (normalizedOwnerRole === "teacher" && !form.lecturer_email.trim() && profile.role !== "teacher") {
-      setMessage("Teacher timetable entries must include a lecturer email.");
       return;
     }
 
@@ -146,8 +134,8 @@ export default function AdminTimetablesPage() {
       return;
     }
 
-    if (normalizedOwnerRole === "student" && !yearOptions.includes(form.year_of_study)) {
-      setMessage("Year of study must be between 1 and 6 for student timetables.");
+    if (!form.year_of_study || !yearOptions.includes(form.year_of_study)) {
+      setMessage("Year of study must be between 1 and 6.");
       return;
     }
 
@@ -163,14 +151,14 @@ export default function AdminTimetablesPage() {
       module_code: form.module_code.trim().toUpperCase(),
       module_name: form.module_name.trim(),
       lecturer_name: form.lecturer_name.trim(),
-      lecturer_email: profile.role === "teacher" ? user?.email ?? form.lecturer_email.trim() : form.lecturer_email.trim() || null,
+      lecturer_email: normalizedLecturerEmail || null,
       room: form.room.trim(),
       building: form.building.trim(),
       year_of_study: normalizedYearOfStudy,
       semester: normalizedSemester,
       start_time: normalizedStartTime,
       end_time: normalizedEndTime,
-      owner_role: normalizedOwnerRole,
+      owner_role: inferredOwnerRole,
       published: true,
     };
 
@@ -371,7 +359,6 @@ export default function AdminTimetablesPage() {
                 placeholder="Course code"
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
                 required
-                disabled={profile.role === "teacher" || form.owner_role === "teacher"}
               />
               <input
                 value={form.course_name}
@@ -381,39 +368,14 @@ export default function AdminTimetablesPage() {
                 placeholder="Course name"
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
                 required
-                disabled={profile.role === "teacher" || form.owner_role === "teacher"}
               />
-              <select
-                value={form.owner_role}
-                onChange={(e) => {
-                  const nextRole = e.target.value;
-                  setForm((current) => ({
-                    ...current,
-                    owner_role: nextRole,
-                    course_code:
-                      nextRole === "teacher" ? teacherCourseCode : current.course_code === teacherCourseCode ? initialForm.course_code : current.course_code,
-                    course_name:
-                      nextRole === "teacher" ? teacherCourseName : current.course_name === teacherCourseName ? initialForm.course_name : current.course_name,
-                    year_of_study: nextRole === "teacher" ? "1" : current.year_of_study,
-                  }));
-                }}
-                className="rounded-xl border border-[#D8D6D0] px-4 py-3"
-                disabled={profile.role === "teacher"}
-              >
-                {ownerRoleOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option === "teacher" ? "Teacher timetable" : "Student timetable"}
-                  </option>
-                ))}
-              </select>
               <select
                 value={form.year_of_study}
                 onChange={(e) =>
                   setForm((current) => ({ ...current, year_of_study: e.target.value }))
                 }
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
-                required={form.owner_role !== "teacher"}
-                disabled={form.owner_role === "teacher"}
+                required
               >
                 {yearOptions.map((option) => (
                   <option key={option} value={option}>
@@ -485,7 +447,6 @@ export default function AdminTimetablesPage() {
                 placeholder="Lecturer email"
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
                 disabled={profile.role === "teacher"}
-                required={form.owner_role === "teacher"}
               />
               <input
                 value={form.room}
