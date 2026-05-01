@@ -17,6 +17,10 @@ const dayColors: Record<string, string> = {
 };
 const subjectColors = ["bg-blue-100 border-blue-300", "bg-green-100 border-green-300", "bg-yellow-100 border-yellow-300", "bg-pink-100 border-pink-300", "bg-purple-100 border-purple-300", "bg-cyan-100 border-cyan-300"];
 
+function normalizeTime(value: string) {
+  return value.slice(0, 5);
+}
+
 function subjectColor(moduleCode: string) {
   let sum = 0;
   for (const char of moduleCode) sum += char.charCodeAt(0);
@@ -73,7 +77,7 @@ export default function TimetablesPage() {
       .filter((entry) => !user?.email || entry.lecturer_email === user.email);
 
     if (profile?.role === "teacher") {
-      return teacherEntries.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || a.start_time.localeCompare(b.start_time));
+      return teacherEntries.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)));
     }
 
     let filtered = courseScopedEntries.filter((entry) => (selectedGroup === "All" ? true : extractGroup(entry) === selectedGroup));
@@ -82,21 +86,21 @@ export default function TimetablesPage() {
       filtered = studentEntries;
     }
 
-    return filtered.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || a.start_time.localeCompare(b.start_time));
+    return filtered.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week) || normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)));
   }, [courseScopedEntries, entries, profile?.role, selectedGroup, studentEntries, user?.email]);
 
   const showGrid = selectedCourse !== "All" && selectedYear !== "All";
 
   const timeSlots = useMemo(() => {
     const slotSet = new Set(defaultTimeSlots);
-    filteredEntries.forEach((entry) => slotSet.add(entry.start_time));
+    filteredEntries.forEach((entry) => slotSet.add(normalizeTime(entry.start_time)));
     return Array.from(slotSet).sort();
   }, [filteredEntries]);
 
   const cellMap = useMemo(() => {
     const map = new Map<string, TimetableRecord[]>();
     filteredEntries.forEach((entry) => {
-      const key = `${entry.day_of_week}-${entry.start_time}`;
+      const key = `${entry.day_of_week}-${normalizeTime(entry.start_time)}`;
       const current = map.get(key) ?? [];
       current.push(entry);
       map.set(key, current);
@@ -163,7 +167,7 @@ export default function TimetablesPage() {
                             {cellEntries.map((entry) => (
                               <div key={entry.id} className={`rounded-lg border p-2 text-xs shadow-sm ${subjectColor(entry.module_code)}`}>
                                 <p className="font-semibold text-slate-900">{entry.module_name}</p>
-                                <p className="mt-0.5 text-slate-700">{entry.start_time} - {entry.end_time}</p>
+                                <p className="mt-0.5 text-slate-700">{normalizeTime(entry.start_time)} - {normalizeTime(entry.end_time)}</p>
                                 <p className="mt-0.5 text-slate-700">{entry.room}</p>
                                 <p className="mt-0.5 text-slate-700">{entry.lecturer_name}</p>
                               </div>
@@ -184,7 +188,7 @@ export default function TimetablesPage() {
             <article key={entry.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">{entry.day_of_week} • {entry.start_time} - {entry.end_time}</p>
+                  <p className="text-sm font-medium text-slate-500">{entry.day_of_week} • {normalizeTime(entry.start_time)} - {normalizeTime(entry.end_time)}</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">{entry.module_name}</h2>
                   <p className="mt-1 text-sm text-slate-600">{entry.course_name}{entry.year_of_study ? ` · Year ${entry.year_of_study}` : ""}{extractGroup(entry) !== "All" ? ` · ${extractGroup(entry)}` : ""}</p>
                   <p className="mt-1 text-sm text-slate-600">{entry.building}, {entry.room}</p>
