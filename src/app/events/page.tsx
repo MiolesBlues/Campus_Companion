@@ -129,13 +129,14 @@ export default function EventsPage() {
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">What&apos;s Happening</span>
             <h1 className="mt-4 text-3xl font-bold text-slate-900">Campus Events</h1>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">Discover upcoming events, workshops, and activities around campus.</p>
+            <p className="mt-2 text-sm font-medium text-blue-700">How not to miss your events</p>
           </div>
-          <button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="mt-2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-50" aria-label="How ICS downloads work">
+          <button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-blue-200 bg-blue-50 text-base font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100" aria-label="How to add events to your calendar">
             ?
           </button>
         </div>
@@ -143,12 +144,12 @@ export default function EventsPage() {
 
       {showIcsHelp && (
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900 shadow-sm">
-          <p className="font-semibold">How to use ICS downloads</p>
+          <p className="font-semibold">How to add an event to your calendar</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>Click <strong>Download ICS</strong> on an event.</li>
             <li>Open the downloaded file from your browser or downloads folder.</li>
             <li>Choose Microsoft Outlook / Calendar when prompted, or import the file manually.</li>
-            <li>Confirm the event save in your calendar.</li>
+            <li>Confirm the event save so reminders show up when you need them.</li>
           </ol>
         </div>
       )}

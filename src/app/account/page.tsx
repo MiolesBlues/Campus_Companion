@@ -48,6 +48,7 @@ export default function AccountPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [registeredEvents, setRegisteredEvents] = useState<EventWithTags[]>([]);
+  const [showIcsHelp, setShowIcsHelp] = useState(false);
 
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
   const [course, setCourse] = useState(courseOptions[0]);
@@ -129,7 +130,7 @@ export default function AccountPage() {
         <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">My Account</span>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Account</h1>
-          <p className="mt-2 text-slate-600">View and update your profile details, registered events, and profile picture.</p>
+          <p className="mt-2 text-slate-600">View and update your profile details, societies, registered events, and profile picture.</p>
         </div>
       </div>
 
@@ -199,13 +200,42 @@ export default function AccountPage() {
 
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-900">My societies</h2>
+            <p className="mt-2 text-sm text-slate-600">The societies you joined across the platform.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {profile?.societies && profile.societies.length > 0 ? (
+                profile.societies.map((society) => (
+                  <span key={society.society_id} className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">{society.name}</span>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">You haven&apos;t joined any societies yet.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Registered events</h2>
-                <p className="mt-2 text-sm text-slate-600">Events you already signed up for.</p>
+                <p className="mt-1 text-sm text-blue-700">How not to miss your events</p>
               </div>
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700" title="Download the ICS file, open it, then choose Outlook or import it into your calendar manually.">?</span>
+              <button type="button" onClick={() => setShowIcsHelp((current) => !current)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border border-blue-200 bg-blue-50 text-base font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100" aria-label="How to add events to your calendar">
+                ?
+              </button>
             </div>
+
+            {showIcsHelp && (
+              <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <p className="font-semibold">How to add an event to your calendar</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5">
+                  <li>Click <strong>Download ICS</strong> on any registered event.</li>
+                  <li>Open the downloaded file from your browser or downloads folder.</li>
+                  <li>Choose Microsoft Outlook / Calendar when prompted, or import it manually into your calendar app.</li>
+                  <li>Confirm the event save so you get reminders later.</li>
+                </ol>
+              </div>
+            )}
+
             <div className="mt-4 space-y-3">
               {registeredEvents.length > 0 ? (
                 registeredEvents.map((event) => (
