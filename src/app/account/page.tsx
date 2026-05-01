@@ -81,6 +81,7 @@ export default function AccountPage() {
   >([]);
   const [startYear, setStartYear] = useState(String(new Date().getFullYear()));
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     if (!profile) {
@@ -95,6 +96,7 @@ export default function AccountPage() {
     setPreferredSocietyCategories(profile.preferred_society_categories ?? []);
     setStartYear(String(profile.start_year ?? new Date().getFullYear()));
     setAvatarUrl(profile.avatar_url ?? "");
+    setBio(profile.bio ?? "");
   }, [profile]);
 
   useEffect(() => {
@@ -157,6 +159,7 @@ export default function AccountPage() {
         start_year: parsedStartYear,
         year_of_study: nextYear,
         avatar_url: avatarUrl || null,
+        bio: bio.trim() || null,
       })
       .eq("id", user.id);
 
@@ -239,6 +242,9 @@ export default function AccountPage() {
                   <p className="text-[#111111]">
                     {profile?.full_name ?? "Not set"}
                   </p>
+                  {profile?.bio && (
+                    <p className="mt-1 text-sm text-[#64615C]">{profile.bio}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-[#787774]">Role</p>
@@ -352,6 +358,25 @@ export default function AccountPage() {
                     onChange={(event) => setStartYear(event.target.value)}
                     className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
                   />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="account-bio"
+                    className="mb-2 block text-sm font-medium text-[#4A4844]"
+                  >
+                    Bio
+                  </label>
+                  <textarea
+                    id="account-bio"
+                    value={bio}
+                    onChange={(event) => setBio(event.target.value.slice(0, 300))}
+                    rows={4}
+                    maxLength={300}
+                    className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+                    placeholder="Tell people a bit about yourself..."
+                  />
+                  <p className="mt-2 text-xs text-[#787774]">{bio.length}/300 characters</p>
                 </div>
 
                 <div>

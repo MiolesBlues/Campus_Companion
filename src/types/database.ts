@@ -37,6 +37,7 @@ export type Profile = {
   career_interest: string | null;
   availability_preferences: string[] | null;
   accessibility_preferences: string | null;
+  bio?: string | null;
   year_of_study: number | null;
   start_year: number | null;
   avatar_url?: string | null;
