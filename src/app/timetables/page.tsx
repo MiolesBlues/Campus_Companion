@@ -123,10 +123,8 @@ export default function TimetablesPage() {
   useEffect(() => {
     if (profile?.academic_group) {
       setSelectedGroup(profile.academic_group);
-    } else {
-      setSelectedGroup("All");
     }
-  }, [profile?.academic_group, selectedCourse, selectedYear]);
+  }, [profile?.academic_group]);
 
   const filteredEntries = useMemo(() => {
     const teacherEntries = entries
@@ -143,13 +141,11 @@ export default function TimetablesPage() {
       );
     }
 
-    let filtered = courseScopedEntries.filter((entry) =>
-      selectedGroup === "All" ? true : extractGroup(entry) === selectedGroup,
-    );
-
-    if (filtered.length === 0 && profile?.role === "student") {
-      filtered = studentEntries;
-    }
+    const filtered = courseScopedEntries.filter((entry) => {
+      if (selectedGroup === "All") return true;
+      const group = extractGroup(entry);
+      return group === "All" || group === selectedGroup;
+    });
 
     return filtered.sort(
       (a, b) =>
@@ -161,7 +157,6 @@ export default function TimetablesPage() {
     entries,
     profile?.role,
     selectedGroup,
-    studentEntries,
     user?.email,
   ]);
 
