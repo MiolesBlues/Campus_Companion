@@ -42,15 +42,25 @@ export default function AdminEventsPage() {
     if (!query) return events;
 
     return events.filter((event) =>
-      [event.title, event.category, event.location, event.description, event.tags.join(" ")]
+      [
+        event.title,
+        event.category,
+        event.location,
+        event.description,
+        event.tags.join(" "),
+      ]
         .join(" ")
         .toLowerCase()
-        .includes(query)
+        .includes(query),
     );
   }, [events, search]);
 
   if (!profile || profile.role !== "admin") {
-    return <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm">Admin access only.</section>;
+    return (
+      <section className="rounded-xl border border-[#F4C8CA] bg-[#FDEBEC] p-6 text-[#9F2F2D] ">
+        Admin access only.
+      </section>
+    );
   }
 
   const resetForm = () => {
@@ -86,13 +96,20 @@ export default function AdminEventsPage() {
     let eventId = editingId;
 
     if (editingId) {
-      const { error } = await supabase.from("events").update(payload).eq("id", editingId);
+      const { error } = await supabase
+        .from("events")
+        .update(payload)
+        .eq("id", editingId);
       if (error) {
         setMessage(error.message);
         return;
       }
     } else {
-      const { data, error } = await supabase.from("events").insert(payload).select().single();
+      const { data, error } = await supabase
+        .from("events")
+        .insert(payload)
+        .select()
+        .single();
       if (error || !data) {
         setMessage(error?.message ?? "Failed to create event.");
         return;
@@ -102,13 +119,20 @@ export default function AdminEventsPage() {
 
     if (eventId) {
       await supabase.from("event_tags").delete().eq("event_id", eventId);
-      const tagList = form.tags.split(",").map((tag) => tag.trim()).filter(Boolean);
+      const tagList = form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
       if (tagList.length > 0) {
-        await supabase.from("event_tags").insert(tagList.map((tag) => ({ event_id: eventId, tag })));
+        await supabase
+          .from("event_tags")
+          .insert(tagList.map((tag) => ({ event_id: eventId, tag })));
       }
     }
 
-    setMessage(editingId ? "Event updated successfully." : "Event created successfully.");
+    setMessage(
+      editingId ? "Event updated successfully." : "Event created successfully.",
+    );
     resetForm();
     await loadEvents();
   };
@@ -146,48 +170,179 @@ export default function AdminEventsPage() {
     <section className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Manage Events</h1>
-          <p className="mt-2 text-slate-600">View, edit, and delete events with live event tags.</p>
+          <h1 className="text-3xl font-bold text-[#111111]">Manage Events</h1>
+          <p className="mt-2 text-[#64615C]">
+            View, edit, and delete events with live event tags.
+          </p>
         </div>
-        <button type="button" onClick={openCreateModal} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xl font-semibold text-white shadow-sm transition hover:bg-slate-700">+</button>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#111111] text-xl font-semibold text-white transition hover:bg-[#333333]"
+        >
+          +
+        </button>
       </div>
 
-      <AdminSearch value={search} onChange={setSearch} placeholder="Search events by title, category, location, description, or tags" />
+      <AdminSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Search events by title, category, location, description, or tags"
+      />
 
-      {message && <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">{message}</div>}
+      {message && (
+        <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 text-sm text-[#64615C] ">
+          {message}
+        </div>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
         {filteredEvents.map((event) => (
-          <article key={event.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">{event.title}</h2>
-            <p className="mt-2 text-sm text-slate-500">{event.event_date} • {event.start_time}</p>
-            <p className="mt-1 text-sm text-slate-500">{event.location}</p>
-            <p className="mt-3 text-slate-600">{event.description}</p>
+          <article
+            key={event.id}
+            className="rounded-xl border border-[#EAEAEA] bg-white p-5 "
+          >
+            <h2 className="text-xl font-semibold text-[#111111]">
+              {event.title}
+            </h2>
+            <p className="mt-2 text-sm text-[#787774]">
+              {event.event_date} • {event.start_time}
+            </p>
+            <p className="mt-1 text-sm text-[#787774]">{event.location}</p>
+            <p className="mt-3 text-[#64615C]">{event.description}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {event.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">#{tag}</span>
+                <span
+                  key={tag}
+                  className="rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium text-[#1F6C9F]"
+                >
+                  #{tag}
+                </span>
               ))}
             </div>
             <div className="mt-5 flex gap-3">
-              <button type="button" onClick={() => handleEdit(event)} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-900">Edit</button>
-              <button type="button" onClick={() => void handleDelete(event.id)} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white">Delete</button>
+              <button
+                type="button"
+                onClick={() => handleEdit(event)}
+                className="rounded-xl border border-[#D8D6D0] px-4 py-2 text-sm font-medium text-[#111111]"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDelete(event.id)}
+                className="rounded-xl bg-[#9F2F2D] px-4 py-2 text-sm font-medium text-white"
+              >
+                Delete
+              </button>
             </div>
           </article>
         ))}
       </div>
 
       {isModalOpen && (
-        <AdminModal title={editingId ? "Edit Event" : "Add Event"} description="Fill in the details below and save the event." onClose={resetForm}>
+        <AdminModal
+          title={editingId ? "Edit Event" : "Add Event"}
+          description="Fill in the details below and save the event."
+          onClose={resetForm}
+        >
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} placeholder="Event title" className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} placeholder="Category" className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder="Location" className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input type="date" value={form.eventDate} onChange={(e) => setForm((current) => ({ ...current, eventDate: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input type="time" value={form.startTime} onChange={(e) => setForm((current) => ({ ...current, startTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input type="time" value={form.endTime} onChange={(e) => setForm((current) => ({ ...current, endTime: e.target.value }))} className="rounded-xl border border-slate-300 px-4 py-3" required />
-            <input value={form.tags} onChange={(e) => setForm((current) => ({ ...current, tags: e.target.value }))} placeholder="Tags comma separated" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" />
-            <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} placeholder="Description" className="rounded-xl border border-slate-300 px-4 py-3 md:col-span-2" rows={5} required />
-            <div className="flex gap-3 md:col-span-2"><button type="submit" className="rounded-xl bg-slate-900 px-5 py-3 text-white">{editingId ? "Update event" : "Create event"}</button><button type="button" onClick={resetForm} className="rounded-xl border border-slate-300 px-5 py-3 text-slate-900">Cancel</button></div>
+            <input
+              value={form.title}
+              onChange={(e) =>
+                setForm((current) => ({ ...current, title: e.target.value }))
+              }
+              placeholder="Event title"
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              value={form.category}
+              onChange={(e) =>
+                setForm((current) => ({ ...current, category: e.target.value }))
+              }
+              placeholder="Category"
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              value={form.location}
+              onChange={(e) =>
+                setForm((current) => ({ ...current, location: e.target.value }))
+              }
+              placeholder="Location"
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              type="date"
+              value={form.eventDate}
+              onChange={(e) =>
+                setForm((current) => ({
+                  ...current,
+                  eventDate: e.target.value,
+                }))
+              }
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              type="time"
+              value={form.startTime}
+              onChange={(e) =>
+                setForm((current) => ({
+                  ...current,
+                  startTime: e.target.value,
+                }))
+              }
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              type="time"
+              value={form.endTime}
+              onChange={(e) =>
+                setForm((current) => ({ ...current, endTime: e.target.value }))
+              }
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3"
+              required
+            />
+            <input
+              value={form.tags}
+              onChange={(e) =>
+                setForm((current) => ({ ...current, tags: e.target.value }))
+              }
+              placeholder="Tags comma separated"
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3 md:col-span-2"
+            />
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm((current) => ({
+                  ...current,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Description"
+              className="rounded-xl border border-[#D8D6D0] px-4 py-3 md:col-span-2"
+              rows={5}
+              required
+            />
+            <div className="flex gap-3 md:col-span-2">
+              <button
+                type="submit"
+                className="rounded-xl bg-[#111111] px-5 py-3 text-white"
+              >
+                {editingId ? "Update event" : "Create event"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-[#D8D6D0] px-5 py-3 text-[#111111]"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         </AdminModal>
       )}

@@ -21,9 +21,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [campus, setCampus] = useState(campusOptions[0]);
   const [academicGroup, setAcademicGroup] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [preferredEventCategories, setPreferredEventCategories] = useState<string[]>([]);
+  const [preferredEventCategories, setPreferredEventCategories] = useState<
+    string[]
+  >([]);
   const [yearOfStudy, setYearOfStudy] = useState("1");
-  const [startYear, setStartYear] = useState(String(currentAcademicStartYear()));
+  const [startYear, setStartYear] = useState(
+    String(currentAcademicStartYear()),
+  );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +41,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setError(null);
 
     if (!isSupabaseConfigured()) {
-      setError("Supabase auth is not configured yet. Add your environment variables first.");
+      setError(
+        "Supabase auth is not configured yet. Add your environment variables first.",
+      );
       setLoading(false);
       return;
     }
@@ -81,7 +87,10 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (signInError) {
       setError(signInError.message);
@@ -95,7 +104,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="rounded-xl border border-[#EAEAEA] bg-white p-6 sm:p-8">
       <form className="space-y-5" onSubmit={handleSubmit}>
         {isSignup && (
           <SignupFields
@@ -119,22 +128,60 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         )}
 
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">Email</label>
-          <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" placeholder="student@example.com" required />
+          <label
+            htmlFor="email"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+            placeholder="student@example.com"
+            required
+          />
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">Password</label>
-          <input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" placeholder="Enter your password" required />
+          <label
+            htmlFor="password"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
+            placeholder="Enter your password"
+            required
+          />
         </div>
 
-        <button type="submit" disabled={loading} className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70">
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-xl bg-[#111111] px-5 py-3 text-white transition hover:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-70"
+        >
           {loading ? "Please wait..." : isSignup ? "Create account" : "Log in"}
         </button>
       </form>
 
-      {message && <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">{message}</div>}
-      {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
+      {message && (
+        <div className="mt-5 rounded-xl border border-[#D5E5D1] bg-[#EDF3EC] p-4 text-sm text-[#346538]">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="mt-5 rounded-xl border border-[#F4C8CA] bg-[#FDEBEC] p-4 text-sm text-[#9F2F2D]">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
