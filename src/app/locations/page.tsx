@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { getLocations } from "@/lib/data";
 import type { LocationRecord } from "@/types/database";
 
+function locationRecommendationScore(location: LocationRecord, campus: string | null | undefined) {
+  let score = 0;
+  if (campus && location.campus === campus) score += 3;
+  return score;
+}
+
 export default function LocationsPage() {
+  const { profile } = useAuth();
   const [locations, setLocations] = useState<LocationRecord[]>([]);
   const [search, setSearch] = useState("");
 
@@ -19,15 +27,21 @@ export default function LocationsPage() {
 
   const filteredLocations = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return locations;
 
-    return locations.filter((location) =>
-      [location.name, location.type, location.description, location.campus ?? "", location.opening_hours ?? "", location.accessibility_notes ?? ""]
-        .join(" ")
-        .toLowerCase()
-        .includes(query)
-    );
-  }, [locations, search]);
+    return [...locations]
+      .filter((location) => {
+        if (!query) return true;
+        return [location.name, location.type, location.description, location.campus ?? "", location.opening_hours ?? "", location.accessibility_notes ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((a, b) => {
+        const scoreDiff = locationRecommendationScore(b, profile?.campus) - locationRecommendationScore(a, profile?.campus);
+        if (scoreDiff !== 0) return scoreDiff;
+        return a.name.localeCompare(b.name);
+      });
+  }, [locations, profile?.campus, search]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -57,35 +71,43 @@ export default function LocationsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredLocations.map((location) => (
-          <article key={location.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                {location.type}
-              </span>
-              {location.campus && (
-                <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-                  {location.campus}
+        {filteredLocations.map((location) => {
+          const matchesCampus = Boolean(profile?.campus && location.campus === profile.campus);
+          return (
+            <article key={location.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                  {location.type}
                 </span>
-              )}
-            </div>
+                {location.campus && (
+                  <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+                    {location.campus}
+                  </span>
+                )}
+                {matchesCampus && (
+                  <span className="inline-block rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+                    Matches your campus
+                  </span>
+                )}
+              </div>
 
-            <h2 className="mt-4 text-xl font-semibold text-slate-900">{location.name}</h2>
+              <h2 className="mt-4 text-xl font-semibold text-slate-900">{location.name}</h2>
 
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">{location.description}</p>
+              <p className="mt-3 text-sm text-slate-600 sm:text-base">{location.description}</p>
 
-            <div className="mt-4 space-y-2 text-sm text-slate-500">
-              <p>
-                <span className="font-medium text-slate-700">Opening hours:</span>{" "}
-                {location.opening_hours ?? "Not provided"}
-              </p>
-              <p>
-                <span className="font-medium text-slate-700">Accessibility:</span>{" "}
-                {location.accessibility_notes ?? "Not provided"}
-              </p>
-            </div>
-          </article>
-        ))}
+              <div className="mt-4 space-y-2 text-sm text-slate-500">
+                <p>
+                  <span className="font-medium text-slate-700">Opening hours:</span>{" "}
+                  {location.opening_hours ?? "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Accessibility:</span>{" "}
+                  {location.accessibility_notes ?? "Not provided"}
+                </p>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
       {filteredLocations.length === 0 && (
