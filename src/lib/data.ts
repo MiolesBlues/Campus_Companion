@@ -161,7 +161,10 @@ export async function getTimetables() {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
-    return mapFallbackTimetables();
+    return {
+      data: mapFallbackTimetables(),
+      source: "fallback" as const,
+    };
   }
 
   const { data, error } = await supabase
@@ -173,10 +176,16 @@ export async function getTimetables() {
 
   if (error || !data) {
     console.error("Failed to load timetables", error);
-    return mapFallbackTimetables();
+    return {
+      data: mapFallbackTimetables(),
+      source: "fallback" as const,
+    };
   }
 
-  return data as TimetableRecord[];
+  return {
+    data: data as TimetableRecord[],
+    source: "live" as const,
+  };
 }
 
 export async function getSocietiesList() {

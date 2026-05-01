@@ -39,8 +39,8 @@ export default function AdminTimetablesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadTimetables = async () => {
-    const data = await getTimetables();
-    setEntries(data);
+    const result = await getTimetables();
+    setEntries(result.data);
   };
 
   useEffect(() => {

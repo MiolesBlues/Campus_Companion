@@ -57,6 +57,7 @@ function extractGroup(entry: TimetableRecord) {
 export default function TimetablesPage() {
   const { profile, user } = useAuth();
   const [entries, setEntries] = useState<TimetableRecord[]>([]);
+  const [dataSource, setDataSource] = useState<"live" | "fallback">("fallback");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
@@ -64,8 +65,9 @@ export default function TimetablesPage() {
 
   useEffect(() => {
     const loadTimetables = async () => {
-      const data = await getTimetables();
-      setEntries(data);
+      const result = await getTimetables();
+      setEntries(result.data);
+      setDataSource(result.source);
     };
 
     void loadTimetables();
@@ -214,9 +216,16 @@ export default function TimetablesPage() {
   return (
     <section className="space-y-8">
       <div className="space-y-3">
-        <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
-          Weekly Planner
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
+            Weekly Planner
+          </span>
+          <span
+            className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${dataSource === "live" ? "bg-[#EDF3EC] text-[#346538]" : "bg-[#FBF3DB] text-[#956400]"}`}
+          >
+            {dataSource === "live" ? "Live timetable data" : "Demo timetable data"}
+          </span>
+        </div>
         <div>
           <h1 className="text-3xl font-bold text-[#111111]">
             {profile?.role === "teacher"
@@ -226,8 +235,13 @@ export default function TimetablesPage() {
           <p className="mt-2 text-[#64615C]">
             {profile?.role === "teacher"
               ? `Your teaching schedule is shown automatically based on your account email${profile?.email ? ` (${profile.email})` : ""}.`
-              : "Choose all for a browsing list, or pick a course, year, and group for a more focused timetable."}
+              : "Pick a course, year, and group for a focused timetable."}
           </p>
+          {dataSource === "fallback" && (
+            <p className="mt-2 text-sm font-medium text-[#956400]">
+              You are currently seeing demo timetable data because live timetable rows could not be loaded from Supabase.
+            </p>
+          )}
         </div>
       </div>
 
