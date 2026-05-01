@@ -16,9 +16,10 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const event = allEvents.find((e) => e.id === params.id);
+  const { id } = await params;
+  const event = allEvents.find((e) => e.id === id);
   if (!event) return { title: "Event Not Found" };
   return {
     title: `${event.title} | Campus Companion`,
@@ -87,7 +88,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function EventDetailPage({
+export default async function EventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;

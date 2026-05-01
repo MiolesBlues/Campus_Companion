@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getEvents, getUserEventRegistrations } from "@/lib/data";
@@ -7,6 +8,26 @@ import { downloadEventIcs } from "@/lib/ics";
 import { eventRecommendationScore } from "@/lib/preferences";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
+
+const CATEGORY_STYLES: Record<string, string> = {
+  Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
+  Career: "bg-[#FBF3DB] text-[#956400]",
+  Sport: "bg-[#EDF3EC] text-[#346538]",
+  Social: "bg-[#F1EDF8] text-[#6B5B7D]",
+  Wellness: "bg-[#FDEBEC] text-[#9F2F2D]",
+  Arts: "bg-[#FBF3DB] text-[#956400]",
+};
+
+function CategoryBadge({ category }: { category: string }) {
+  const style = CATEGORY_STYLES[category] ?? "bg-[#F7F6F3] text-[#2F3437]";
+  return (
+    <span
+      className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${style}`}
+    >
+      {category}
+    </span>
+  );
+}
 
 export default function EventsPage() {
   const { user, profile } = useAuth();
