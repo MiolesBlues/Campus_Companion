@@ -132,11 +132,10 @@ export async function getLocations() {
   return data as LocationRecord[];
 }
 
-export async function getTimetables() {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    return timetableFallback.map((entry) => ({
+function mapFallbackTimetables(): TimetableRecord[] {
+  return timetableFallback.map((entry) => {
+    const [startTime, endTime] = entry.time.split(" - ");
+    return {
       id: entry.id,
       course_code: entry.course === "Teaching" ? "STAFF" : entry.course.slice(0, 3).toUpperCase(),
       course_name: entry.course,
@@ -149,12 +148,20 @@ export async function getTimetables() {
       lecturer_email: entry.lecturerEmail ?? null,
       room: entry.location,
       building: entry.location,
-      start_time: entry.time.split(" - ")[0],
-      end_time: entry.time.split(" - ")[1] ?? entry.time.split(" - ")[0],
+      start_time: startTime,
+      end_time: endTime ?? startTime,
       delivery_mode: "In Person",
       owner_role: entry.role ?? "student",
       published: true,
-    })) as TimetableRecord[];
+    };
+  });
+}
+
+export async function getTimetables() {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return mapFallbackTimetables();
   }
 
   const { data, error } = await supabase
@@ -166,25 +173,7 @@ export async function getTimetables() {
 
   if (error || !data) {
     console.error("Failed to load timetables", error);
-    return timetableFallback.map((entry) => ({
-      id: entry.id,
-      course_code: entry.course === "Teaching" ? "STAFF" : entry.course.slice(0, 3).toUpperCase(),
-      course_name: entry.course,
-      year_of_study: entry.year.startsWith("Year ") ? Number(entry.year.replace("Year ", "")) : null,
-      semester: 1,
-      day_of_week: entry.day,
-      module_code: `MOD-${entry.id}`,
-      module_name: entry.module,
-      lecturer_name: entry.lecturer,
-      lecturer_email: entry.lecturerEmail ?? null,
-      room: entry.location,
-      building: entry.location,
-      start_time: entry.time.split(" - ")[0],
-      end_time: entry.time.split(" - ")[1] ?? entry.time.split(" - ")[0],
-      delivery_mode: "In Person",
-      owner_role: entry.role ?? "student",
-      published: true,
-    })) as TimetableRecord[];
+    return mapFallbackTimetables();
   }
 
   return data as TimetableRecord[];

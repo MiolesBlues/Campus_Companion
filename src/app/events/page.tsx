@@ -1,76 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { getEvents, getUserEventRegistrations } from "@/lib/data";
+import { downloadEventIcs } from "@/lib/ics";
+import { eventRecommendationScore } from "@/lib/preferences";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags } from "@/types/database";
-
-function formatIcsDate(date: string, time: string) {
-  const safeTime = time.slice(0, 5);
-  return `${date.replaceAll("-", "")}T${safeTime.replace(":", "")}00`;
-}
-
-function downloadEventIcs(event: EventWithTags) {
-  const icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Campus Companion//EN",
-    "BEGIN:VEVENT",
-    `UID:event-${event.id}@campuscompanion`,
-    `DTSTAMP:${formatIcsDate(event.event_date, event.start_time)}`,
-    `DTSTART:${formatIcsDate(event.event_date, event.start_time)}`,
-    `DTEND:${formatIcsDate(event.event_date, event.end_time)}`,
-    `SUMMARY:${event.title}`,
-    `DESCRIPTION:${event.description.replaceAll("\n", " ")}`,
-    `LOCATION:${event.location}${event.campus ? `, ${event.campus}` : ""}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
-function recommendationScore(
-  event: EventWithTags,
-  campus: string | null | undefined,
-  interests: string[] | null | undefined,
-  preferredCategories: string[] | null | undefined,
-) {
-  let score = 0;
-  if (campus && event.campus === campus) score += 3;
-  if (preferredCategories?.includes(event.category)) score += 3;
-  if (interests?.includes(event.category)) score += 2;
-  return score;
-}
-
-const CATEGORY_STYLES: Record<string, string> = {
-  Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
-  Careers: "bg-[#FBF3DB] text-[#956400]",
-  Sports: "bg-[#EDF3EC] text-[#346538]",
-  Social: "bg-[#F1EDF8] text-[#6F4BA6]",
-  Wellness: "bg-[#FDEBEC] text-[#9F2F2D]",
-  Cultural: "bg-[#FFF1E6] text-[#B85C00]",
-  Technology: "bg-[#E1F3FE] text-[#1F6C9F]",
-};
-
-function CategoryBadge({ category }: { category: string }) {
-  const style = CATEGORY_STYLES[category] ?? "bg-[#EAEAEA] text-[#4A4844]";
-  return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>
-      {category}
-    </span>
-  );
-}
 
 export default function EventsPage() {
   const { user, profile } = useAuth();
@@ -84,12 +20,12 @@ export default function EventsPage() {
   const [sortOrder, setSortOrder] = useState("recommended");
 
   useEffect(() => {
-    const loadEventsData = async () => {
+    const loadEvents = async () => {
       const data = await getEvents();
       setEvents(data);
     };
 
-    void loadEventsData();
+    void loadEvents();
   }, []);
 
   useEffect(() => {
@@ -120,6 +56,27 @@ export default function EventsPage() {
     [events],
   );
 
+  const scoreByEventId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const event of events) {
+      map.set(
+        event.id,
+        eventRecommendationScore(
+          event,
+          profile?.campus,
+          profile?.interests,
+          profile?.preferred_event_categories,
+        ),
+      );
+    }
+    return map;
+  }, [
+    events,
+    profile?.campus,
+    profile?.interests,
+    profile?.preferred_event_categories,
+  ]);
+
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -148,21 +105,10 @@ export default function EventsPage() {
       );
     }
 
-    result = [...result].sort((a, b) => {
+    return [...result].sort((a, b) => {
       if (sortOrder === "recommended") {
         const scoreDiff =
-          recommendationScore(
-            b,
-            profile?.campus,
-            profile?.interests,
-            profile?.preferred_event_categories,
-          ) -
-          recommendationScore(
-            a,
-            profile?.campus,
-            profile?.interests,
-            profile?.preferred_event_categories,
-          );
+          (scoreByEventId.get(b.id) ?? 0) - (scoreByEventId.get(a.id) ?? 0);
         if (scoreDiff !== 0) return scoreDiff;
       }
 
@@ -176,18 +122,7 @@ export default function EventsPage() {
           ? -1
           : 1;
     });
-
-    return result;
-  }, [
-    events,
-    profile?.campus,
-    profile?.interests,
-    profile?.preferred_event_categories,
-    search,
-    selectedCategory,
-    selectedCampus,
-    sortOrder,
-  ]);
+  }, [events, scoreByEventId, search, selectedCategory, selectedCampus, sortOrder]);
 
   const toggleRegister = async (eventItem: EventWithTags) => {
     if (!user) {
@@ -336,6 +271,7 @@ export default function EventsPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredEvents.map((event) => {
           const isRegistered = registrations.includes(event.id);
+          const score = scoreByEventId.get(event.id) ?? 0;
           return (
             <article
               key={event.id}

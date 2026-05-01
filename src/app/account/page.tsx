@@ -10,50 +10,16 @@ import {
   eventCategoryOptions,
   interestOptions,
 } from "@/lib/constants";
-import { getEvents, getUserEventRegistrations } from "@/lib/data";
+import {
+  getEvents,
+  getSocietiesList,
+  getUserEventRegistrations,
+} from "@/lib/data";
+import { downloadEventIcs } from "@/lib/ics";
+import { toggleValue } from "@/lib/preferences";
 import { calculateAcademicYear, getEffectiveYearOfStudy } from "@/lib/profile";
-import { getSocieties } from "@/lib/societies";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { EventWithTags, Society } from "@/types/database";
-
-function formatIcsDate(date: string, time: string) {
-  const safeTime = time.slice(0, 5);
-  return `${date.replaceAll("-", "")}T${safeTime.replace(":", "")}00`;
-}
-
-function downloadEventIcs(event: EventWithTags) {
-  const icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Campus Companion//EN",
-    "BEGIN:VEVENT",
-    `UID:event-${event.id}@campuscompanion`,
-    `DTSTAMP:${formatIcsDate(event.event_date, event.start_time)}`,
-    `DTSTART:${formatIcsDate(event.event_date, event.start_time)}`,
-    `DTEND:${formatIcsDate(event.event_date, event.end_time)}`,
-    `SUMMARY:${event.title}`,
-    `DESCRIPTION:${event.description.replaceAll("\n", " ")}`,
-    `LOCATION:${event.location}${event.campus ? `, ${event.campus}` : ""}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
-function toggleValue(values: string[], value: string) {
-  return values.includes(value)
-    ? values.filter((item) => item !== value)
-    : [...values, value];
-}
 
 export default function AccountPage() {
   const { loading, user, profile, isConfigured, refreshProfile, signOut } =
@@ -101,7 +67,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     const loadSidebarData = async () => {
-      const allSocieties = await getSocieties();
+      const allSocieties = await getSocietiesList();
       const joinedIds = new Set(
         (profile?.societies ?? []).map((society) => society.society_id),
       );

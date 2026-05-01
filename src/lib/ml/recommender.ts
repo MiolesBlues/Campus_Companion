@@ -11,119 +11,72 @@ export type Event = {
 
 export type SimilarEvent = Event & { similarity: number };
 
-function tokenise(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((t) => t.length > 1);
-}
-
-function buildDocument(event: Event): string[] {
-  const titleTokens = tokenise(event.title);
-  const descTokens = tokenise(event.description);
-  const categoryTokens = tokenise(event.category);
-  const tagTokens = event.tags.flatMap((tag) => tokenise(tag));
-
-  return [
-    ...titleTokens,
-    ...titleTokens,
-    ...descTokens,
-    ...categoryTokens,
-    ...categoryTokens,
-    ...categoryTokens,
-    ...categoryTokens,
-    ...tagTokens,
-    ...tagTokens,
-    ...tagTokens,
-  ];
-}
-
-function computeTF(tokens: string[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const token of tokens) {
-    counts.set(token, (counts.get(token) ?? 0) + 1);
-  }
-
-  const tf = new Map<string, number>();
-  for (const [term, count] of counts) {
-    tf.set(term, count / tokens.length);
-  }
-  return tf;
-}
-
-function computeIDF(allTokens: string[][]): Map<string, number> {
-  const totalDocs = allTokens.length;
-  const docFreq = new Map<string, number>();
-
-  for (const tokens of allTokens) {
-    const seen = new Set(tokens);
-    for (const term of seen) {
-      docFreq.set(term, (docFreq.get(term) ?? 0) + 1);
-    }
-  }
-
-  const idf = new Map<string, number>();
-  for (const [term, df] of docFreq) {
-    idf.set(term, Math.log(totalDocs / df));
-  }
-  return idf;
-}
-
-function computeTFIDF(
-  tf: Map<string, number>,
-  idf: Map<string, number>,
-): Map<string, number> {
-  const tfidf = new Map<string, number>();
-  for (const [term, tfValue] of tf) {
-    const idfValue = idf.get(term) ?? 0;
-    tfidf.set(term, tfValue * idfValue);
-  }
-  return tfidf;
-}
-
-function cosineSimilarity(
-  a: Map<string, number>,
-  b: Map<string, number>,
-): number {
-  let dot = 0;
-  for (const [term, aVal] of a) {
-    const bVal = b.get(term) ?? 0;
-    dot += aVal * bVal;
-  }
-
-  const magA = Math.sqrt([...a.values()].reduce((sum, value) => sum + value * value, 0));
-  const magB = Math.sqrt([...b.values()].reduce((sum, value) => sum + value * value, 0));
-
-  if (magA === 0 || magB === 0) return 0;
-  return dot / (magA * magB);
-}
-
 export function getSimilarEvents(
   targetEventId: string,
   allEvents: Event[],
   k = 3,
 ): SimilarEvent[] {
-  const documents = allEvents.map(buildDocument);
-  const idf = computeIDF(documents);
+  const targetEvent = allEvents.find((event) => event.id === targetEventId);
 
-  const tfidfVectors = documents.map((tokens) => {
-    const tf = computeTF(tokens);
-    return computeTFIDF(tf, idf);
-  });
+  if (!targetEvent) return [];
+
+  const stopwords = new Set([
+    "the", "and", "a", "an", "to", "of", "in", "for", "on", "with", "at", "is"
+  ]);
+
+  function tokenize(event: Event): string[] {
+    const text = [
+      event.title,
+      event.description,
+      event.category,
+      ...(event.tags || []),
+      event.category,
+      ...(event.tags || [])
+    ].join(" ");
+
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .split(/\s+/)
+      .filter((word) => word && !stopwords.has(word));
+  }
+
+  const documents = allEvents.map((event) => tokenize(event));
+
+  const vocabulary = Array.from(new Set(documents.flat()));
+
+  function termFrequency(tokens: string[], term: string) {
+    return tokens.filter((token) => token === term).length / tokens.length;
+  }
+
+  function inverseDocumentFrequency(term: string) {
+    const docsWithTerm = documents.filter((doc) => doc.includes(term)).length;
+    return Math.log(documents.length / (1 + docsWithTerm));
+  }
+
+  function vectorise(tokens: string[]) {
+    return vocabulary.map((term) => termFrequency(tokens, term) * inverseDocumentFrequency(term));
+  }
+
+  function cosineSimilarity(a: number[], b: number[]) {
+    const dot = a.reduce((sum, value, i) => sum + value * b[i], 0);
+    const magA = Math.sqrt(a.reduce((sum, value) => sum + value * value, 0));
+    const magB = Math.sqrt(b.reduce((sum, value) => sum + value * value, 0));
+
+    if (magA === 0 || magB === 0) return 0;
+
+    return dot / (magA * magB);
+  }
 
   const targetIndex = allEvents.findIndex((event) => event.id === targetEventId);
-  if (targetIndex === -1) return [];
+  const targetVector = vectorise(documents[targetIndex]);
 
-  const targetVector = tfidfVectors[targetIndex];
-
-  const scored = allEvents
+  return allEvents
     .map((event, index) => ({
       ...event,
-      similarity: cosineSimilarity(targetVector, tfidfVectors[index]),
+      similarity: cosineSimilarity(targetVector, vectorise(documents[index])),
     }))
     .filter((event) => event.id !== targetEventId)
-    .sort((a, b) => b.similarity - a.similarity);
-
-  return scored.slice(0, k);
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, k);
 }

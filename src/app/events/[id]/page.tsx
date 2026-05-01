@@ -13,7 +13,7 @@ export function generateStaticParams() {
   return allEvents.map((e) => ({ id: String(e.id) }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { id: string };
@@ -90,9 +90,10 @@ function formatDate(dateStr: string): string {
 export default function EventDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const event = allEvents.find((e) => e.id === params.id);
+  const { id } = await params;
+  const event = allEvents.find((e) => e.id === id);
 
   if (!event) notFound();
 
@@ -100,7 +101,7 @@ export default function EventDetailPage({
 
   return (
     <section className="min-h-[100dvh] bg-[#F7F6F3]">
-      <header className="border-b border-[#EAEAEA] bg-white">
+      <header className="bg-white border-b border-[#EAEAEA]">
         <div className="mx-auto max-w-3xl px-4 py-4">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-[#787774]">
@@ -130,9 +131,9 @@ export default function EventDetailPage({
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+      <div className="mx-auto max-w-3xl px-4 py-8 space-y-8">
         <article aria-labelledby="event-title">
-          <div className="space-y-5 rounded-xl border border-[#EAEAEA] bg-white p-6 md:p-8">
+          <div className="rounded-xl bg-white border border-[#EAEAEA] p-6 md:p-8 space-y-5">
             <div className="flex flex-wrap items-start gap-3">
               <h1
                 id="event-title"
@@ -143,7 +144,7 @@ export default function EventDetailPage({
               <CategoryBadge category={event.category} />
             </div>
 
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="font-medium text-[#787774]">Date</dt>
                 <dd className="text-[#111111]">{formatDate(event.date)}</dd>

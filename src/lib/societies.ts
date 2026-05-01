@@ -1,4 +1,3 @@
-import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Society } from "@/types/database";
 
 export const fallbackSocieties: Society[] = [
@@ -11,34 +10,3 @@ export const fallbackSocieties: Society[] = [
   { id: 7, name: "Gaming Society", category: "Social", description: "Console, PC, board game, and esports events.", contact_email: "gaming@campuscompanion.edu", meeting_day: "Saturday", published: true },
   { id: 8, name: "International Students Society", category: "Community", description: "Support and social events for international students.", contact_email: "international@campuscompanion.edu", meeting_day: "Thursday", published: true }
 ];
-
-export async function getSocieties() {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    return fallbackSocieties;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("societies")
-      .select("*")
-      .eq("published", true)
-      .order("name", { ascending: true });
-
-    if (error || !data) {
-      console.error("Failed to load societies", {
-        code: error?.code,
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-      });
-      return fallbackSocieties;
-    }
-
-    return data as Society[];
-  } catch (error) {
-    console.error("Unexpected societies fetch failure", error);
-    return fallbackSocieties;
-  }
-}
