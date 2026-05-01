@@ -48,7 +48,7 @@ export default function AccountPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [registeredEvents, setRegisteredEvents] = useState<EventWithTags[]>([]);
-  const [showIcsHelp, setShowIcsHelp] = useState(false);
+  const [showIcsHelp, setShowIcsHelp] = useState(true);
 
   const effectiveYear = useMemo(() => getEffectiveYearOfStudy(profile), [profile]);
   const [course, setCourse] = useState(courseOptions[0]);

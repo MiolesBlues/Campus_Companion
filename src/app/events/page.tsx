@@ -44,7 +44,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<EventWithTags[]>([]);
   const [registrations, setRegistrations] = useState<number[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [showIcsHelp, setShowIcsHelp] = useState(false);
+  const [showIcsHelp, setShowIcsHelp] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedCampus, setSelectedCampus] = useState("All");
