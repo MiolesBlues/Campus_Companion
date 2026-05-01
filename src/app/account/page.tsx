@@ -128,8 +128,21 @@ export default function AccountPage() {
     void loadSidebarData();
   }, [profile?.societies, user]);
 
-  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const saveProfile = async (
+    overrides?: Partial<{
+      course: string;
+      campus: string;
+      academic_group: string | null;
+      interests: string[];
+      preferred_event_categories: string[];
+      preferred_society_categories: string[];
+      start_year: number;
+      year_of_study: number | null;
+      avatar_url: string | null;
+      bio: string | null;
+    }>,
+    successMessage = "Account details updated successfully.",
+  ) => {
     setSaving(true);
     setMessage(null);
     setError(null);
@@ -138,7 +151,7 @@ export default function AccountPage() {
     if (!supabase || !user) {
       setError("Supabase or user session is unavailable.");
       setSaving(false);
-      return;
+      return false;
     }
 
     const parsedStartYear = Number(startYear);
@@ -147,31 +160,65 @@ export default function AccountPage() {
         ? calculateAcademicYear(parsedStartYear)
         : (profile?.year_of_study ?? null);
 
+    const payload = {
+      course,
+      campus,
+      academic_group: academicGroup || null,
+      interests: selectedInterests,
+      preferred_event_categories: preferredEventCategories,
+      preferred_society_categories: preferredSocietyCategories,
+      start_year: parsedStartYear,
+      year_of_study: nextYear,
+      avatar_url: avatarUrl || null,
+      bio: bio.trim() || null,
+      ...overrides,
+    };
+
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({
-        course,
-        campus,
-        academic_group: academicGroup || null,
-        interests: selectedInterests,
-        preferred_event_categories: preferredEventCategories,
-        preferred_society_categories: preferredSocietyCategories,
-        start_year: parsedStartYear,
-        year_of_study: nextYear,
-        avatar_url: avatarUrl || null,
-        bio: bio.trim() || null,
-      })
+      .update(payload)
       .eq("id", user.id);
 
     if (updateError) {
       setError(updateError.message);
       setSaving(false);
-      return;
+      return false;
     }
 
     await refreshProfile();
-    setMessage("Account details updated successfully.");
+    setMessage(successMessage);
     setSaving(false);
+    return true;
+  };
+
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await saveProfile();
+  };
+
+  const handleToggleWithAutosave = async (
+    type: "interests" | "preferred_event_categories" | "preferred_society_categories",
+    value: string,
+  ) => {
+    if (!user) return;
+
+    if (type === "interests") {
+      const next = toggleValue(selectedInterests, value);
+      setSelectedInterests(next);
+      await saveProfile({ interests: next }, "Interests updated.");
+      return;
+    }
+
+    if (type === "preferred_event_categories") {
+      const next = toggleValue(preferredEventCategories, value);
+      setPreferredEventCategories(next);
+      await saveProfile({ preferred_event_categories: next }, "Preferred event categories updated.");
+      return;
+    }
+
+    const next = toggleValue(preferredSocietyCategories, value);
+    setPreferredSocietyCategories(next);
+    await saveProfile({ preferred_society_categories: next }, "Preferred society categories updated.");
   };
 
   return (
@@ -379,82 +426,6 @@ export default function AccountPage() {
                   <p className="mt-2 text-xs text-[#787774]">{bio.length}/300 characters</p>
                 </div>
 
-                <div>
-                  <p className="mb-2 block text-sm font-medium text-[#4A4844]">
-                    Interests
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {interestOptions.map((option) => {
-                      const active = selectedInterests.includes(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() =>
-                            setSelectedInterests(
-                              toggleValue(selectedInterests, option),
-                            )
-                          }
-                          className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#1F6C9F] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-2 block text-sm font-medium text-[#4A4844]">
-                    Preferred event categories
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {eventCategoryOptions.map((option) => {
-                      const active = preferredEventCategories.includes(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() =>
-                            setPreferredEventCategories(
-                              toggleValue(preferredEventCategories, option),
-                            )
-                          }
-                          className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#111111] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-2 block text-sm font-medium text-[#4A4844]">
-                    Preferred society categories
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {interestOptions.map((option) => {
-                      const active =
-                        preferredSocietyCategories.includes(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() =>
-                            setPreferredSocietyCategories(
-                              toggleValue(preferredSocietyCategories, option),
-                            )
-                          }
-                          className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#346538] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 <button
                   type="submit"
                   disabled={saving}
@@ -479,6 +450,80 @@ export default function AccountPage() {
         </div>
 
         <div className="space-y-6">
+          <div className="rounded-xl border border-[#EAEAEA] bg-white p-6 ">
+            <h2 className="text-xl font-semibold text-[#111111]">
+              Preferences
+            </h2>
+            <p className="mt-2 text-sm text-[#64615C]">
+              These update automatically when you tap them, so no save button dance needed.
+            </p>
+
+            <div className="mt-4 space-y-6">
+              <div>
+                <p className="mb-2 block text-sm font-medium text-[#4A4844]">
+                  Interests
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map((option) => {
+                    const active = selectedInterests.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => void handleToggleWithAutosave("interests", option)}
+                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#1F6C9F] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 block text-sm font-medium text-[#4A4844]">
+                  Preferred event categories
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {eventCategoryOptions.map((option) => {
+                    const active = preferredEventCategories.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => void handleToggleWithAutosave("preferred_event_categories", option)}
+                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#111111] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 block text-sm font-medium text-[#4A4844]">
+                  Preferred society categories
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map((option) => {
+                    const active = preferredSocietyCategories.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => void handleToggleWithAutosave("preferred_society_categories", option)}
+                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${active ? "bg-[#346538] text-white" : "border border-[#D8D6D0] bg-white text-[#4A4844] hover:bg-[#FBFBFA]"}`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-xl border border-[#EAEAEA] bg-white p-6 ">
             <h2 className="text-xl font-semibold text-[#111111]">
               My societies
