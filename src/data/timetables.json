@@ -7,7 +7,8 @@
     "module": "Introduction to Programming",
     "time": "09:00 - 10:30",
     "location": "Engineering Block, Room E201",
-    "lecturer": "Dr. Ryan"
+    "lecturer": "Dr. Ryan",
+    "role": "student"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "module": "Discrete Mathematics",
     "time": "11:00 - 12:30",
     "location": "Science Centre, Room S104",
-    "lecturer": "Prof. Walsh"
+    "lecturer": "Prof. Walsh",
+    "role": "student"
   },
   {
     "id": 3,
@@ -27,7 +29,8 @@
     "module": "Web Development Lab",
     "time": "14:00 - 16:00",
     "location": "Tech Lab 2",
-    "lecturer": "Ms. Keane"
+    "lecturer": "Ms. Keane",
+    "role": "student"
   },
   {
     "id": 4,
@@ -37,7 +40,8 @@
     "module": "Data Structures",
     "time": "10:00 - 11:30",
     "location": "Engineering Block, Room E305",
-    "lecturer": "Dr. Byrne"
+    "lecturer": "Dr. Byrne",
+    "role": "student"
   },
   {
     "id": 5,
@@ -47,7 +51,8 @@
     "module": "Database Systems",
     "time": "13:00 - 14:30",
     "location": "ICT Building, Room I110",
-    "lecturer": "Mr. Ahmed"
+    "lecturer": "Mr. Ahmed",
+    "role": "student"
   },
   {
     "id": 6,
@@ -57,7 +62,8 @@
     "module": "Principles of Marketing",
     "time": "10:00 - 11:30",
     "location": "Business School, Room B101",
-    "lecturer": "Dr. Murphy"
+    "lecturer": "Dr. Murphy",
+    "role": "student"
   },
   {
     "id": 7,
@@ -67,7 +73,8 @@
     "module": "Business Communication",
     "time": "09:00 - 10:30",
     "location": "Business School, Room B203",
-    "lecturer": "Ms. Nolan"
+    "lecturer": "Ms. Nolan",
+    "role": "student"
   },
   {
     "id": 8,
@@ -77,7 +84,8 @@
     "module": "Financial Accounting",
     "time": "12:00 - 13:30",
     "location": "Business School, Room B115",
-    "lecturer": "Mr. O'Connell"
+    "lecturer": "Mr. O'Connell",
+    "role": "student"
   },
   {
     "id": 9,
@@ -87,6 +95,89 @@
     "module": "Project Management",
     "time": "15:00 - 16:30",
     "location": "Innovation Hub, Room H12",
-    "lecturer": "Dr. Smith"
+    "lecturer": "Dr. Smith",
+    "role": "student"
+  },
+  {
+    "id": 10,
+    "course": "Engineering",
+    "year": "Year 1",
+    "day": "Tuesday",
+    "module": "Mechanics",
+    "time": "11:00 - 12:30",
+    "location": "Engineering Block, Room E204",
+    "lecturer": "Dr. Byrne",
+    "role": "student"
+  },
+  {
+    "id": 11,
+    "course": "Engineering",
+    "year": "Year 2",
+    "day": "Friday",
+    "module": "Control Systems",
+    "time": "14:00 - 15:30",
+    "location": "Engineering Block, Room E405",
+    "lecturer": "Dr. Ryan",
+    "role": "student"
+  },
+  {
+    "id": 12,
+    "course": "Teaching",
+    "year": "Staff",
+    "day": "Monday",
+    "module": "Introduction to Programming",
+    "time": "09:00 - 10:30",
+    "location": "Engineering Block, Room E201",
+    "lecturer": "Dr. Ryan",
+    "role": "teacher",
+    "lecturerEmail": "dr.ryan@campuscompanion.edu"
+  },
+  {
+    "id": 13,
+    "course": "Teaching",
+    "year": "Staff",
+    "day": "Tuesday",
+    "module": "Object Oriented Programming",
+    "time": "09:00 - 10:30",
+    "location": "Engineering Block, Room E302",
+    "lecturer": "Dr. Ryan",
+    "role": "teacher",
+    "lecturerEmail": "dr.ryan@campuscompanion.edu"
+  },
+  {
+    "id": 14,
+    "course": "Teaching",
+    "year": "Staff",
+    "day": "Thursday",
+    "module": "Control Systems",
+    "time": "14:00 - 15:30",
+    "location": "Engineering Block, Room E405",
+    "lecturer": "Dr. Ryan",
+    "role": "teacher",
+    "lecturerEmail": "dr.ryan@campuscompanion.edu"
+  },
+  {
+    "id": 15,
+    "course": "Teaching",
+    "year": "Staff",
+    "day": "Monday",
+    "module": "Discrete Mathematics",
+    "time": "11:00 - 12:30",
+    "location": "Science Centre, Room S104",
+    "lecturer": "Prof. Walsh",
+    "role": "teacher",
+    "lecturerEmail": "prof.walsh@campuscompanion.edu"
+  },
+  {
+    "id": 16,
+    "course": "Teaching",
+    "year": "Staff",
+    "day": "Friday",
+    "module": "Software Engineering",
+    "time": "15:00 - 16:30",
+    "location": "Engineering Block, Room E401",
+    "lecturer": "Prof. Walsh",
+    "role": "teacher",
+    "lecturerEmail": "prof.walsh@campuscompanion.edu"
   }
 ]
