@@ -122,6 +122,11 @@ export default function AdminTimetablesPage() {
       return;
     }
 
+    if (normalizedOwnerRole === "teacher" && !form.lecturer_email.trim() && profile.role !== "teacher") {
+      setMessage("Teacher timetable entries must include a lecturer email.");
+      return;
+    }
+
     if (!semesterOptions.includes(form.semester)) {
       setMessage("Semester must be 1 or 2.");
       return;
@@ -272,6 +277,12 @@ export default function AdminTimetablesPage() {
                   Lecturer
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-[#4A4844]">
+                  Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[#4A4844]">
+                  Lecturer Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-[#4A4844]">
                   Actions
                 </th>
               </tr>
@@ -293,6 +304,12 @@ export default function AdminTimetablesPage() {
                   </td>
                   <td className="px-4 py-4 text-sm text-[#4A4844]">
                     {entry.lecturer_name}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-[#4A4844]">
+                    {entry.owner_role === "teacher" ? "Teacher" : "Student"}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-[#4A4844]">
+                    {entry.lecturer_email ?? "—"}
                   </td>
                   <td className="px-4 py-4 text-sm text-[#4A4844]">
                     <div className="flex gap-2">
@@ -463,6 +480,7 @@ export default function AdminTimetablesPage() {
                 placeholder="Lecturer email"
                 className="rounded-xl border border-[#D8D6D0] px-4 py-3"
                 disabled={profile.role === "teacher"}
+                required={form.owner_role === "teacher"}
               />
               <input
                 value={form.room}
