@@ -23,11 +23,98 @@ a {
   z-index: 1000;
 }
 
-.skip-link:focus {
-  outline: 3px solid #bfdbfe;
-  outline-offset: 2px;
-}
-
 * {
   box-sizing: border-box;
+}
+
+/* ─── Accessibility: Focus Visible ──────────────────────────────────────────
+   3 px outline, 2 px offset, dark blue — passes 3:1 against white and black.
+   Replaces the per-component focus rings scattered around the codebase.       */
+:focus-visible {
+  outline: 3px solid #1d4ed8 !important;
+  outline-offset: 2px !important;
+}
+
+/* ─── Accessibility: High Contrast ──────────────────────────────────────────
+   True black/white palette with strong borders when data-contrast="high" is
+   set on <html> by AccessibilityProvider.                                      */
+[data-contrast="high"] body,
+[data-contrast="high"] header,
+[data-contrast="high"] main,
+[data-contrast="high"] article,
+[data-contrast="high"] section,
+[data-contrast="high"] aside,
+[data-contrast="high"] footer,
+[data-contrast="high"] form,
+[data-contrast="high"] fieldset {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+[data-contrast="high"] * {
+  border-color: #fff !important;
+}
+
+[data-contrast="high"] h1,
+[data-contrast="high"] h2,
+[data-contrast="high"] h3,
+[data-contrast="high"] h4,
+[data-contrast="high"] h5,
+[data-contrast="high"] h6,
+[data-contrast="high"] p,
+[data-contrast="high"] span,
+[data-contrast="high"] div,
+[data-contrast="high"] li,
+[data-contrast="high"] td,
+[data-contrast="high"] th,
+[data-contrast="high"] label,
+[data-contrast="high"] legend {
+  color: #fff !important;
+}
+
+/* Links are yellow in high-contrast so they're distinguishable from body text */
+[data-contrast="high"] a {
+  color: #ff0 !important;
+  text-decoration: underline !important;
+}
+
+[data-contrast="high"] button,
+[data-contrast="high"] [role="button"] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+[data-contrast="high"] input,
+[data-contrast="high"] select,
+[data-contrast="high"] textarea {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+/* ─── Accessibility: Reduced Motion ─────────────────────────────────────────
+   "auto"  → honour the OS prefers-reduced-motion media query (WCAG 2.3.3).
+   "on"    → always suppress motion regardless of OS setting.
+   "off"   → always allow motion (AccessibilityProvider sets nothing extra).   */
+@media (prefers-reduced-motion: reduce) {
+  [data-reduced-motion="auto"],
+  [data-reduced-motion="auto"] *,
+  [data-reduced-motion="auto"] *::before,
+  [data-reduced-motion="auto"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-reduced-motion="on"],
+[data-reduced-motion="on"] *,
+[data-reduced-motion="on"] *::before,
+[data-reduced-motion="on"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

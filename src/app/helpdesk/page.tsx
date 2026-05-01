@@ -141,7 +141,11 @@ export default function HelpdeskPage() {
       </div>
 
       {submitted && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-sm sm:text-base">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 shadow-sm sm:text-base"
+        >
           Your helpdesk request has been submitted successfully.
         </div>
       )}
