@@ -15,6 +15,13 @@ export type Society = {
   published: boolean;
 };
 
+export type SocietyJoinRecord = {
+  id: number;
+  user_id: string;
+  society_id: number;
+  created_at: string;
+};
+
 export type Profile = {
   id: string;
   email: string | null;
@@ -22,6 +29,14 @@ export type Profile = {
   role: UserRole;
   student_id: string | null;
   course: string | null;
+  campus: string | null;
+  academic_group: string | null;
+  interests: string[] | null;
+  preferred_event_categories: string[] | null;
+  preferred_society_categories: string[] | null;
+  career_interest: string | null;
+  availability_preferences: string[] | null;
+  accessibility_preferences: string | null;
   year_of_study: number | null;
   start_year: number | null;
   avatar_url?: string | null;
@@ -37,12 +52,20 @@ export type EventTagRecord = {
   tag: string;
 };
 
+export type EventRegistrationRecord = {
+  id: number;
+  user_id: string;
+  event_id: number;
+  created_at: string;
+};
+
 export type EventRecord = {
   id: number;
   title: string;
   category: string;
   description: string;
   location: string;
+  campus: string | null;
   event_date: string;
   start_time: string;
   end_time: string;
@@ -61,6 +84,7 @@ export type LocationRecord = {
   name: string;
   type: string;
   description: string;
+  campus: string | null;
   opening_hours: string | null;
   accessibility_notes: string | null;
   contact_email?: string | null;

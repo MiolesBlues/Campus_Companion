@@ -22,5 +22,95 @@
     "description": "A flexible space used for workshops, talks, and society activities.",
     "opening_hours": "10:00 - 18:00",
     "accessibility_notes": "Accessible entrance and nearby accessible toilets."
+  },
+  {
+    "id": 4,
+    "name": "Sports Centre",
+    "type": "Sports",
+    "description": "Campus sports facility with courts, gym, and changing rooms.",
+    "opening_hours": "07:00 - 22:00",
+    "accessibility_notes": "Step-free access throughout. Accessible changing facilities available."
+  },
+  {
+    "id": 5,
+    "name": "Sports Hall",
+    "type": "Sports",
+    "description": "Large indoor hall used for basketball, volleyball, and other indoor sports.",
+    "opening_hours": "08:00 - 21:00",
+    "accessibility_notes": "Wheelchair accessible. Wide entrance doors and accessible seating."
+  },
+  {
+    "id": 6,
+    "name": "Campus Track",
+    "type": "Sports",
+    "description": "Outdoor running track open to all students for casual and structured training.",
+    "opening_hours": "07:00 - 20:00",
+    "accessibility_notes": "Open outdoor space. Some surfaces may be uneven."
+  },
+  {
+    "id": 7,
+    "name": "PE Hall",
+    "type": "Event Space",
+    "description": "Multi-use hall within the Sports Hall, used for large events and cultural activities.",
+    "opening_hours": "09:00 - 20:00",
+    "accessibility_notes": "Wheelchair accessible via side entrance."
+  },
+  {
+    "id": 8,
+    "name": "Wellness Centre",
+    "type": "Support",
+    "description": "Student wellbeing hub offering counselling, mindfulness sessions, and mental health support.",
+    "opening_hours": "09:00 - 17:00",
+    "accessibility_notes": "Step-free access. Private consultation rooms available."
+  },
+  {
+    "id": 9,
+    "name": "Health Centre",
+    "type": "Support",
+    "description": "On-campus health service providing nurse consultations, and health workshops.",
+    "opening_hours": "08:30 - 17:30",
+    "accessibility_notes": "Fully accessible. Hearing loop available at reception."
+  },
+  {
+    "id": 10,
+    "name": "Careers Office",
+    "type": "Support",
+    "description": "Career guidance, CV reviews, mock interviews.",
+    "opening_hours": "09:00 - 17:00",
+    "accessibility_notes": "Accessible entrance on ground floor."
+  },
+  {
+    "id": 11,
+    "name": "Main Hall",
+    "type": "Event Space",
+    "description": "Large multi-purpose hall used for fairs, presentations, and major campus events.",
+    "opening_hours": "08:00 - 21:00",
+    "accessibility_notes": "Fully accessible. Level entrance and with alot accessible seating available."
+  },
+  {
+    "id": 12,
+    "name": "Student Union Hall",
+    "type": "Event Space",
+    "description": "Social hub run by the Students Union, hosting events, societies, and community activities.",
+    "opening_hours": "10:00 - 23:00",
+    "accessibility_notes": "Accessible entrance. Accessible toilets on ground floor."
+  },
+  {
+    "id": 13,
+    "name": "T-Main",
+    "type": "Lecture rooms",
+    "description": "General purpose teaching building, Main block.",
+    "opening_hours": "08:00 - 20:00",
+    "accessibility_notes": " 3 floors. Fully accessible. "
+  },
+  {
+    "id": 14,
+    "name": "T-North",
+    "type": "Lecture rooms",
+    "description": "Newer teaching building, Newer block with a bigger number of labs.",
+    "opening_hours": "08:00 - 20:00",
+    "accessibility_notes": "Lift access available in north building."
   }
+
+
 ]

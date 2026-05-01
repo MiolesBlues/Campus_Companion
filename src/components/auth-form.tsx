@@ -1,11 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { campusOptions } from "@/lib/constants";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { getSocieties } from "@/lib/societies";
 import { SignupFields } from "@/components/auth/signup-fields";
-import type { Society } from "@/types/database";
 
 function currentAcademicStartYear(now = new Date()) {
   const month = now.getMonth();
@@ -19,40 +18,17 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [course, setCourse] = useState("Computer Science");
+  const [campus, setCampus] = useState(campusOptions[0]);
+  const [academicGroup, setAcademicGroup] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [preferredEventCategories, setPreferredEventCategories] = useState<string[]>([]);
   const [yearOfStudy, setYearOfStudy] = useState("1");
   const [startYear, setStartYear] = useState(String(currentAcademicStartYear()));
-  const [societyOptions, setSocietyOptions] = useState<Society[]>([]);
-  const [selectedSocietyIds, setSelectedSocietyIds] = useState<string[]>([""]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isSignup = mode === "signup";
-
-  useEffect(() => {
-    if (!isSignup) {
-      return;
-    }
-
-    const loadSocieties = async () => {
-      const societies = await getSocieties();
-      setSocietyOptions(societies);
-    };
-
-    void loadSocieties();
-  }, [isSignup]);
-
-  const updateSociety = (index: number, value: string) => {
-    setSelectedSocietyIds((current) => current.map((item, i) => (i === index ? value : item)));
-  };
-
-  const addSocietyField = () => {
-    setSelectedSocietyIds((current) => [...current, ""]);
-  };
-
-  const removeSocietyField = (index: number) => {
-    setSelectedSocietyIds((current) => current.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,12 +51,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
 
     if (isSignup) {
-      const cleanSocieties = selectedSocietyIds
-        .filter(Boolean)
-        .map((id) => societyOptions.find((society) => society.id === Number(id)))
-        .filter((society): society is Society => Boolean(society))
-        .map((society) => ({ society_id: society.id, name: society.name }));
-
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -89,9 +59,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             full_name: fullName,
             role: "student",
             course,
+            campus,
+            academic_group: academicGroup || null,
+            interests: selectedInterests,
+            preferred_event_categories: preferredEventCategories,
             year_of_study: Number(yearOfStudy),
             start_year: Number(startYear),
-            societies: cleanSocieties,
+            societies: [],
           },
         },
       });
@@ -107,10 +81,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
       setError(signInError.message);
@@ -132,53 +103,32 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             setFullName={setFullName}
             course={course}
             setCourse={setCourse}
+            campus={campus}
+            setCampus={setCampus}
+            academicGroup={academicGroup}
+            setAcademicGroup={setAcademicGroup}
+            selectedInterests={selectedInterests}
+            setSelectedInterests={setSelectedInterests}
+            preferredEventCategories={preferredEventCategories}
+            setPreferredEventCategories={setPreferredEventCategories}
             yearOfStudy={yearOfStudy}
             setYearOfStudy={setYearOfStudy}
             startYear={startYear}
             setStartYear={setStartYear}
-            societyOptions={societyOptions}
-            selectedSocietyIds={selectedSocietyIds}
-            updateSociety={updateSociety}
-            addSocietyField={addSocietyField}
-            removeSocietyField={removeSocietyField}
           />
         )}
 
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-            placeholder="student@example.com"
-            required
-          />
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">Email</label>
+          <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" placeholder="student@example.com" required />
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-            placeholder="Enter your password"
-            required
-          />
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">Password</label>
+          <input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none" placeholder="Enter your password" required />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
+        <button type="submit" disabled={loading} className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70">
           {loading ? "Please wait..." : isSignup ? "Create account" : "Log in"}
         </button>
       </form>

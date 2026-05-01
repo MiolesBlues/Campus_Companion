@@ -9,7 +9,7 @@ export function AuthStatus() {
 
   if (!isConfigured) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 shadow-sm">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 shadow-sm">
         Supabase auth not configured yet
       </div>
     );
@@ -17,7 +17,7 @@ export function AuthStatus() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 shadow-sm">
         Checking account...
       </div>
     );
@@ -25,23 +25,37 @@ export function AuthStatus() {
 
   if (!user) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
-        Guest
+      <div className="flex flex-wrap items-center gap-2">
+        <Link href="/login" className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
+          Log in
+        </Link>
+        <Link href="/signup" className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700">
+          Sign up
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
+      {profile?.role === "admin" && (
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
+          title="Settings"
+          aria-label="Settings"
+        >
+          <span className="text-sm">⚙</span>
+          <span>Settings</span>
+        </Link>
+      )}
+
       <Link
         href="/account"
-        className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+        className="flex items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
       >
         <Avatar src={profile?.avatar_url ?? null} alt={profile?.full_name ?? user.email ?? "User avatar"} size="sm" />
-        <span>
-          {profile?.full_name ?? user.email}
-          {profile?.role === "admin" ? " (Admin)" : ""}
-        </span>
+        <span>{profile?.full_name ?? user.email}</span>
       </Link>
     </div>
   );
