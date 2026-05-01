@@ -127,9 +127,13 @@ export default function TimetablesPage() {
   }, [profile?.academic_group]);
 
   const filteredEntries = useMemo(() => {
+    const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
     const teacherEntries = entries
       .filter((entry) => entry.owner_role === "teacher")
-      .filter((entry) => !user?.email || entry.lecturer_email === user.email);
+      .filter((entry) => {
+        if (!teacherEmail) return true;
+        return (entry.lecturer_email ?? "").trim().toLowerCase() === teacherEmail;
+      });
 
     if (profile?.role === "teacher") {
       return teacherEntries.sort(
@@ -155,6 +159,7 @@ export default function TimetablesPage() {
   }, [
     courseScopedEntries,
     entries,
+    profile?.email,
     profile?.role,
     selectedGroup,
     user?.email,
@@ -195,7 +200,7 @@ export default function TimetablesPage() {
           </h1>
           <p className="mt-2 text-[#64615C]">
             {profile?.role === "teacher"
-              ? "Your teaching schedule is shown automatically based on your account email."
+              ? `Your teaching schedule is shown automatically based on your account email${profile?.email ? ` (${profile.email})` : ""}.`
               : "Choose all for a browsing list, or pick a course, year, and group for a more focused timetable."}
           </p>
         </div>
@@ -374,7 +379,9 @@ export default function TimetablesPage() {
 
       {filteredEntries.length === 0 && (
         <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C] ">
-          No timetable entries found for this account or filter.
+          {profile?.role === "teacher"
+            ? `No timetable entries found for ${profile?.email ?? user?.email ?? "this teacher account"}. Check that the timetable lecturer email matches exactly.`
+            : "No timetable entries found for this account or filter."}
         </div>
       )}
     </section>
