@@ -2,19 +2,32 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { campusOptions } from "@/lib/constants";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { SignupFields } from "@/components/auth/signup-fields";
 
-type AuthMode = "login" | "signup";
+function currentAcademicStartYear(now = new Date()) {
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  return month >= 7 ? year : year - 1;
+}
 
-type AuthFormProps = {
-  mode: AuthMode;
-};
-
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [course, setCourse] = useState("Computer Science");
+  const [campus, setCampus] = useState(campusOptions[0]);
+  const [academicGroup, setAcademicGroup] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [preferredEventCategories, setPreferredEventCategories] = useState<
+    string[]
+  >([]);
+  const [yearOfStudy, setYearOfStudy] = useState("1");
+  const [startYear, setStartYear] = useState(
+    String(currentAcademicStartYear()),
+  );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +41,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     setError(null);
 
     if (!isSupabaseConfigured()) {
-      setError("Supabase auth is not configured yet. Add your environment variables first.");
+      setError(
+        "Supabase auth is not configured yet. Add your environment variables first.",
+      );
       setLoading(false);
       return;
     }
@@ -49,6 +64,14 @@ export function AuthForm({ mode }: AuthFormProps) {
           data: {
             full_name: fullName,
             role: "student",
+            course,
+            campus,
+            academic_group: academicGroup || null,
+            interests: selectedInterests,
+            preferred_event_categories: preferredEventCategories,
+            year_of_study: Number(yearOfStudy),
+            start_year: Number(startYear),
+            societies: [],
           },
         },
       });
@@ -76,37 +99,38 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     setLoading(false);
-    router.push("/account");
+    router.push("/");
     router.refresh();
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="rounded-xl border border-[#EAEAEA] bg-white p-6 sm:p-8">
       <form className="space-y-5" onSubmit={handleSubmit}>
         {isSignup && (
-          <div>
-            <label
-              htmlFor="full-name"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Full name
-            </label>
-            <input
-              id="full-name"
-              type="text"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-              placeholder="Alex Student"
-              required
-            />
-          </div>
+          <SignupFields
+            fullName={fullName}
+            setFullName={setFullName}
+            course={course}
+            setCourse={setCourse}
+            campus={campus}
+            setCampus={setCampus}
+            academicGroup={academicGroup}
+            setAcademicGroup={setAcademicGroup}
+            selectedInterests={selectedInterests}
+            setSelectedInterests={setSelectedInterests}
+            preferredEventCategories={preferredEventCategories}
+            setPreferredEventCategories={setPreferredEventCategories}
+            yearOfStudy={yearOfStudy}
+            setYearOfStudy={setYearOfStudy}
+            startYear={startYear}
+            setStartYear={setStartYear}
+          />
         )}
 
         <div>
           <label
             htmlFor="email"
-            className="mb-2 block text-sm font-medium text-slate-700"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
           >
             Email
           </label>
@@ -115,7 +139,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
             placeholder="student@example.com"
             required
           />
@@ -124,7 +148,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div>
           <label
             htmlFor="password"
-            className="mb-2 block text-sm font-medium text-slate-700"
+            className="mb-2 block text-sm font-medium text-[#4A4844]"
           >
             Password
           </label>
@@ -133,7 +157,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111] focus:border-[#787774] focus:outline-none"
             placeholder="Enter your password"
             required
           />
@@ -142,27 +166,19 @@ export function AuthForm({ mode }: AuthFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-slate-900 px-5 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+          className="rounded-xl bg-[#111111] px-5 py-3 text-white transition hover:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {loading ? "Please wait..." : isSignup ? "Create account" : "Log in"}
         </button>
       </form>
 
       {message && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
-        >
+        <div className="mt-5 rounded-xl border border-[#D5E5D1] bg-[#EDF3EC] p-4 text-sm text-[#346538]">
           {message}
         </div>
       )}
-
       {error && (
-        <div
-          role="alert"
-          className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
+        <div className="mt-5 rounded-xl border border-[#F4C8CA] bg-[#FDEBEC] p-4 text-sm text-[#9F2F2D]">
           {error}
         </div>
       )}

@@ -4,14 +4,18 @@ type AdminSearchProps = {
   placeholder: string;
 };
 
-export function AdminSearch({ value, onChange, placeholder }: AdminSearchProps) {
+export function AdminSearch({
+  value,
+  onChange,
+  placeholder,
+}: AdminSearchProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-[#EAEAEA] bg-white p-4 ">
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900"
+        className="w-full rounded-xl border border-[#D8D6D0] px-4 py-3 text-[#111111]"
       />
     </div>
   );

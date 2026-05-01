@@ -141,7 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       loading,
       isConfigured: configured,
-      isMuted: Boolean(profile?.muted_until && new Date(profile.muted_until) > new Date()),
+      isMuted: Boolean(
+        profile?.muted_until && new Date(profile.muted_until) > new Date(),
+      ),
       signOut: async () => {
         const supabase = getSupabaseClient();
         if (!supabase) {
@@ -159,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(profileData);
       },
     }),
-    [configured, loading, profile, session, user]
+    [configured, loading, profile, session, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

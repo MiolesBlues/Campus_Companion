@@ -2,15 +2,28 @@
 
 import { useState, useCallback } from "react";
 import { useAccessibility } from "@/components/AccessibilityProvider";
-import type { TextSize, Contrast, ReducedMotion } from "@/components/AccessibilityProvider";
+import type {
+  TextSize,
+  Contrast,
+  ReducedMotion,
+} from "@/components/AccessibilityProvider";
 
-const TEXT_SIZE_OPTIONS: { value: TextSize; label: string; detail: string }[] = [
-  { value: "1", label: "Normal", detail: "Default size (16 px base)" },
-  { value: "1.15", label: "Large", detail: "Slightly larger (≈18 px base)" },
-  { value: "1.3", label: "Extra large", detail: "Largest size (≈21 px base)" },
-];
+const TEXT_SIZE_OPTIONS: { value: TextSize; label: string; detail: string }[] =
+  [
+    { value: "1", label: "Normal", detail: "Default size (16 px base)" },
+    { value: "1.15", label: "Large", detail: "Slightly larger (≈18 px base)" },
+    {
+      value: "1.3",
+      label: "Extra large",
+      detail: "Largest size (≈21 px base)",
+    },
+  ];
 
-const MOTION_OPTIONS: { value: ReducedMotion; label: string; detail: string }[] = [
+const MOTION_OPTIONS: {
+  value: ReducedMotion;
+  label: string;
+  detail: string;
+}[] = [
   {
     value: "auto",
     label: "Match my device",
@@ -29,8 +42,14 @@ const MOTION_OPTIONS: { value: ReducedMotion; label: string; detail: string }[] 
 ];
 
 export default function SettingsPage() {
-  const { textSize, contrast, reducedMotion, setTextSize, setContrast, setReducedMotion } =
-    useAccessibility();
+  const {
+    textSize,
+    contrast,
+    reducedMotion,
+    setTextSize,
+    setContrast,
+    setReducedMotion,
+  } = useAccessibility();
 
   const [liveText, setLiveText] = useState("");
 
@@ -58,33 +77,44 @@ export default function SettingsPage() {
   return (
     <section className="space-y-8">
       {/* Polite live region — announces "Settings updated" after every change */}
-      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
         {liveText}
       </div>
 
       <div className="space-y-3">
-        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+        <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
           Preferences
         </span>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Accessibility settings</h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Adjust these settings to make Campus Companion more comfortable to use.
-            All changes are saved automatically and persist on refresh.
+          <h1 className="text-3xl font-bold text-[#111111]">
+            Accessibility settings
+          </h1>
+          <p className="mt-2 text-sm text-[#64615C] sm:text-base">
+            Adjust these settings to make Campus Companion more comfortable to
+            use. All changes are saved automatically and persist on refresh.
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
         {/* ── Text size ────────────────────────────────────────────────────── */}
-        <fieldset className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <legend className="px-1 text-base font-semibold text-slate-900">
+        <fieldset className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
+          <legend className="px-1 text-base font-semibold text-[#111111]">
             Text size
           </legend>
-          <p id="text-size-hint" className="mt-1 text-sm text-slate-500">
+          <p id="text-size-hint" className="mt-1 text-sm text-[#787774]">
             Adjusts the base font size across the whole app.
           </p>
-          <div className="mt-4 space-y-3" role="radiogroup" aria-labelledby="text-size-legend">
+          <div
+            className="mt-4 space-y-3"
+            role="radiogroup"
+            aria-labelledby="text-size-legend"
+          >
             {TEXT_SIZE_OPTIONS.map((option) => (
               <div key={option.value} className="flex items-start gap-3">
                 <input
@@ -95,14 +125,14 @@ export default function SettingsPage() {
                   checked={textSize === option.value}
                   onChange={() => handleTextSize(option.value)}
                   aria-describedby="text-size-hint"
-                  className="mt-0.5 h-4 w-4 accent-blue-600"
+                  className="mt-0.5 h-4 w-4 accent-[#1F6C9F]"
                 />
                 <label
                   htmlFor={`text-size-${option.value}`}
-                  className="cursor-pointer text-sm text-slate-700"
+                  className="cursor-pointer text-sm text-[#4A4844]"
                 >
                   <span className="font-medium">{option.label}</span>
-                  <span className="ml-2 text-slate-400">{option.detail}</span>
+                  <span className="ml-2 text-[#9B9892]">{option.detail}</span>
                 </label>
               </div>
             ))}
@@ -110,11 +140,11 @@ export default function SettingsPage() {
         </fieldset>
 
         {/* ── High contrast ────────────────────────────────────────────────── */}
-        <fieldset className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <legend className="px-1 text-base font-semibold text-slate-900">
+        <fieldset className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
+          <legend className="px-1 text-base font-semibold text-[#111111]">
             Colour contrast
           </legend>
-          <p id="contrast-hint" className="mt-1 text-sm text-slate-500">
+          <p id="contrast-hint" className="mt-1 text-sm text-[#787774]">
             Switches to a true black and white palette for maximum readability.
           </p>
           <div className="mt-4 flex items-start gap-3">
@@ -124,11 +154,11 @@ export default function SettingsPage() {
               checked={contrast === "high"}
               onChange={(e) => handleContrast(e.target.checked)}
               aria-describedby="contrast-hint"
-              className="mt-0.5 h-4 w-4 accent-blue-600"
+              className="mt-0.5 h-4 w-4 accent-[#1F6C9F]"
             />
             <label
               htmlFor="high-contrast"
-              className="cursor-pointer text-sm font-medium text-slate-700"
+              className="cursor-pointer text-sm font-medium text-[#4A4844]"
             >
               Enable high contrast
             </label>
@@ -136,11 +166,11 @@ export default function SettingsPage() {
         </fieldset>
 
         {/* ── Reduced motion ───────────────────────────────────────────────── */}
-        <fieldset className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <legend className="px-1 text-base font-semibold text-slate-900">
+        <fieldset className="rounded-xl border border-[#EAEAEA] bg-white p-5 sm:p-6">
+          <legend className="px-1 text-base font-semibold text-[#111111]">
             Reduced motion
           </legend>
-          <p id="reduced-motion-hint" className="mt-1 text-sm text-slate-500">
+          <p id="reduced-motion-hint" className="mt-1 text-sm text-[#787774]">
             Controls whether animations and transitions play.
           </p>
           <div className="mt-4 space-y-3">
@@ -154,14 +184,14 @@ export default function SettingsPage() {
                   checked={reducedMotion === option.value}
                   onChange={() => handleReducedMotion(option.value)}
                   aria-describedby="reduced-motion-hint"
-                  className="mt-0.5 h-4 w-4 accent-blue-600"
+                  className="mt-0.5 h-4 w-4 accent-[#1F6C9F]"
                 />
                 <label
                   htmlFor={`reduced-motion-${option.value}`}
-                  className="cursor-pointer text-sm text-slate-700"
+                  className="cursor-pointer text-sm text-[#4A4844]"
                 >
                   <span className="font-medium">{option.label}</span>
-                  <span className="ml-2 text-slate-400">{option.detail}</span>
+                  <span className="ml-2 text-[#9B9892]">{option.detail}</span>
                 </label>
               </div>
             ))}

@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f7f6f3;
+  --foreground: #111111;
+  --surface: #fbfbfa;
+  --line: #eaeaea;
+  --muted: #787774;
+  --accent-bg: #e1f3fe;
+  --accent: #1f6c9f;
 }
 
 html {
@@ -12,7 +17,10 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "SF Pro Display", "Helvetica Neue", Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -27,6 +35,25 @@ a {
   box-sizing: border-box;
 }
 
+::selection {
+  background: #fbf3db;
+  color: #111111;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:active,
+a:active {
+  transform: scale(0.98);
+}
+
 /* ─── Accessibility: Focus Visible ──────────────────────────────────────────
    3 px outline, 2 px offset, dark blue — passes 3:1 against white and black.
    Replaces the per-component focus rings scattered around the codebase.       */
@@ -36,61 +63,185 @@ a {
 }
 
 /* ─── Accessibility: High Contrast ──────────────────────────────────────────
-   True black/white palette with strong borders when data-contrast="high" is
-   set on <html> by AccessibilityProvider.                                      */
+   Activated by data-contrast="high" on <html>. Collapses the page to a true
+   black canvas with white text and strong borders, while preserving state
+   cues (links, buttons, focus, current page, errors) through distinct colors
+   and border styles — meeting WCAG 1.4.11 (Non-text Contrast) and 1.4.1
+   (Use of Color).
+
+   Tailwind utility classes (bg-*, shadow-*, border-*, divide-*) are
+   neutralised below so component code keeps working in both modes without a
+   parallel design system.                                                      */
+
+[data-contrast="high"] {
+  color-scheme: dark;
+  background-color: #000;
+  color: #fff;
+}
+
+/* Strip authored backgrounds, gradients and decorative shadows so utility
+   classes like bg-white / bg-blue-50 / shadow-sm / backdrop-blur don't leak
+   color or hide white text on white surfaces. */
+[data-contrast="high"] *,
+[data-contrast="high"] *::before,
+[data-contrast="high"] *::after {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: #fff !important;
+  accent-color: #ff0;
+}
+
+/* Re-assert opaque black on structural regions to defeat any utility that
+   sets a translucent background underneath the universal reset. */
 [data-contrast="high"] body,
 [data-contrast="high"] header,
 [data-contrast="high"] main,
-[data-contrast="high"] article,
-[data-contrast="high"] section,
 [data-contrast="high"] aside,
 [data-contrast="high"] footer,
-[data-contrast="high"] form,
-[data-contrast="high"] fieldset {
+[data-contrast="high"] dialog,
+[data-contrast="high"] [role="dialog"] {
   background-color: #000 !important;
-  color: #fff !important;
 }
 
-[data-contrast="high"] * {
+/* Borders are the primary structural cue in HC. Re-color any element that
+   declared a border (Tailwind: border, border-*, divide-*) and the form
+   primitives whose default chrome is replaced below. */
+[data-contrast="high"] [class*="border"],
+[data-contrast="high"] [class*="divide"],
+[data-contrast="high"] fieldset,
+[data-contrast="high"] hr,
+[data-contrast="high"] table,
+[data-contrast="high"] th,
+[data-contrast="high"] td,
+[data-contrast="high"] input,
+[data-contrast="high"] select,
+[data-contrast="high"] textarea,
+[data-contrast="high"] button,
+[data-contrast="high"] [role="button"] {
   border-color: #fff !important;
 }
 
-[data-contrast="high"] h1,
-[data-contrast="high"] h2,
-[data-contrast="high"] h3,
-[data-contrast="high"] h4,
-[data-contrast="high"] h5,
-[data-contrast="high"] h6,
-[data-contrast="high"] p,
-[data-contrast="high"] span,
-[data-contrast="high"] div,
-[data-contrast="high"] li,
-[data-contrast="high"] td,
-[data-contrast="high"] th,
-[data-contrast="high"] label,
-[data-contrast="high"] legend {
-  color: #fff !important;
-}
-
-/* Links are yellow in high-contrast so they're distinguishable from body text */
+/* Links: yellow on black (≈19.6:1), always underlined. Visited stays
+   distinguishable; hover inverts to a yellow chip for a clear hit target.
+   The button rules below have higher specificity so <a role="button"> still
+   renders as a button. */
 [data-contrast="high"] a {
   color: #ff0 !important;
   text-decoration: underline !important;
 }
+[data-contrast="high"] a:visited {
+  color: #d8b4ff !important;
+}
+[data-contrast="high"] a:hover {
+  background-color: #ff0 !important;
+  color: #000 !important;
+}
 
+/* Buttons: outlined by default; pressed / current page invert to filled;
+   disabled uses a dashed border + muted text, so the cue is not color-only. */
 [data-contrast="high"] button,
-[data-contrast="high"] [role="button"] {
+[data-contrast="high"] [role="button"],
+[data-contrast="high"] input[type="button"],
+[data-contrast="high"] input[type="submit"],
+[data-contrast="high"] input[type="reset"] {
   background-color: #000 !important;
   color: #fff !important;
   border: 2px solid #fff !important;
 }
+[data-contrast="high"] button[aria-pressed="true"],
+[data-contrast="high"] [aria-current="page"],
+[data-contrast="high"] [aria-current="true"] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+[data-contrast="high"] button:hover:not(:disabled),
+[data-contrast="high"] [role="button"]:not([aria-disabled="true"]):hover {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+[data-contrast="high"] button:disabled,
+[data-contrast="high"] [aria-disabled="true"] {
+  border-style: dashed !important;
+  color: #aaa !important;
+  cursor: not-allowed;
+}
 
+/* Form fields: visible default, double 4px border for invalid (so the cue
+   is not color-only — meets 1.4.1 Use of Color). */
 [data-contrast="high"] input,
 [data-contrast="high"] select,
 [data-contrast="high"] textarea {
   background-color: #000 !important;
   color: #fff !important;
   border: 2px solid #fff !important;
+}
+[data-contrast="high"] input::placeholder,
+[data-contrast="high"] textarea::placeholder {
+  color: #ccc !important;
+  opacity: 1;
+}
+[data-contrast="high"] input[aria-invalid="true"],
+[data-contrast="high"] textarea[aria-invalid="true"],
+[data-contrast="high"] select[aria-invalid="true"] {
+  border: 4px double #fff !important;
+}
+
+/* Focus indicator inside HC overrides the global blue with yellow — much
+   higher visibility on a black canvas. */
+[data-contrast="high"] :focus-visible {
+  outline: 3px solid #ff0 !important;
+  outline-offset: 2px !important;
+}
+
+/* Make text selection visible in HC. */
+[data-contrast="high"] ::selection {
+  background-color: #ff0 !important;
+  color: #000 !important;
+}
+
+/* Decorative images can lose meaning at a pure-black canvas; mark them with
+   data-decorative="true" in markup to dim instead of removing. */
+[data-contrast="high"] [data-decorative="true"] {
+  opacity: 0.6;
+}
+
+/* ─── Accessibility: Windows High Contrast / Forced Colors ──────────────────
+   When the OS forces a palette, surrender authored colors and map intent to
+   system color keywords. forced-color-adjust defaults to auto, which lets
+   the UA substitute Canvas/CanvasText/etc. We explicitly map focus, links
+   and buttons to the system equivalents.                                      */
+@media (forced-colors: active) {
+  :root {
+    --background: Canvas;
+    --foreground: CanvasText;
+    --surface: Canvas;
+    --line: CanvasText;
+    --muted: GrayText;
+    --accent-bg: Canvas;
+    --accent: LinkText;
+  }
+  :focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+  a {
+    color: LinkText;
+  }
+  a:visited {
+    color: VisitedText;
+  }
+  button,
+  [role="button"] {
+    background-color: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    color: GrayText;
+  }
 }
 
 /* ─── Accessibility: Reduced Motion ─────────────────────────────────────────

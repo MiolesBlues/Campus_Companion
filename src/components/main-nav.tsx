@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/societies", label: "Societies" },
   { href: "/locations", label: "Locations" },
   { href: "/helpdesk", label: "Helpdesk" },
+  { href: "/account", label: "Account" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -23,18 +24,22 @@ export function MainNav() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-500 shadow-sm">Loading navigation...</div>;
+    return (
+      <div className="rounded-xl border border-[#EAEAEA] bg-[#FBFBFA] p-2.5 text-sm text-[#787774]">
+        Loading navigation...
+      </div>
+    );
   }
 
   return (
-    <div className="flex w-full flex-wrap gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1.5 shadow-sm">
+    <div className="grid w-full grid-cols-2 gap-1.5 rounded-xl border border-[#EAEAEA] bg-[#F7F6F3] p-1.5 sm:grid-cols-4 lg:grid-cols-8">
       {navLinks.map((link) => {
         const active = pathname === link.href;
         return (
           <Link
             key={link.href}
             href={link.href}
-            className={`min-w-[105px] flex-1 rounded-xl px-3 py-2.5 text-center text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-300 ${active ? "bg-white text-slate-900 shadow-sm" : "text-slate-700 hover:bg-white hover:text-slate-900 hover:shadow-sm"}`}
+            className={`rounded-lg px-3 py-2.5 text-center text-sm font-medium transition duration-200 focus:outline-none ${active ? "bg-white text-[#111111]" : "text-[#4A4844] hover:bg-white hover:text-[#111111]"}`}
           >
             {link.label}
           </Link>
