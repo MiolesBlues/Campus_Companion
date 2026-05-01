@@ -17,7 +17,7 @@ export function AuthStatus() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-[#EAEAEA] bg-white px-4 py-2 text-sm text-[#787774]">
+      <div className="cc-loading-sheen rounded-lg border border-[#EAEAEA] bg-white px-4 py-2 text-sm text-[#787774]">
         Checking account...
       </div>
     );

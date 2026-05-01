@@ -152,7 +152,7 @@ export default function AdminUsersPage() {
                           onClick={() =>
                             void muteUser(userProfile.id, option.days)
                           }
-                          className="rounded-xl bg-[#956400] px-3 py-2 text-sm font-medium text-white"
+                          className="rounded-xl bg-[#956400] px-3 py-2.5 text-sm font-medium text-white sm:py-2"
                         >
                           Mute {option.label}
                         </button>

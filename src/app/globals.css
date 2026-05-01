@@ -31,6 +31,11 @@ a {
   z-index: 1000;
 }
 
+.cc-loading-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -49,9 +54,169 @@ textarea {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-button:active,
-a:active {
+button:active:not(:disabled),
+a:active,
+[role="button"]:not([aria-disabled="true"]):active {
   transform: scale(0.98);
+}
+
+/* ─── Cursor affordance ─────────────────────────────────────────────────────
+   Native <button> defaults to the arrow cursor, which reads as non-clickable.
+   Promote real interactive controls to the hand pointer, and demote anything
+   the user can't actually activate (disabled, aria-disabled) to not-allowed
+   so the cue matches the affordance.                                          */
+button,
+summary,
+label[for],
+select,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="menuitemcheckbox"],
+[role="menuitemradio"],
+[role="option"],
+[role="switch"],
+[role="checkbox"],
+[role="radio"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="color"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+fieldset:disabled button,
+fieldset:disabled input,
+fieldset:disabled select,
+[aria-disabled="true"],
+[aria-disabled="true"] * {
+  cursor: not-allowed;
+}
+
+/* Subtle universal hover lift for any clickable that didn't define its own
+   visual change. Brightness combines unobtrusively with explicit hover:bg-*
+   utilities — components keep full control of color, this just guarantees a
+   minimum feedback floor. Skipped on coarse pointers to avoid sticky hover. */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover,
+  summary:hover,
+  a:hover {
+    filter: brightness(0.97);
+  }
+}
+
+@keyframes cc-paper-open {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 18% 0 round 12px);
+    filter: blur(2px);
+    transform: translateY(6px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 12px);
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes cc-quiet-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleX(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #main-content > section,
+  #main-content > main,
+  #main-content > div {
+    animation: cc-paper-open 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  #main-content > section > *,
+  #main-content article,
+  #main-content fieldset {
+    animation: cc-paper-open 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  #main-content > section > *:nth-child(1) {
+    animation-delay: 40ms;
+  }
+
+  #main-content > section > *:nth-child(2) {
+    animation-delay: 90ms;
+  }
+
+  #main-content > section > *:nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  #main-content > section > *:nth-child(4) {
+    animation-delay: 190ms;
+  }
+
+  #main-content article:nth-child(1),
+  #main-content fieldset:nth-child(1) {
+    animation-delay: 80ms;
+  }
+
+  #main-content article:nth-child(2),
+  #main-content fieldset:nth-child(2) {
+    animation-delay: 130ms;
+  }
+
+  #main-content article:nth-child(3),
+  #main-content fieldset:nth-child(3) {
+    animation-delay: 180ms;
+  }
+
+  #main-content article:nth-child(4),
+  #main-content fieldset:nth-child(4) {
+    animation-delay: 230ms;
+  }
+
+  #main-content article,
+  #main-content a[class*="border"],
+  #main-content button,
+  header a,
+  header button {
+    transition-property: background-color, border-color, color, opacity;
+  }
+
+  #main-content input:focus,
+  #main-content select:focus,
+  #main-content textarea:focus {
+    box-shadow: 0 0 0 4px rgba(31, 108, 159, 0.08);
+  }
+
+  .cc-loading-sheen {
+    border-color: #d8d6d0;
+  }
+
+  .cc-loading-sheen::after {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.55rem;
+    height: 1px;
+    background: #1f6c9f;
+    transform-origin: left;
+    animation: cc-quiet-pulse 1450ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
 }
 
 /* ─── Accessibility: Focus Visible ──────────────────────────────────────────
