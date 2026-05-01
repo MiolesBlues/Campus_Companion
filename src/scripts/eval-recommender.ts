@@ -12,10 +12,10 @@
  * Run with:  npm run eval:recs
  */
 
-import { getSimilarEvents, type Event } from "../src/lib/ml/recommender";
-import eventsData from "../src/data/events.json";
+import { getSimilarEvents, type Event } from "../lib/ml/recommender";
+import eventsData from "../data/events.json";
 
-const allEvents = eventsData as Event[];
+const allEvents = eventsData as unknown as Event[];
 const K = 3;
 
 // ---------------------------------------------------------------------------
@@ -87,7 +87,7 @@ const rows: {
 for (const event of allEvents) {
   const similar = getSimilarEvents(event.id, allEvents, K);
   const matches = similar.filter(
-    (s) => s.event.category === event.category
+    (s) => s.category === event.category
   ).length;
 
   totalMatches += matches;
@@ -97,7 +97,7 @@ for (const event of allEvents) {
     title: event.title,
     category: event.category,
     recs: similar.map(
-      (s) => `${s.event.title} [${s.event.category}] (${pct(s.score)})`
+      (s) => `${s.title} [${s.category}] (${pct(s.similarity)})`
     ),
     matches,
     rate: pct(matches / similar.length),

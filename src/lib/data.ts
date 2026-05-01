@@ -49,7 +49,7 @@ type FallbackTimetable = {
   lecturerEmail?: string;
 };
 
-const eventFallback = fallbackEvents as FallbackEvent[];
+const eventFallback = fallbackEvents as unknown as FallbackEvent[];
 const locationFallback = fallbackLocations as FallbackLocation[];
 const timetableFallback = fallbackTimetables as FallbackTimetable[];
 

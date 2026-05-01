@@ -88,12 +88,6 @@ export default function AdminUsersPage() {
                   <p className="mt-1 text-sm text-[#64615C]">
                     Current role: {userProfile.role}
                   </p>
-                  <p className="mt-1 text-sm text-[#64615C]">
-                    Status:{" "}
-                    {isMuted
-                      ? `Muted until ${userProfile.muted_until}`
-                      : "Active"}
-                  </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <select
