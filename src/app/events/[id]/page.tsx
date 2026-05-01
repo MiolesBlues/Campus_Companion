@@ -1,31 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getEvents } from "@/lib/data";
 import { getSimilarEvents, type Event } from "@/lib/ml/recommender";
-import eventsData from "@/data/events.json";
 
 export const dynamicParams = false;
-
-const allEvents: Event[] = (
-  eventsData as Array<Omit<Event, "id"> & { id: number | string }>
-).map((e) => ({ ...e, id: String(e.id), tags: e.tags ?? [] }));
-
-export function generateStaticParams() {
-  return allEvents.map((e) => ({ id: String(e.id) }));
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const event = allEvents.find((e) => e.id === id);
-  if (!event) return { title: "Event Not Found" };
-  return {
-    title: `${event.title} | Campus Companion`,
-    description: event.description,
-  };
-}
 
 const CATEGORY_STYLES: Record<string, string> = {
   Academic: "bg-[#E1F3FE] text-[#1F6C9F]",
@@ -44,11 +22,24 @@ function CategoryBadge({ category }: { category: string }) {
   const style = CATEGORY_STYLES[category] ?? "bg-[#F7F6F3] text-[#2F3437]";
   return (
     <span
-      className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${style}`}
+      className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 py-1 text-sm font-medium leading-none ${style}`}
     >
       {category}
     </span>
   );
+}
+
+function mapEventForRecommendations(event: Awaited<ReturnType<typeof getEvents>>[number]): Event {
+  return {
+    id: String(event.id),
+    title: event.title,
+    category: event.category,
+    description: event.description,
+    date: event.event_date,
+    time: `${event.start_time} - ${event.end_time}`,
+    location: event.location,
+    tags: event.tags ?? [],
+  };
 }
 
 function SimilarEventCard({ event, score }: { event: Event; score: number }) {
@@ -88,21 +79,43 @@ function formatDate(dateStr: string): string {
   });
 }
 
+export async function generateStaticParams() {
+  const events = await getEvents();
+  return events.map((event) => ({ id: String(event.id) }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const events = await getEvents();
+  const event = events.find((item) => String(item.id) === id);
+  if (!event) return { title: "Event Not Found" };
+  return {
+    title: `${event.title} | Campus Companion`,
+    description: event.description,
+  };
+}
+
 export default async function EventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = allEvents.find((e) => e.id === id);
+  const events = await getEvents();
+  const event = events.find((item) => String(item.id) === id);
 
   if (!event) notFound();
 
-  const similar = getSimilarEvents(event.id, allEvents, 3);
+  const recommendationEvents = events.map(mapEventForRecommendations);
+  const similar = getSimilarEvents(String(event.id), recommendationEvents, 3);
 
   return (
     <section className="min-h-[100dvh] bg-[#F7F6F3]">
-      <header className="bg-white border-b border-[#EAEAEA]">
+      <header className="border-b border-[#EAEAEA] bg-white">
         <div className="mx-auto max-w-3xl px-4 py-4">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-[#787774]">
@@ -132,9 +145,9 @@ export default async function EventDetailPage({
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-8 space-y-8">
+      <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
         <article aria-labelledby="event-title">
-          <div className="rounded-xl bg-white border border-[#EAEAEA] p-6 md:p-8 space-y-5">
+          <div className="space-y-5 rounded-xl border border-[#EAEAEA] bg-white p-6 md:p-8">
             <div className="flex flex-wrap items-start gap-3">
               <h1
                 id="event-title"
@@ -145,19 +158,27 @@ export default async function EventDetailPage({
               <CategoryBadge category={event.category} />
             </div>
 
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="font-medium text-[#787774]">Date</dt>
-                <dd className="text-[#111111]">{formatDate(event.date)}</dd>
+                <dd className="text-[#111111]">{formatDate(event.event_date)}</dd>
               </div>
               <div>
                 <dt className="font-medium text-[#787774]">Time</dt>
-                <dd className="text-[#111111]">{event.time}</dd>
+                <dd className="text-[#111111]">
+                  {event.start_time} - {event.end_time}
+                </dd>
               </div>
               <div className="sm:col-span-2">
                 <dt className="font-medium text-[#787774]">Location</dt>
                 <dd className="text-[#111111]">{event.location}</dd>
               </div>
+              {event.campus && (
+                <div className="sm:col-span-2">
+                  <dt className="font-medium text-[#787774]">Campus</dt>
+                  <dd className="text-[#111111]">{event.campus}</dd>
+                </div>
+              )}
             </dl>
 
             <div>
@@ -177,7 +198,7 @@ export default async function EventDetailPage({
                 <ul className="flex flex-wrap gap-2" aria-label="Event tags">
                   {event.tags.map((tag) => (
                     <li key={tag}>
-                      <span className="rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium text-[#1F6C9F]">
+                      <span className="inline-flex min-h-7 items-center justify-center rounded-full bg-[#E1F3FE] px-3 py-1 text-xs font-medium leading-none text-[#1F6C9F]">
                         #{tag}
                       </span>
                     </li>
