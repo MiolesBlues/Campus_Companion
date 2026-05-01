@@ -64,10 +64,9 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Link href="/events" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"><h2 className="text-xl font-semibold text-slate-900">Events</h2><p className="mt-2 text-sm text-slate-600 sm:text-base">Register for upcoming campus talks, fairs, and student activities.</p><p className="mt-4 text-sm font-medium text-blue-700">Open events →</p></Link>
         <Link href="/timetables" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"><h2 className="text-xl font-semibold text-slate-900">Timetables</h2><p className="mt-2 text-sm text-slate-600 sm:text-base">Use a list for broad browsing or a compact grid for your exact course, year, and group.</p><p className="mt-4 text-sm font-medium text-blue-700">Open timetables →</p></Link>
-        <Link href="/societies" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"><h2 className="text-xl font-semibold text-slate-900">Societies</h2><p className="mt-2 text-sm text-slate-600 sm:text-base">Find student communities, filter by category, and join what fits you.</p><p className="mt-4 text-sm font-medium text-blue-700">Open societies →</p></Link>
         <Link href="/helpdesk" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 sm:p-6"><h2 className="text-xl font-semibold text-slate-900">Helpdesk</h2><p className="mt-2 text-sm text-slate-600 sm:text-base">Send support requests quickly when something on campus goes sideways.</p><p className="mt-4 text-sm font-medium text-blue-700">Open helpdesk →</p></Link>
       </div>
 
