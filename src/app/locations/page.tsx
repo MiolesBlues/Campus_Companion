@@ -15,6 +15,7 @@ export default function LocationsPage() {
   const { profile } = useAuth();
   const [locations, setLocations] = useState<LocationRecord[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState("All");
 
   useEffect(() => {
     const loadLocations = async () => {
@@ -25,11 +26,17 @@ export default function LocationsPage() {
     void loadLocations();
   }, []);
 
+  const types = useMemo(
+    () => ["All", ...Array.from(new Set(locations.map((location) => location.type))).sort()],
+    [locations],
+  );
+
   const filteredLocations = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return [...locations]
       .filter((location) => {
+        if (selectedType !== "All" && location.type !== selectedType) return false;
         if (!query) return true;
         return [location.name, location.type, location.description, location.campus ?? "", location.opening_hours ?? "", location.accessibility_notes ?? ""]
           .join(" ")
@@ -41,7 +48,7 @@ export default function LocationsPage() {
         if (scoreDiff !== 0) return scoreDiff;
         return a.name.localeCompare(b.name);
       });
-  }, [locations, profile?.campus, search]);
+  }, [locations, profile?.campus, search, selectedType]);
 
   return (
     <section className="space-y-6 sm:space-y-8">
@@ -58,16 +65,37 @@ export default function LocationsPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <label htmlFor="location-search" className="mb-2 block text-sm font-medium text-slate-700">
-          Search locations
-        </label>
-        <input
-          id="location-search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by name, type, campus, description, hours, or accessibility"
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
-        />
+        <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
+          <div>
+            <label htmlFor="location-search" className="mb-2 block text-sm font-medium text-slate-700">
+              Search locations
+            </label>
+            <input
+              id="location-search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name, type, campus, description, hours, or accessibility"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="location-type" className="mb-2 block text-sm font-medium text-slate-700">
+              Filter by type
+            </label>
+            <select
+              id="location-type"
+              value={selectedType}
+              onChange={(event) => setSelectedType(event.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-slate-500 focus:outline-none"
+            >
+              {types.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
