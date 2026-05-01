@@ -341,7 +341,7 @@ export default function AdminTimetablesPage() {
                 Close
               </button>
             </div>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+            <form noValidate className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <input
                 value={form.course_code}
                 onChange={(e) =>

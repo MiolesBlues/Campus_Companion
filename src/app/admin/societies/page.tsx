@@ -71,9 +71,33 @@ export default function AdminSocietiesPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setMessage(null);
+
+    if (!form.name.trim() || !form.category.trim() || !form.description.trim()) {
+      setMessage("Please fill in name, category, and description.");
+      return;
+    }
+
+    const trimmedEmail = form.contact_email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setMessage("Please enter a valid contact email.");
+      return;
+    }
+
     const supabase = getSupabaseClient();
-    if (!supabase) return;
-    const payload = { ...form, published: true };
+    if (!supabase) {
+      setMessage("Supabase is not configured for this deployment.");
+      return;
+    }
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      category: form.category.trim(),
+      description: form.description.trim(),
+      contact_email: trimmedEmail || null,
+      meeting_day: form.meeting_day.trim() || null,
+      published: true,
+    };
     const response = editingId
       ? await supabase.from("societies").update(payload).eq("id", editingId)
       : await supabase.from("societies").insert(payload);
@@ -195,7 +219,7 @@ export default function AdminSocietiesPage() {
                 Close
               </button>
             </div>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+            <form noValidate className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <input
                 value={form.name}
                 onChange={(e) =>

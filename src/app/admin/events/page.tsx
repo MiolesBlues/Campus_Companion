@@ -81,11 +81,21 @@ export default function AdminEventsPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
+    setMessage(null);
+
+    if (!form.title.trim() || !form.location.trim() || !form.description.trim()) {
+      setMessage("Please fill in title, location, and description.");
+      return;
+    }
 
     if (form.startTime >= form.endTime) {
       setMessage("End time must be later than start time.");
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setMessage("Supabase is not configured for this deployment.");
       return;
     }
 
@@ -259,7 +269,7 @@ export default function AdminEventsPage() {
           description="Fill in the details below and save the event."
           onClose={resetForm}
         >
-          <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+          <form noValidate className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
             <input
               value={form.title}
               onChange={(e) =>

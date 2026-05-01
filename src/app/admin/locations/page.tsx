@@ -79,8 +79,24 @@ export default function AdminLocationsPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setMessage(null);
+
+    if (!form.name.trim() || !form.type.trim() || !form.description.trim()) {
+      setMessage("Please fill in name, type, and description.");
+      return;
+    }
+
+    const trimmedEmail = form.contact_email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setMessage("Please enter a valid contact email.");
+      return;
+    }
+
     const supabase = getSupabaseClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setMessage("Supabase is not configured for this deployment.");
+      return;
+    }
     const payload = {
       ...form,
       name: form.name.trim(),
@@ -90,7 +106,7 @@ export default function AdminLocationsPage() {
       description: form.description.trim(),
       opening_hours: form.opening_hours.trim() || null,
       accessibility_notes: form.accessibility_notes.trim() || null,
-      contact_email: form.contact_email.trim() || null,
+      contact_email: trimmedEmail || null,
       contact_phone: form.contact_phone.trim() || null,
       published: true,
     };
@@ -202,7 +218,7 @@ export default function AdminLocationsPage() {
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111111]/50 p-4">
-          <div className="w-full max-w-3xl rounded-xl border border-[#EAEAEA] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(17,17,17,0.22)]">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[#EAEAEA] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(17,17,17,0.22)]">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-[#111111]">
@@ -220,7 +236,7 @@ export default function AdminLocationsPage() {
                 Close
               </button>
             </div>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+            <form noValidate className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <input
                 value={form.name}
                 onChange={(e) =>
