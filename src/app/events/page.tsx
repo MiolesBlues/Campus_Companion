@@ -339,7 +339,7 @@ export default function EventsPage() {
           return (
             <article
               key={event.id}
-              className="rounded-xl border border-[#EAEAEA] bg-white p-5"
+              className="flex h-full flex-col rounded-xl border border-[#EAEAEA] bg-white p-5"
             >
               <div className="flex flex-wrap gap-2">
                 <CategoryBadge category={event.category} />
@@ -377,7 +377,7 @@ export default function EventsPage() {
                 </div>
               )}
 
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-auto flex flex-wrap gap-3 pt-5">
                 <button
                   type="button"
                   onClick={() => void toggleRegister(event)}
