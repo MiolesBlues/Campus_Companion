@@ -163,7 +163,9 @@ export default function TimetablesPage() {
     user?.email,
   ]);
 
-  const showGrid = selectedCourse !== "All" && selectedYear !== "All";
+  const showGrid =
+    profile?.role === "teacher" ||
+    (selectedCourse !== "All" && selectedYear !== "All");
 
   const timeSlots = useMemo(() => {
     const slotSet = new Set(defaultTimeSlots);
