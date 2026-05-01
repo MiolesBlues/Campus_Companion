@@ -202,7 +202,7 @@ export default function EventsPage() {
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 sm:items-center">
           <div>
             <span className="inline-flex rounded-full bg-[#E1F3FE] px-3 py-1 text-sm font-medium text-[#1F6C9F]">
               What&apos;s Happening
@@ -220,7 +220,7 @@ export default function EventsPage() {
           <button
             type="button"
             onClick={() => setShowIcsHelp((current) => !current)}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-lg border border-[#CFE6F4] bg-[#E1F3FE] text-base font-semibold text-[#1F6C9F] transition hover:border-[#A9D2E8] hover:bg-[#E1F3FE]"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#CFE6F4] bg-[#E1F3FE] text-base font-semibold text-[#1F6C9F] transition hover:border-[#A9D2E8] hover:bg-[#E1F3FE] sm:h-10 sm:w-10 sm:self-center"
             aria-label="How to add events to your calendar"
           >
             ?

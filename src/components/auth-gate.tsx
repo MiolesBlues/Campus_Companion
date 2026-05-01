@@ -28,7 +28,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <main className="mx-auto flex min-h-[100dvh] max-w-6xl items-center justify-center px-4 py-10 sm:px-6">
-        <div className="rounded-xl border border-[#EAEAEA] bg-white px-6 py-5 text-sm text-[#64615C] ">
+        <div className="cc-loading-sheen rounded-xl border border-[#EAEAEA] bg-white px-6 py-5 text-sm text-[#64615C]">
           Checking access...
         </div>
       </main>
@@ -38,7 +38,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!user && !isPublicPath) {
     return (
       <main className="mx-auto flex min-h-[100dvh] max-w-6xl items-center justify-center px-4 py-10 sm:px-6">
-        <div className="rounded-xl border border-[#EAEAEA] bg-white px-6 py-5 text-sm text-[#64615C] ">
+        <div className="cc-loading-sheen rounded-xl border border-[#EAEAEA] bg-white px-6 py-5 text-sm text-[#64615C]">
           Redirecting to login...
         </div>
       </main>

@@ -201,7 +201,7 @@ export default function AccountPage() {
             <p className="text-[#64615C]">You are not logged in.</p>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar
                     src={avatarUrl || profile?.avatar_url || null}
@@ -510,7 +510,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => setShowIcsHelp((current) => !current)}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-lg border border-[#CFE6F4] bg-[#E1F3FE] text-base font-semibold text-[#1F6C9F] transition hover:border-[#A9D2E8] hover:bg-[#E1F3FE]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-lg border border-[#CFE6F4] bg-[#E1F3FE] text-base font-semibold text-[#1F6C9F] transition hover:border-[#A9D2E8] hover:bg-[#E1F3FE] sm:h-10 sm:w-10"
                 aria-label="How to add events to your calendar"
               >
                 ?

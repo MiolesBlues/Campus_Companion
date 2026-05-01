@@ -25,7 +25,7 @@ export function MainNav() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-[#EAEAEA] bg-[#FBFBFA] p-2.5 text-sm text-[#787774]">
+      <div className="cc-loading-sheen rounded-xl border border-[#EAEAEA] bg-[#FBFBFA] p-2.5 text-sm text-[#787774]">
         Loading navigation...
       </div>
     );
