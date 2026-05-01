@@ -11,7 +11,7 @@ export default function SignupPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Create account</h1>
           <p className="mt-2 text-slate-600">
-            Sign up as a student user. Admin access is controlled in the database through roles.
+            Sign up as a student. Teacher and admin roles can only be granted by admins.
           </p>
         </div>
       </div>
