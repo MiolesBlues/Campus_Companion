@@ -79,6 +79,7 @@ export default function TimetablesPage() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
+  const [filtersReady, setFiltersReady] = useState(false);
   const effectiveYear = getEffectiveYearOfStudy(profile);
 
   useEffect(() => {
@@ -129,20 +130,47 @@ export default function TimetablesPage() {
   );
 
   useEffect(() => {
-    if (profile?.role === "student") {
-      if (profile.course) {
-        setSelectedCourse(profile.course);
-      } else if (courses[0]) {
-        setSelectedCourse(courses[0]);
-      }
-
-      if (effectiveYear) {
-        setSelectedYear(`Year ${effectiveYear}`);
-      } else if (years[0]) {
-        setSelectedYear(years[0]);
-      }
+    if (profile?.role === "teacher") {
+      setFiltersReady(true);
+      return;
     }
-  }, [courses, effectiveYear, profile, years]);
+
+    if (profile?.role !== "student") {
+      setFiltersReady(false);
+      return;
+    }
+
+    const nextCourse = profile.course && courses.includes(profile.course)
+      ? profile.course
+      : (courses[0] ?? "");
+
+    const preferredYear = effectiveYear ? `Year ${effectiveYear}` : "";
+    const nextYear = preferredYear && years.includes(preferredYear)
+      ? preferredYear
+      : (years[0] ?? "");
+
+    if (nextCourse !== selectedCourse) {
+      setSelectedCourse(nextCourse);
+    }
+
+    if (nextYear !== selectedYear) {
+      setSelectedYear(nextYear);
+    }
+
+    if (!nextCourse || !nextYear) {
+      setFiltersReady(false);
+      return;
+    }
+
+    setFiltersReady(true);
+  }, [
+    courses,
+    effectiveYear,
+    profile,
+    selectedCourse,
+    selectedYear,
+    years,
+  ]);
 
   useEffect(() => {
     if (selectedCourse && !courses.includes(selectedCourse)) {
@@ -190,6 +218,10 @@ export default function TimetablesPage() {
       );
     }
 
+    if (!filtersReady) {
+      return [];
+    }
+
     const filtered = entries.filter((entry) =>
       matchesStudentFilters(
         entry,
@@ -206,6 +238,7 @@ export default function TimetablesPage() {
     );
   }, [
     entries,
+    filtersReady,
     profile?.email,
     profile?.role,
     selectedCourse,
@@ -438,7 +471,9 @@ export default function TimetablesPage() {
         <div className="rounded-xl border border-dashed border-[#D8D6D0] bg-white p-8 text-center text-[#64615C] ">
           {profile?.role === "teacher"
             ? `No timetable entries found for ${profile?.email ?? user?.email ?? "this teacher account"}. Check that the timetable lecturer email matches exactly.`
-            : "No timetable entries found for this account or filter."}
+            : !filtersReady
+              ? "Loading the correct timetable for your course filters..."
+              : "No timetable entries found for this account or filter."}
         </div>
       )}
     </section>
