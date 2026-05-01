@@ -75,34 +75,37 @@ export default function TimetablesPage() {
     () => entries.filter((entry) => entry.year_of_study !== null),
     [entries],
   );
-  const courseScopedEntries = useMemo(
+  const courseEntries = useMemo(
     () =>
-      studentEntries
-        .filter((entry) =>
-          !selectedCourse ? true : entry.course_name === selectedCourse,
-        )
-        .filter((entry) =>
-          !selectedYear ? true : `Year ${entry.year_of_study}` === selectedYear,
-        ),
-    [selectedCourse, selectedYear, studentEntries],
+      studentEntries.filter((entry) =>
+        !selectedCourse ? true : entry.course_name === selectedCourse,
+      ),
+    [selectedCourse, studentEntries],
+  );
+  const yearScopedEntries = useMemo(
+    () =>
+      courseEntries.filter((entry) =>
+        !selectedYear ? true : `Year ${entry.year_of_study}` === selectedYear,
+      ),
+    [courseEntries, selectedYear],
   );
   const courses = useMemo(
     () => [...new Set(studentEntries.map((entry) => entry.course_name))],
     [studentEntries],
   );
   const years = useMemo(
-    () => [...new Set(studentEntries.map((entry) => `Year ${entry.year_of_study}`))],
-    [studentEntries],
+    () => [...new Set(courseEntries.map((entry) => `Year ${entry.year_of_study}`))],
+    [courseEntries],
   );
   const groups = useMemo(
     () => [
       ...new Set(
-        courseScopedEntries
+        yearScopedEntries
           .map((entry) => extractGroup(entry))
           .filter((group) => group !== "All"),
       ),
     ],
-    [courseScopedEntries],
+    [yearScopedEntries],
   );
 
   useEffect(() => {
@@ -122,12 +125,33 @@ export default function TimetablesPage() {
   }, [courses, effectiveYear, profile, years]);
 
   useEffect(() => {
-    if (profile?.academic_group) {
-      setSelectedGroup(profile.academic_group);
-    } else if (groups[0]) {
+    if (selectedCourse && !courses.includes(selectedCourse)) {
+      setSelectedCourse(courses[0] ?? "");
+    }
+  }, [courses, selectedCourse]);
+
+  useEffect(() => {
+    if (selectedYear && !years.includes(selectedYear)) {
+      setSelectedYear(years[0] ?? "");
+    }
+  }, [selectedYear, years]);
+
+  useEffect(() => {
+    const preferredGroup = profile?.academic_group ?? "";
+    if (preferredGroup && groups.includes(preferredGroup)) {
+      setSelectedGroup(preferredGroup);
+      return;
+    }
+
+    if (selectedGroup && !groups.includes(selectedGroup)) {
+      setSelectedGroup(groups[0] ?? "");
+      return;
+    }
+
+    if (!selectedGroup && groups[0]) {
       setSelectedGroup(groups[0]);
     }
-  }, [groups, profile?.academic_group]);
+  }, [groups, profile?.academic_group, selectedGroup]);
 
   const filteredEntries = useMemo(() => {
     const teacherEmail = (profile?.email ?? user?.email ?? "").trim().toLowerCase();
@@ -146,7 +170,7 @@ export default function TimetablesPage() {
       );
     }
 
-    const filtered = courseScopedEntries.filter((entry) => {
+    const filtered = yearScopedEntries.filter((entry) => {
       if (!selectedGroup) return true;
       const group = extractGroup(entry);
       return group === "All" || group === selectedGroup;
@@ -158,7 +182,7 @@ export default function TimetablesPage() {
         normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time)),
     );
   }, [
-    courseScopedEntries,
+    yearScopedEntries,
     entries,
     profile?.email,
     profile?.role,
